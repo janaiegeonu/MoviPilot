@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MoviPilot</title>
+  <link rel="icon" type="image/png" href="templates/logo favicon.png">
+  
+  <style>
+    /* Container handles full screen dimensions and clips off-screen elements */
+    .intro-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #111; 
+    }
+
+    /* The actual image layer */
+    .intro-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://picsum.photos'); 
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+      
+      /* Background slides in for 1.5 seconds */
+      animation: slideInBg 1.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+
+    /* Semi-transparent tint */
+    .intro-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+
+    /* Text wrapper placed perfectly on top */
+    .intro-content {
+      position: relative;
+      z-index: 3;
+      color: #e4caca;
+      text-align: center;
+      font-family: sans-serif;
+      
+      /* Hide text initially until animation starts */
+      opacity: 0; 
+      
+      /* New Text Animation: 
+         - Takes 1 second to complete
+         - Delays for 0.8 seconds so it starts as the background slows down
+         - 'forwards' keeps the text visible when done */
+      animation: fadeInUpText 1s cubic-bezier(0.25, 1, 0.5, 1) 0.8s forwards;
+    }
+
+    .brand-title {
+      font-size: 3.5rem;
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    /* Background Animation Logic */
+    @keyframes slideInBg {
+      0% {
+        transform: translateX(100%); 
+      }
+      100% {
+        transform: translateX(0);    
+      }
+    }
+
+    /* NEW: Text Animation Logic (Fades in and slides up slightly) */
+    @keyframes fadeInUpText {
+      0% {
+        opacity: 0;
+        transform: translateY(30px); /* Starts 30px lower down */
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);    /* Settles perfectly in place */
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="intro-container">
+    <div class="intro-bg"></div>
+    <div class="intro-overlay"></div>
+    
+    <div class="intro-content">
+      <h1 class="brand-title">MoviPilot</h1>
+      <img src="\templates\logo favicon.png">
+      <p>Discover something amazing today.</p>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -2,15 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MoviRadar</title>
-  <link rel="icon" type="image/png" href="templates/logo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MoviPilot</title>
+    <link rel="icon" type="image/png" href="templates/logo favicon.png">
+    <link rel="stylesheet" href="templates/css/intro.css?v=1.1">
 </head>
 <body>
-    <form action="/intro" method="get">
 
-          <h1>MoviRadar</h1>
-    </form>
-  
+  <div class="intro-container">
+    <div class="intro-content">
+      <img class="logo" src="img/logo favicon.png" alt="MoviPilot Logo">
+      <label class="text">Movi<mark>Pilot</mark></label>
+    </div>
+  </div>
+
+  <script>
+    setTimeout(() => {
+        window.location.href = "/home";
+    }, 2300);
+  </script>
+
 </body>
 </html>

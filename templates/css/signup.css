@@ -6,7 +6,7 @@
 }
 
 body {
-    background-image: linear-gradient(rgba(232, 249, 255, 0.199), rgba(0, 2, 3, 0.231)), url("/img/background.png");
+    background-image: linear-gradient( rgba(0, 2, 3, 0.231)), url("/img/background.png");
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: fixed;
@@ -35,10 +35,11 @@ form {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
+
 /* The Sign up Inputs card panel */
 .module-card {
     background-color: aliceblue;
-    min-height: 450px;
+    min-height: 570px;
     flex: 1; /* Automatically splits half-and-half with the image banner */
     padding: 40px;
     display: flex;
@@ -49,7 +50,7 @@ form {
 /* The Main Visual Slider Panel */
 .module-cardimg {
     position: relative;
-    min-height: 450px;
+    min-height: 570px;
     flex: 1;
     overflow:hidden;
 }
@@ -64,6 +65,8 @@ form {
     background-size: cover;
     background-position: center;
     opacity: 0;
+    border: 3px solid white;
+  
     animation: infiniteCardSlider 12s infinite ease-in-out;
 }
 
@@ -150,8 +153,11 @@ form {
         flex-direction: column; /* Stack vertically instead of horizontally */
         max-width: 450px;
     }
-    .module-card, .module-cardimg {
-        min-height: 400px; /* Reduce height slightly on tablet stacks */
+    .module-card{
+        min-height: 450px; /* Reduce height slightly on tablet stacks */
+    }
+    .module-cardimg {
+        min-height: 300px; /* Reduce height slightly on tablet stacks */
     }
 }
 

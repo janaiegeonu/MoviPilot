@@ -30,7 +30,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items:flex-start;
+    align-items: flex-start;
     padding: 8% 6%;
     background-color: rgba(0, 0, 0, 0.354); /* Overlay layer for font readability */
 }
@@ -64,7 +64,7 @@ body {
 
 .signup-btn:hover {
     background-color: rgb(31, 128, 199);
-    transform:translateY(-4px);
+    transform: translateY(-4px);
 }
 
 /* Right side parent container filling exactly half the desktop screen */
@@ -78,28 +78,23 @@ body {
 .side-image {
     width: 100%;
     height: 100%;
-    object-fit:fill; /* Forces the image to fill the cell space completely */
+    object-fit: cover;
     object-position: center;
 }
 
-
 /* RESPONSIVE LAYOUT BREAKPOINTS */
 
-/* Tablet and landscape phone screens */
+/* Tablet screens */
 @media (max-width: 992px) {
     .home-wrapper {
-        flex-direction:row; /* Stacks text on top, keeps image at the bottom */
+        flex-direction: row;
     }
-
+    
     .side-image-parent {
-        width: 50vh; /* Takes exactly half of the available screen height on tablet */
         width: 50%;
-
-        
     }
-
+     
     .content-side {
-  
         align-items: center;
         text-align: center;
         padding: 50px 25px;
@@ -110,11 +105,39 @@ body {
 
 /* Mobile Screens */
 @media (max-width: 480px) {
-    .side-image-parent {
-        height: 40vh; /* Reduces picture footprint on tiny phones so form interactions are fast */
+    .home-wrapper {
+        flex-direction: column;
+        min-height: 100vh;
     }
-    
+
+    /* Completely removes the image block container from mobile view layout flow */
+    .side-image-parent {
+        display: none;
+    }
+         
+    /* Text element takes full screen layout width and height */
     .content-side {
-        padding: 40px 15px;
+        width: 100%;
+        min-height: 100vh;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+        padding: 40px 24px;
+    }
+
+    .content-side h1 {
+        font-size: clamp(1.8rem, 6vw, 2.3rem);
+        margin-bottom: 16px;
+    }
+
+    .content-side p {
+        font-size: 1rem;
+        margin-bottom: 28px;
+    }
+
+    /* Keeps button proportional on small screens */
+    .signup-btn {
+        padding: 11px 32px;
+        font-size: 1rem;
     }
 }

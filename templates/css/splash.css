@@ -1,0 +1,234 @@
+body {
+    overflow: hidden;
+}
+
+.splash-background {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    z-index: -1;
+
+    background:
+        radial-gradient(
+            circle at 50% 50%,
+            #071b3d 0%,
+            #030b1c 45%,
+            #01040c 100%
+        );
+}
+
+/* Large moving light fields */
+
+.gradient {
+    position: absolute;
+    width: 55vw;
+    height: 55vw;
+    border-radius: 50%;
+
+    filter: blur(100px);
+
+    opacity: 0.35;
+
+    pointer-events: none;
+
+    will-change: transform;
+}
+
+.gradient-one {
+    background: radial-gradient(
+        circle,
+        rgba(20, 92, 255, 0.8),
+        rgba(10, 40, 120, 0.2),
+        transparent 70%
+    );
+
+    top: -25%;
+    left: -15%;
+
+    animation: driftOne 18s ease-in-out infinite alternate;
+}
+
+.gradient-two {
+    background: radial-gradient(
+        circle,
+        rgba(0, 160, 255, 0.5),
+        rgba(30, 40, 180, 0.15),
+        transparent 70%
+    );
+
+    right: -20%;
+    bottom: -25%;
+
+    animation: driftTwo 24s ease-in-out infinite alternate;
+}
+
+.gradient-three {
+    background: radial-gradient(
+        circle,
+        rgba(80, 40, 220, 0.35),
+        rgba(20, 80, 180, 0.1),
+        transparent 70%
+    );
+
+    left: 30%;
+    top: 25%;
+
+    animation: driftThree 30s ease-in-out infinite alternate;
+}
+
+
+/* Slow cinematic movement */
+
+@keyframes driftOne {
+
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(120px, 60px, 0) scale(1.1);
+    }
+
+    100% {
+        transform: translate3d(40px, 140px, 0) scale(0.95);
+    }
+}
+
+
+@keyframes driftTwo {
+
+    0% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(-100px, -80px, 0) scale(1.15);
+    }
+
+    100% {
+        transform: translate3d(-30px, -140px, 0) scale(0.95);
+    }
+}
+
+
+@keyframes driftThree {
+
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.9);
+    }
+
+    50% {
+        transform: translate3d(-80px, 100px, 0) scale(1.1);
+    }
+
+    100% {
+        transform: translate3d(100px, -60px, 0) scale(1);
+    }
+}
+
+
+/* Particle canvas */
+
+#particleCanvas {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+}
+
+
+/* Dark edges */
+
+.background-vignette {
+    position: absolute;
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 30%,
+            rgba(0, 0, 0, 0.35) 75%,
+            rgba(0, 0, 0, 0.7) 100%
+        );
+}
+
+
+/* Keep your actual content above everything */
+
+.splash-content {
+    position: relative;
+    z-index: 2;
+}
+
+.intro-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+.intro-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    opacity: 0; 
+    animation: fadeInUpText 1s cubic-bezier(0.25, 1, 0.5, 1) 0.8s forwards;
+}
+
+/* Scalable Logo */
+.logo {
+    width: 100%;
+    max-width: 300px; /* Limits max size on desktop */
+    height: auto;
+}
+
+/* Viewport-based font sizing so text scales on mobile/desktop */
+.text {
+    color: rgb(212, 252, 245);
+    font-size: clamp(4rem, 8vw, 8.125rem); /* Dynamically scales between 3rem and 130px */
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bolder;
+    text-shadow: 1px 1px 4px black;
+    margin-top: -20px; /* Adjust spacing between logo and text */
+}
+
+mark {
+    background-color: transparent;
+    color: rgb(41, 148, 219);
+}
+
+.brand-title {
+    font-size: 3.5rem;
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+/* Background Animation Logic */
+@keyframes slideInBg {
+    0% {
+        transform: translateX(100%); 
+    }
+    100% {
+        transform: translateX(0);    
+    }
+}
+
+/* Text Animation Logic */
+@keyframes fadeInUpText {
+    0% {
+        opacity: 0;
+        transform: translateY(80px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

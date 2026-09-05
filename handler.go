@@ -6,7 +6,7 @@ import (
 )
 
 func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) error {
-	tmpl, err := template.ParseFiles("templates/intro.html", "templates/home.html", "templates/signup.html")
+	tmpl, err := template.ParseFiles("templates/splash.html", "templates/home.html", "templates/signup.html")
 	if err != nil {
 		http.Error(w, "Template Parsing Error: "+err.Error(), http.StatusInternalServerError)
 		return nil
@@ -20,10 +20,10 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 
 }
 
-func DisplayIntro(w http.ResponseWriter, r *http.Request) {
+func SplashIntro(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
-		err := renderTemplate(w, "intro.html", nil)
+		err := renderTemplate(w, "splash.html", nil)
 		if err != nil {
 			http.Error(w, "404 : Page Not Found", http.StatusNotFound)
 			return
@@ -43,7 +43,6 @@ func DisplayHome(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
-
 
 func DisplaySignup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {

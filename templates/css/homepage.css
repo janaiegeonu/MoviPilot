@@ -621,19 +621,21 @@ h2 {
 
     display: block;
 
-    transition:
-        transform 0.5s ease,
-        filter 0.5s ease;
+    transition: transform 0.2s;
+
+    filter:
+        brightness(0.9)
+         saturate(1);
 }
 
 
 .movie-card:hover img {
 
-    transform: scale(1.035);
+    transform: scale(1.09);
 
     filter:
-        brightness(1.08)
-        saturate(1.05);
+        brightness(1.09)
+        saturate(1.10);
 }
 
 

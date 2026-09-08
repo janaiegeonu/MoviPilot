@@ -8,113 +8,126 @@
     <link rel="stylesheet" href="templates/css/homepage.css?v=1">
 </head>
 <body>
-  
-      <style>
-        :root {
-            --bg-color: #141414;
-            --card-bg: #1f1f1f;
-            --text-color: #ffffff;
-            --accent-color: #e50914;
-        }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        h1 { color: var(--accent-color); font-size: 2.5rem; margin-bottom: 10px; }
-        .search-container { margin-bottom: 30px; }
-        input[type="text"] {
-            padding: 12px 20px;
-            width: 300px;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        button {
-            padding: 12px 24px;
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        h2 { border-left: 4px solid var(--accent-color); padding-left: 10px; }
-        .movie-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 25px;
-            padding: 20px 0;
-        }
-        /* Make the hyperlink wrapper look like a clean container card */
-        .movie-link {
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-        .movie-card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            height: 100%;
-        }
-        .movie-card:hover { transform: scale(1.05); }
-        .movie-card img { width: 100%; height: 300px; object-fit: cover; display: block; }
-        .movie-info { padding: 15px; }
-        .movie-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 5px 0; }
-        .movie-meta { font-size: 0.85rem; color: #aaa; margin-bottom: 10px; }
-        .rating { color: #f3ce3e; font-weight: bold; }
-        .overview { font-size: 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: #ddd; }
-    </style>
-</body>
-<body>
+    
+<div class="home-background">
 
-    <header>
-        <h1>🎬 Movie Recommendation Hub</h1>
-        <div class="search-container">
-            <form action="/" method="GET">
-                <input type="text" name="q" placeholder="Search for a movie..." required>
-                <button type="submit">Search</button>
-            </form>
-        </div>
-    </header>
+    <div class="ambient-glow glow-one"></div>
+    <div class="ambient-glow glow-two"></div>
+    <div class="ambient-glow glow-three"></div>
 
-    <main>
-        <h2>{{ .PageTitle }}</h2>
-        <div class="movie-grid">
-            {{ range .Movies }}
-            <!-- Clickable Link Container Wrapping the Card Components -->
-            <a href="/movie?id={{ .ID }}" class="movie-link">
-                <div class="movie-card">
-                    {{ if .PosterURL }}
-                        <img src="{{ .PosterURL }}" alt="{{ .Title }}">
-                    {{ else }}
-                        <img src="https://placeholder.com" alt="No Poster Available">
-                    {{ end }}
-                    <div class="movie-info">
-                        <p class="movie-title">{{ .Title }}</p>
-                        <div class="movie-meta">
-                            <span>{{ .ReleaseDate }}</span> | 
-                            <span class="rating">⭐ {{ printf "%.1f" .Rating }}</span>
-                        </div>
-                        <p class="overview">{{ .Overview }}</p>
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="light-streak streak-one"></div>
+    <div class="light-streak streak-two"></div>
+
+    <div class="cinematic-overlay"></div>
+
+</div>
+
+<header>
+
+    <h1>🎬 Movie Recommendation Hub</h1>
+
+    <div class="search-container">
+
+        <form action="/homepage" method="GET">
+
+            <input
+                type="text"
+                name="q"
+                placeholder="Search for a movie..."
+                required
+            >
+
+            <button type="submit">
+                Search
+            </button>
+
+        </form>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <h2>{{ .PageTitle }}</h2>
+
+    <div class="movie-grid">
+
+        {{ range .Movies }}
+
+        <a
+            href="/movie?id={{ .ID }}"
+            class="movie-link"
+        >
+
+            <div class="movie-card">
+
+                {{ if .PosterURL }}
+
+                    <img
+                        src="{{ .PosterURL }}"
+                        alt="{{ .Title }}"
+                    >
+
+                {{ else }}
+
+                    <img
+                        src="https://placeholder.com"
+                        alt="No Poster Available"
+                    >
+
+                {{ end }}
+
+
+                <div class="movie-info">
+
+                    <p class="movie-title">
+                        {{ .Title }}
+                    </p>
+
+
+                    <div class="movie-meta">
+
+                        <span>
+                            {{ .ReleaseDate }}
+                        </span>
+
+                        |
+
+                        <span class="rating">
+                            ⭐ {{ printf "%.1f" .Rating }}
+                        </span>
+
                     </div>
+
+
+                    <p class="overview">
+                        {{ .Overview }}
+                    </p>
+
                 </div>
-            </a>
-            {{ else }}
-                <p>No movies found. Try another search!</p>
-            {{ end }}
-        </div>
-    </main>
+
+            </div>
+
+        </a>
+
+        {{ else }}
+
+            <p>No movies found. Try another search!</p>
+
+        {{ end }}
+
+    </div>
+
+</main>
+
+
+<script src="/templates/js/homepage_bg.js"></script>
+
+
 
 </body>
 </html>

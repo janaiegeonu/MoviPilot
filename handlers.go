@@ -92,7 +92,7 @@ func HomepageHandler(w http.ResponseWriter, r *http.Request) {
 		Movies:    movies,
 	}
 
-	err = templates.ExecuteTemplate(w, "templates/homepage.html", data)
+	err = templates.ExecuteTemplate(w, "homepage.html", data)
 	if err != nil {
 		http.Error(
 			w,
@@ -178,7 +178,7 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = templates.ExecuteTemplate(
 		w,
-		"templates/homepage.html",
+		"homepage.html",
 		data,
 	)
 

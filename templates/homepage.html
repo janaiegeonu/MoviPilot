@@ -4,10 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MoviPilot</title>
-    <link rel="icon" type="image/png" href="templates/logo favicon.png">
+    <link rel="icon" type="image/png" href="img/logo favicon.png">
     <link rel="stylesheet" href="templates/css/homepage.css?v=1">
 </head>
 <body>
+
+
+  <nav class="navbar">
+
+    <div class="logo">
+
+        <a href="/homepage">
+            <img src="img/logo favicon.png" alt="MoviPilot logo">
+            <span>MoviPilot</span>
+        </a>
+
+    </div>
+
+
+    <ul class="nav-links">
+
+        <li>
+            <a href="/homepage">Home</a>
+        </li>
+
+        <li>
+            <a href="/signup">Signup</a>
+        </li>
+
+        <li>
+            <a href="/login">Login</a>
+        </li>
+
+    </ul>
+
+
+    <!-- MOBILE MENU BUTTON -->
+
+    <button class="menu-toggle" aria-label="Open navigation menu">
+
+       <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+>
+
+    <path
+        class="line line-one"
+        d="M4 6H20"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+    />
+
+    <path
+        class="line line-two"
+        d="M4 12H20"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+    />
+
+    <path
+        class="line line-three"
+        d="M4 18H20"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+    />
+
+</svg>
+
+    </button>
+
+</nav>
     
 <div class="home-background">
 
@@ -25,7 +95,7 @@
 </div>
 
 <header>
-
+    <br><br>
     <h1> MoviPilot</h1>
 
     <div class="search-container">
@@ -126,8 +196,37 @@
 
 
 <script src="/templates/js/homepage_bg.js"></script>
+<script>
+    const navbar = document.querySelector(".navbar");
+const menuToggle = document.querySelector(".menu-toggle");
 
+// Open / close menu when hamburger is clicked
+menuToggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    navbar.classList.toggle("menu-open");
+});
 
+// Close menu when clicking outside the navbar
+document.addEventListener("click", (event) => {
+    if (!navbar.contains(event.target)) {
+        navbar.classList.remove("menu-open");
+    }
+});
+
+// Close menu when clicking inside the navbar
+document.addEventListener("click", (event) => {
+    if (navbar.contains(event.target)) {
+        navbar.classList.remove("menu-open");
+    }
+});
+
+// Close menu when a navigation link is clicked
+document.querySelectorAll(".nav-links a").forEach(link => {
+    link.addEventListener("click", () => {
+        navbar.classList.remove("menu-open");
+    });
+});
+</script>
 
 </body>
 </html>

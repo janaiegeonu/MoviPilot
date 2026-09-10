@@ -122,7 +122,137 @@
 
 <main>
 
-    <h2>{{ .PageTitle }}</h2>
+    <div class="trending-title">
+         {{ if .IsTrending }}
+    <div class="fire-icon" id="fireIcon">
+        <svg
+            viewBox="0 0 34 34"
+            width="34"
+            height="34"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <!-- Outer flame -->
+            <path
+                class="fire-outer"
+                d="M17 31
+                   C10.2 31 6 26.8 6 20.8
+                   C6 16.2 9.1 13.4 11.8 10.7
+                   C13.8 8.7 14.5 6.1 13.8 3
+                   C18.9 5.7 22.3 10.2 22 15
+                   C23.3 13.8 24 12.2 23.8 10.5
+                   C27.3 14.1 28.8 17.7 28.2 21.7
+                   C27.4 27.4 23.2 31 17 31Z"
+            />
+
+            <!-- Inner flame -->
+            <path
+                class="fire-inner"
+                d="M17 28
+                   C13.2 28 10.8 25.5 11.1 22
+                   C11.4 18.8 14.1 17.1 15.3 14.3
+                   C17.7 16.2 19.2 18.5 18.9 21.1
+                   C20.1 20.2 20.6 19.1 20.5 18
+                   C23 20.5 23.7 23.2 22.5 25.2
+                   C21.5 27 19.6 28 17 28Z"
+            />
+
+            <!-- Hot center -->
+            <path
+                class="fire-core"
+                d="M17 26
+                   C15.2 26 14.1 24.7 14.4 23.1
+                   C14.7 21.7 16 20.8 16.2 19.3
+                   C17.8 20.5 18.2 21.8 18 23
+                   C19 22.5 19.3 21.8 19.2 21.3
+                   C20.3 23 20 26 17 26Z"
+            />
+
+            <!-- Tiny spark -->
+            <circle
+                class="fire-spark"
+                cx="23.5"
+                cy="7"
+                r="0.8"
+            />
+        </svg>
+    </div>
+    <h2>{{ .PageTitle}}</h2>
+    {{ else }}
+
+    <h2 class="titletext">{{ .PageTitle}}</h2>
+    {{ end }}
+
+    <!-- POPUP -->
+
+    <!-- LOGIN REQUIRED MODAL -->
+
+<div class="auth-modal-overlay" id="authModal">
+
+    <div class="auth-modal" id="authModalBox">
+
+        <!-- CLOSE BUTTON -->
+
+        <button
+            class="auth-modal-close"
+            id="authModalClose"
+            aria-label="Close"
+        >
+            &times;
+        </button>
+
+
+        <!-- LOGO -->
+
+        <div class="auth-modal-logo">
+            <img
+                src="/img/logo favicon.png"
+                alt="MoviPilot"
+            >
+        </div>
+
+
+        <!-- CONTENT -->
+
+        <div class="auth-modal-content">
+
+            <span class="auth-modal-label">
+                UNLOCK MOVIPILOT
+            </span>
+
+            <h2>
+                Your movie journey
+                starts here.
+            </h2>
+            <br>
+
+            <p>
+                Sign up to unlock the full MoviPilot experience,
+                discover personalized recommendations, save movies,
+                and explore everything we have to offer just for you.
+            </p>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="auth-modal-actions">
+
+            <a href="/signup" class="auth-signup">
+                Sign Up
+            </a>
+
+            <a href="/login" class="auth-login">
+                Already have an account? <span>Login</span>
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+    
+</div>
 
     <div class="movie-grid">
 
@@ -187,6 +317,10 @@
         {{ else }}
 
             <p>No movies found. Try another search!</p>
+            <div  class="page-overlay">
+                <img src="/img/clapper2.png">
+            </div>
+            
 
         {{ end }}
 
@@ -196,37 +330,50 @@
 
 
 <script src="/templates/js/homepage_bg.js"></script>
+<script src="/templates/js/home-dialog.js"></script>
 <script>
     const navbar = document.querySelector(".navbar");
-const menuToggle = document.querySelector(".menu-toggle");
+    const menuToggle = document.querySelector(".menu-toggle");
 
-// Open / close menu when hamburger is clicked
-menuToggle.addEventListener("click", (event) => {
-    event.stopPropagation();
-    navbar.classList.toggle("menu-open");
-});
-
-// Close menu when clicking outside the navbar
-document.addEventListener("click", (event) => {
-    if (!navbar.contains(event.target)) {
-        navbar.classList.remove("menu-open");
-    }
-});
-
-// Close menu when clicking inside the navbar
-document.addEventListener("click", (event) => {
-    if (navbar.contains(event.target)) {
-        navbar.classList.remove("menu-open");
-    }
-});
-
-// Close menu when a navigation link is clicked
-document.querySelectorAll(".nav-links a").forEach(link => {
-    link.addEventListener("click", () => {
-        navbar.classList.remove("menu-open");
+    // Open / close menu when hamburger is clicked
+    menuToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        
+        // toggle() returns true if the class was added, false if removed
+        const isMenuOpen = navbar.classList.toggle("menu-open");
+        
+        // If the menu is now closed, remove focus from the button
+        if (!isMenuOpen) {
+            menuToggle.blur();
+        }
     });
-});
+
+    // Close menu when clicking outside the navbar
+    document.addEventListener("click", (event) => {
+        if (!navbar.contains(event.target)) {
+            navbar.classList.remove("menu-open");
+        }
+    });
+
+    // Close menu when clicking inside the navbar
+    document.addEventListener("click", (event) => {
+        if (navbar.contains(event.target)) {
+            navbar.classList.remove("menu-open");
+        }
+    });
+
+    // Close menu when a navigation link is clicked
+    document.querySelectorAll(".nav-links a").forEach(link => {
+        link.addEventListener("click", () => {
+            navbar.classList.remove("menu-open");
+        });
+    });
 </script>
+
+
+<script src="/templates/js/fire-svg.js"></script>
+
+
 
 </body>
 </html>

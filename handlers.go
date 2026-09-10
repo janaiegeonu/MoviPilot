@@ -64,18 +64,22 @@ func HomepageHandler(w http.ResponseWriter, r *http.Request) {
 	var movies []API.MovieInfo
 	var err error
 	var title string
+	var isTrending bool
 
 	if query != "" {
 
 		title = fmt.Sprintf("Search Results for: '%s'", query)
 
 		movies, err = API.SearchMovies(query)
+		isTrending = false
 
 	} else {
 
-		title = "🔥 Trending Today"
+		title = "Trending Today"
 
 		movies, err = API.GetTrendingMovies()
+
+		isTrending = true
 	}
 
 	if err != nil {
@@ -88,8 +92,9 @@ func HomepageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := API.PageData{
-		PageTitle: title,
-		Movies:    movies,
+		PageTitle:  title,
+		Movies:     movies,
+		IsTrending: isTrending,
 	}
 
 	err = templates.ExecuteTemplate(w, "homepage.html", data)
@@ -129,6 +134,24 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get the movie the user clicked
+	movie, err := tmdbClient.GetMovieDetails(
+		movieID,
+		map[string]string{
+			"language": "en-US",
+		},
+	)
+
+	if err != nil {
+		http.Error(
+			w,
+			"Error fetching movie details: "+err.Error(),
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// Get recommendations based on that movie
 	recResult, err := tmdbClient.GetMovieRecommendations(
 		movieID,
 		map[string]string{
@@ -171,9 +194,16 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
+	// Create a dynamic page title
+	pageTitle := fmt.Sprintf(
+		`You clicked on "%s", so we recommend:`,
+		movie.Title,
+	)
+
 	data := API.PageData{
-		PageTitle: "🎯 Because You Clicked That Movie, We Recommend:",
-		Movies:    recommendations,
+		PageTitle:  pageTitle,
+		Movies:     recommendations,
+		IsTrending: false,
 	}
 
 	err = templates.ExecuteTemplate(

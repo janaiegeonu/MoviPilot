@@ -6,7 +6,6 @@ import (
 	"github.com/benlei/go-tmdb/v2"
 )
 
-// Replace this with your TMDB API Key.
 const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
 
 type MovieInfo struct {
@@ -19,8 +18,9 @@ type MovieInfo struct {
 }
 
 type PageData struct {
-	PageTitle string
-	Movies    []MovieInfo
+	PageTitle  string
+	IsTrending bool
+	Movies     []MovieInfo
 }
 
 func GetTrendingMovies() ([]MovieInfo, error) {

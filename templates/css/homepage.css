@@ -130,7 +130,7 @@ body {
 
     gap: 10px;
 
-    color: #ffffff;
+    color:  rgb(223, 255, 250);
 
     text-decoration: none;
 
@@ -138,6 +138,12 @@ body {
         opacity 0.3s ease,
         transform 0.3s ease;
 }
+
+.logo a .brand-accent {
+    color: rgb(75, 167, 228);
+}
+
+
 
 
 .logo a:hover {
@@ -165,7 +171,7 @@ body {
 }
 
 .logo img:hover {
-        transform: rotate(360deg) scale(1.08);
+        transform: rotate(660deg) scale(1.08);
 }
 .nav-links {
 
@@ -273,8 +279,8 @@ body {
     background:
         linear-gradient(
             135deg,
-            #1264d8,
-            #238cff
+            #27679b,
+            #248cbd
         );
 
     border:
@@ -1057,15 +1063,110 @@ header {
 }
 
 
-h1 {
+.movipilot-title {
+    position: relative;
+
+    display: inline-block;
+
+    font-size: 4.5rem;
+    font-weight: bold;
+
     color: #55aaff;
 
-    font-size: 2.5rem;
+    cursor: default;
+}
 
-    margin-bottom: 10px;
+/* Wave layer */
 
-    text-shadow:
-        0 0 25px rgba(40, 130, 255, 0.25);
+.movipilot-title span {
+
+    position: relative;
+
+    display: inline-block;
+}
+
+
+/* Animated overlay */
+
+.movipilot-title span::after {
+
+    content: "MoviPilot";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            120deg,
+            #55aaff 0%,
+            #7de7ff 20%,
+            #65d6c4 40%,
+            #55aaff 60%,
+            #2f8fff 80%,
+            #7de7ff 100%
+        );
+
+    background-size: 300% 100%;
+
+    -webkit-background-clip: text;
+    background-clip: text;
+
+    -webkit-text-fill-color: transparent;
+
+    opacity: 0;
+
+    transition: opacity 0.4s ease;
+
+    pointer-events: none;
+}
+
+.movipilot-title:hover span::after {
+
+    opacity: 1;
+
+    animation:
+        waterFlow 4s linear infinite,
+        waveFloat 2.5s ease-in-out infinite;
+
+}
+
+@keyframes waterFlow {
+
+    0% {
+        background-position: 300% 0;
+    }
+
+    100% {
+        background-position: -300% 0;
+    }
+}
+
+@keyframes waveFloat {
+
+    0% {
+        transform: translateY(0px);
+    }
+
+    25% {
+        transform: translateY(-1px);
+    }
+
+    50% {
+        transform: translateY(1px);
+    }
+
+    75% {
+        transform: translateY(-1px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
 }
 
 
@@ -1133,12 +1234,13 @@ input[type="text"]:focus {
 button {
     padding: 13px 24px;
 
-    background:
+     background:
         linear-gradient(
-            135deg,
-            #1464d8,
-            #2589ff
+            1deg,
+            #1b4d97,
+            #29a7ce
         );
+
 
     color: #ffffff;
 
@@ -1195,6 +1297,7 @@ h2 {
 
     text-shadow:
         0 0 15px rgba(30, 120, 255, 0.12);
+        cursor: default;
      
 
 }
@@ -1405,7 +1508,7 @@ h2 {
 .page-overlay {
     position: fixed;
     left: 50%;
-    bottom: -33px;
+    bottom: -123px;
 
     width: 100%;
     height: 100%;
@@ -1416,7 +1519,7 @@ h2 {
     pointer-events: none;
     overflow: hidden;
 
-    z-index: -15;
+    z-index: -100;
 }
 
 .page-overlay img {
@@ -1432,6 +1535,7 @@ h2 {
 
     object-fit: contain;
     object-position: center bottom;
+
 }
 
 /* 
@@ -1581,12 +1685,29 @@ h2 {
         width: 1200px;
         overflow: hidden;
     }
+    .movie-card img {
+
+    filter:
+        brightness(1)
+        saturate(1.10);
+}
+.page-overlay {
+   
+    bottom: 40px;
+}
 }
 /* 
    MOBILE
    */
 
 @media (max-width: 600px) {
+
+.movie-card img {
+
+    filter:
+        brightness(1)
+        saturate(1.10);
+}
 
     body {
         padding: 15px;
@@ -1656,10 +1777,24 @@ h2 {
 
         font-size: 0.78rem;
     }
+    .page-overlay {
+   
+    bottom: 2px;
+}
 }
 
 @media (max-width: 480px) {
 
+   .movipilot-title {
+
+    font-size: 3.1rem;
+  
+}
+
+.page-overlay {
+   
+    bottom: 20px;
+}
     .page-overlay img {
         width: 650px;
         overflow: hidden;
@@ -1905,7 +2040,7 @@ h2 {
 
     header {
 
-        padding-top: 100px;
+        padding-top: 10px;
 
     }
 }

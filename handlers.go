@@ -16,6 +16,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 	tmpl, err := template.ParseFiles(
 		"templates/splash.html",
 		"templates/homepage.html",
+		"templates/signup.html",
 	)
 	if err != nil {
 		http.Error(
@@ -218,6 +219,20 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 			"Template Execution Error: "+err.Error(),
 			http.StatusInternalServerError,
 		)
+		return
+	}
+}
+
+func SignupHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := renderTemplate(w, "signup.html", nil)
+	if err != nil {
+		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
 		return
 	}
 }

@@ -1,0 +1,1561 @@
+#particleCanvas {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+
+    z-index: 0;
+}
+
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+html {
+    scroll-behavior: smooth;
+}
+
+
+body {
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    min-height: 100vh;
+
+    background: #061426;
+
+    color: #ffffff;
+}
+
+
+.home-background {
+    position: fixed;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    z-index: 0;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            #06142d 0%,
+            #020916 45%,
+            #01030a 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/*
+   MOVING BLUE ATMOSPHERE
+   */
+
+.ambient-glow {
+
+    position: absolute;
+
+    width: 55vw;
+    height: 55vw;
+
+    border-radius: 50%;
+
+    filter: blur(90px);
+
+    opacity: 0.25;
+
+    will-change: transform;
+}
+
+
+/* TOP LEFT */
+
+.glow-one {
+
+    top: -25%;
+    left: -15%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0, 110, 255, 0.8),
+            transparent 70%
+        );
+
+    animation:
+        glowMoveOne 14s ease-in-out infinite alternate;
+}
+
+
+/* BOTTOM RIGHT */
+
+.glow-two {
+
+    right: -20%;
+    bottom: -25%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(0, 70, 255, 0.75),
+            transparent 70%
+        );
+
+    animation:
+        glowMoveTwo 17s ease-in-out infinite alternate;
+}
+
+
+/* CENTER */
+
+.glow-three {
+
+    top: 30%;
+    left: 35%;
+
+    width: 40vw;
+    height: 40vw;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(40, 90, 255, 0.45),
+            transparent 70%
+        );
+
+    opacity: 0.14;
+
+    animation:
+        glowMoveThree 20s ease-in-out infinite alternate;
+}
+
+
+/* 
+   GLOW ANIMATIONS
+  */
+
+@keyframes glowMoveOne {
+
+    0% {
+
+        transform:
+            translate3d(0, 0, 0)
+            scale(1);
+
+    }
+
+    50% {
+
+        transform:
+            translate3d(180px, 100px, 0)
+            scale(1.15);
+
+    }
+
+    100% {
+
+        transform:
+            translate3d(80px, 200px, 0)
+            scale(0.9);
+
+    }
+}
+
+
+@keyframes glowMoveTwo {
+
+    0% {
+
+        transform:
+            translate3d(0, 0, 0)
+            scale(1);
+
+    }
+
+    50% {
+
+        transform:
+            translate3d(-180px, -130px, 0)
+            scale(1.15);
+
+    }
+
+    100% {
+
+        transform:
+            translate3d(-50px, -200px, 0)
+            scale(0.92);
+
+    }
+}
+
+
+@keyframes glowMoveThree {
+
+    0% {
+
+        transform:
+            translate3d(0, 0, 0)
+            scale(0.9);
+
+    }
+
+    50% {
+
+        transform:
+            translate3d(120px, -100px, 0)
+            scale(1.2);
+
+    }
+
+    100% {
+
+        transform:
+            translate3d(-100px, 120px, 0)
+            scale(0.95);
+
+    }
+}
+
+
+/*
+   PARTICLE CANVAS
+ */
+
+#particleCanvas {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+
+    opacity: 1;
+
+    z-index: 2;
+}
+
+
+/* 
+   LIGHT STREAKS
+   */
+
+.light-streak {
+
+    position: absolute;
+
+    width: 500px;
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(40, 150, 255, 0.35),
+            transparent
+        );
+
+    filter: blur(2px);
+
+    opacity: 0.5;
+
+    transform: rotate(-25deg);
+
+    z-index: 1;
+}
+
+
+.streak-one {
+
+    top: 25%;
+    left: -200px;
+
+    animation:
+        streakMoveOne 12s linear infinite;
+}
+
+
+.streak-two {
+
+    top: 65%;
+    left: -300px;
+
+    opacity: 0.25;
+
+    animation:
+        streakMoveTwo 18s linear infinite;
+}
+
+
+@keyframes streakMoveOne {
+
+    0% {
+
+        transform:
+            translateX(-300px)
+            rotate(-25deg);
+
+    }
+
+    100% {
+
+        transform:
+            translateX(calc(100vw + 700px))
+            rotate(-25deg);
+
+    }
+}
+
+
+@keyframes streakMoveTwo {
+
+    0% {
+
+        transform:
+            translateX(-500px)
+            rotate(-25deg);
+
+    }
+
+    100% {
+
+        transform:
+            translateX(calc(100vw + 800px))
+            rotate(-25deg);
+
+    }
+}
+
+
+/* 
+   CINEMATIC DARKNESS
+ */
+
+.cinematic-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 3;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            transparent 20%,
+            rgba(1, 5, 15, 0.15) 55%,
+            rgba(0, 2, 8, 0.65) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+.signup-page {
+
+    position: relative;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 10% 20%,
+            rgba(25, 100, 170, 0.18),
+            transparent 35%
+        ),
+
+        radial-gradient(
+            circle at 90% 80%,
+            rgba(35, 180, 175, 0.12),
+            transparent 35%
+        ),
+
+        linear-gradient(
+            135deg,
+            #030b18,
+            #071a30 45%,
+            #041322
+        );
+        
+}
+
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.signup-container {
+
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+
+    z-index: 100;
+
+    width: min(1180px, 100%);
+
+    min-height: 690px;
+
+    display: grid;
+
+    /*
+       LEFT = 40%
+       RIGHT = 60%
+    */
+
+    grid-template-columns: 40% 60%;
+
+    overflow: hidden;
+
+    border-radius: 30px;
+
+    border: 1px solid rgba(160, 210, 240, 0.14);
+
+    background: rgba(8, 24, 42, 0.78);
+
+    box-shadow:
+        0 40px 100px rgba(0, 0, 0, 0.5),
+        0 0 80px rgba(30, 110, 180, 0.08);
+
+    backdrop-filter: blur(25px);
+
+    -webkit-backdrop-filter: blur(25px);
+
+    animation: containerAppear 0.8s ease both;
+}
+
+
+@keyframes containerAppear {
+
+    from {
+        opacity: 0;
+        transform: translateY(25px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* =========================================
+   LEFT SHOWCASE
+========================================= */
+
+.showcase-panel {
+
+    position: relative;
+
+    min-height: 690px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(20, 63, 100, 0.55),
+            rgba(4, 16, 29, 0.95)
+        );
+}
+
+
+/*
+    EMPTY IMAGE AREA
+
+    Replace the background later with your image.
+
+    Example:
+
+    background-image: url("/img/movie.jpg");
+*/
+
+.showcase-image {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(30, 100, 160, 0.15),
+            rgba(5, 20, 35, 0.5)
+        );
+
+    background-size: cover;
+
+    background-position: center;
+
+    transition:
+        transform 1s ease,
+        filter 1s ease;
+}
+
+
+/* =========================================
+   IMAGE OVERLAY
+========================================= */
+
+.showcase-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(4, 14, 27, 0.25),
+            rgba(4, 14, 27, 0.25) 35%,
+            rgba(3, 12, 23, 0.92) 100%
+        );
+}
+
+
+/* =========================================
+   SHOWCASE CONTENT
+========================================= */
+
+.showcase-content {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: space-between;
+
+    padding: 42px;
+}
+
+
+/* =========================================
+   LOGO
+========================================= */
+
+.showcase-logo {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    font-size: 19px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.4px;
+}
+
+
+.logo-placeholder {
+
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    color: #ffffff;
+
+    font-size: 14px;
+
+    font-weight: 800;
+
+    background:
+        linear-gradient(
+            135deg,
+            #55aaff,
+            #2d7fd1
+        );
+
+    box-shadow:
+        0 0 20px rgba(85, 170, 255, 0.3);
+}
+
+
+/* =========================================
+   SHOWCASE TEXT
+========================================= */
+
+.showcase-text {
+
+    max-width: 440px;
+}
+
+
+.showcase-label {
+
+    display: inline-block;
+
+    margin-bottom: 16px;
+
+    color: #55aaff;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+
+.showcase-text h1 {
+
+    margin-bottom: 18px;
+
+    font-size: clamp(2rem, 3vw, 3.2rem);
+
+    line-height: 1.05;
+
+    letter-spacing: -1.8px;
+
+    font-weight: 750;
+}
+
+
+.showcase-text p {
+
+    max-width: 420px;
+
+    color: rgba(220, 235, 248, 0.68);
+
+    font-size: 14px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================
+   DECORATIVE LINE
+========================================= */
+
+.showcase-line {
+
+    position: absolute;
+
+    bottom: 34px;
+
+    left: 42px;
+
+    width: 55px;
+
+    height: 2px;
+
+    background: #55aaff;
+
+    box-shadow:
+        0 0 12px rgba(85, 170, 255, 0.5);
+}
+
+
+/* =========================================
+   RIGHT FORM PANEL
+========================================= */
+
+.form-panel {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 55px 70px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.98),
+            rgba(241, 247, 252, 0.98)
+        );
+
+    color: #102033;
+}
+
+
+/* =========================================
+   FORM WRAPPER
+========================================= */
+
+.form-wrapper {
+
+    width: 100%;
+
+    max-width: 550px;
+}
+
+
+/* =========================================
+   FORM HEADER
+========================================= */
+
+.form-header {
+
+    margin-bottom: 28px;
+}
+
+
+.form-eyebrow {
+
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: #3189dc;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.8px;
+}
+
+
+.form-header h2 {
+
+    margin-bottom: 8px;
+
+    color: #102033;
+
+    font-size: 30px;
+
+    line-height: 1.15;
+
+    letter-spacing: -1px;
+}
+
+
+.form-header p {
+
+    color: #718096;
+
+    font-size: 13px;
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.signup-form {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 17px;
+}
+
+
+/* =========================================
+   INPUT GROUP
+========================================= */
+
+.input-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.input-group label {
+
+    color: #45566a;
+
+    font-size: 11px;
+
+    font-weight: 650;
+}
+
+
+/* =========================================
+   INPUT WRAPPER
+========================================= */
+
+.input-wrapper {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+}
+
+
+/* =========================================
+   INPUT ICON
+========================================= */
+
+.input-icon {
+
+    position: absolute;
+
+    left: 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 17px;
+
+    height: 17px;
+
+    color: #79a4c8;
+
+    pointer-events: none;
+
+    transition: color 0.25s ease;
+}
+
+
+.input-icon svg {
+
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+.input-wrapper input {
+
+    width: 100%;
+
+    height: 49px;
+
+    padding:
+        0 45px
+        0 45px;
+
+    border: 1px solid #d9e3ec;
+
+    border-radius: 11px;
+
+    outline: none;
+
+    background: #f7fafc;
+
+    color: #17283b;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease;
+}
+
+
+.input-wrapper input::placeholder {
+
+    color: #a4b0bd;
+}
+
+
+.input-wrapper input:hover {
+
+    border-color: #b9ccdc;
+}
+
+
+.input-wrapper input:focus {
+
+    background: #ffffff;
+
+    border-color: #55aaff;
+
+    box-shadow:
+        0 0 0 3px rgba(85, 170, 255, 0.11);
+}
+
+
+.input-wrapper:focus-within .input-icon {
+
+    color: #3189dc;
+}
+
+
+/* =========================================
+   PASSWORD BUTTON
+========================================= */
+
+.password-toggle {
+
+    position: absolute;
+
+    right: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #8da0b2;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.password-toggle:hover {
+
+    color: #3189dc;
+
+    transform: scale(1.08);
+}
+
+
+.password-toggle svg {
+
+    width: 17px;
+    height: 17px;
+}
+
+
+/* =========================================
+   TERMS
+========================================= */
+
+.terms {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 9px;
+
+    margin-top: 1px;
+
+    cursor: pointer;
+}
+
+
+.terms input {
+
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+
+.custom-checkbox {
+
+    flex-shrink: 0;
+
+    width: 15px;
+    height: 15px;
+
+    margin-top: 1px;
+
+    border: 1px solid #bdcad6;
+
+    border-radius: 4px;
+
+    background: #ffffff;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.terms input:checked + .custom-checkbox {
+
+    border-color: #3189dc;
+
+    background: #3189dc;
+
+    box-shadow:
+        0 0 0 2px rgba(85, 170, 255, 0.12);
+}
+
+
+.terms-text {
+
+    color: #7b8794;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+}
+
+
+.terms-text a {
+
+    color: #3189dc;
+
+    text-decoration: none;
+
+    font-weight: 600;
+}
+
+
+.terms-text a:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   CREATE ACCOUNT BUTTON
+========================================= */
+
+.create-account-btn {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    width: 100%;
+
+    height: 51px;
+
+    margin-top: 3px;
+
+    border: none;
+
+    border-radius: 11px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            100deg,
+            #348fdf,
+            #55aaff,
+            #3ab8c1
+        );
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 10px 25px rgba(50, 145, 220, 0.25);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.create-account-btn::before {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            110deg,
+            transparent 20%,
+            rgba(255,255,255,0.25) 50%,
+            transparent 80%
+        );
+
+    transform: translateX(-100%);
+
+    transition: transform 0.7s ease;
+}
+
+
+.create-account-btn:hover::before {
+
+    transform: translateX(100%);
+}
+
+
+.create-account-btn:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 14px 30px rgba(50, 145, 220, 0.32);
+}
+
+
+.create-account-btn:active {
+
+    transform: translateY(0);
+}
+
+
+.create-account-btn svg {
+
+    width: 17px;
+
+    transition: transform 0.25s ease;
+}
+
+
+.create-account-btn:hover svg {
+
+    transform: translateX(4px);
+}
+
+
+/* =========================================
+   GOOGLE SECTION
+========================================= */
+
+.alternative-signup {
+
+    margin-top: 22px;
+}
+
+
+.or-divider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 16px;
+}
+
+
+.or-divider span {
+
+    flex: 1;
+
+    height: 1px;
+
+    background: #e1e7ed;
+}
+
+
+.or-divider p {
+
+    color: #9aa7b3;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+}
+
+
+/* =========================================
+   GOOGLE BUTTON
+========================================= */
+
+.google-btn {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    width: 100%;
+
+    height: 48px;
+
+    border: 1px solid #dce4eb;
+
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    color: #344454;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.google-btn:hover {
+
+    border-color: #c5d4e0;
+
+    background: #f8fbfd;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(20, 50, 80, 0.08);
+}
+
+
+.google-icon {
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    border-radius: 50%;
+
+    color: #4285f4;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 15px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================
+   LOGIN
+========================================= */
+
+.login-prompt {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    margin-top: 22px;
+
+    color: #84919e;
+
+    font-size: 11px;
+}
+
+
+.login-prompt a {
+
+    color: #3189dc;
+
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.login-prompt a:hover {
+
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 950px) {
+
+    .signup-page {
+
+        padding: 25px;
+    }
+
+
+    .signup-container {
+
+        grid-template-columns: 36% 64%;
+
+        min-height: 650px;
+    }
+
+
+    .form-panel {
+
+        padding:
+            45px
+            45px;
+    }
+
+
+    .showcase-content {
+
+        padding: 30px;
+    }
+
+
+    .showcase-text h1 {
+
+        font-size: 2rem;
+    }
+
+}
+
+
+/* =========================================
+   TABLET / SMALL SCREEN
+========================================= */
+
+@media (max-width: 720px) {
+
+    .signup-page {
+
+        padding: 15px;
+
+        align-items: flex-start;
+
+        overflow-y: auto;
+    }
+
+
+    .signup-container {
+
+        width: 100%;
+
+        grid-template-columns: 1fr;
+
+        min-height: auto;
+
+        border-radius: 22px;
+    }
+
+
+    .showcase-panel {
+
+        min-height: 260px;
+    }
+
+
+    .showcase-content {
+
+        padding: 25px;
+    }
+
+
+    .showcase-text {
+
+        max-width: 500px;
+    }
+
+
+    .showcase-text h1 {
+
+        font-size: 2rem;
+    }
+
+
+    .showcase-text p {
+
+        font-size: 12px;
+
+        max-width: 420px;
+    }
+
+
+    .showcase-line {
+
+        display: none;
+    }
+
+
+    .form-panel {
+
+        padding:
+            40px
+            25px;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 480px) {
+
+    .signup-page {
+
+        padding: 10px;
+    }
+
+
+    .signup-container {
+
+        border-radius: 18px;
+    }
+
+
+    .showcase-panel {
+
+        min-height: 220px;
+    }
+
+
+    .showcase-content {
+
+        padding: 22px;
+    }
+
+
+    .showcase-logo {
+
+        font-size: 16px;
+    }
+
+
+    .logo-placeholder {
+
+        width: 30px;
+        height: 30px;
+
+        font-size: 12px;
+    }
+
+
+    .showcase-label {
+
+        font-size: 9px;
+    }
+
+
+    .showcase-text h1 {
+
+        font-size: 1.65rem;
+
+        letter-spacing: -1px;
+    }
+
+
+    .showcase-text p {
+
+        font-size: 11px;
+
+        line-height: 1.5;
+    }
+
+
+    .form-panel {
+
+        padding:
+            32px
+            18px;
+    }
+
+
+    .form-header {
+
+        margin-bottom: 24px;
+    }
+
+
+    .form-header h2 {
+
+        font-size: 25px;
+    }
+
+
+    .signup-form {
+
+        gap: 15px;
+    }
+
+
+    .input-wrapper input {
+
+        height: 48px;
+    }
+
+
+    .login-prompt {
+
+        flex-wrap: wrap;
+    }
+
+}
+

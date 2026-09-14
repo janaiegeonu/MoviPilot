@@ -473,6 +473,73 @@ body {
    LEFT SHOWCASE
 ========================================= */
 
+.logo {
+
+    font-size: 23px;
+
+    font-weight: 700;
+
+    letter-spacing: -0.5px;
+
+    position: relative;
+
+    z-index: 2;
+}
+
+
+.logo a {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    color:  rgb(223, 255, 250);
+
+    text-decoration: none;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.logo a .brand-accent {
+    color: rgb(75, 167, 228);
+}
+
+
+
+
+.logo a:hover {
+
+    opacity: 0.9;
+
+    transform: translateY(-1.5px);
+}
+
+
+.logo img {
+
+    width: 36px;
+
+    height: 36px;
+
+    object-fit: contain;
+
+    filter:
+        drop-shadow(
+            0 0 10px
+            rgba(30, 130, 255, 0.35)
+        );
+            transition: transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.logo img:hover {
+        transform: rotate(660deg) scale(1.08);
+}
+
+
 .showcase-panel {
 
     position: relative;
@@ -758,6 +825,57 @@ body {
 
     pointer-events: none;
     border-bottom: 2px solid #ffffff;
+      animation:
+        genreReveal
+        12s
+        infinite
+        ease-in-out;
+}
+
+@keyframes genreReveal {
+
+    0% {
+        opacity: 0;
+
+        transform:
+            translateY(12px);
+    }
+
+    5% {
+        opacity: 0;
+
+        transform:
+            translateY(12px);
+    }
+
+    8% {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+
+    33.33% {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+
+    38.33% {
+        opacity: 0;
+
+        transform:
+            translateY(-6px);
+    }
+
+    100% {
+        opacity: 0;
+
+        transform:
+            translateY(12px);
+    }
+
 }
 
 
@@ -774,6 +892,17 @@ body {
 }
 
 .img-3 {
+    animation-delay: 8s;
+}
+.img-1 .genre-label {
+    animation-delay: 0s;
+}
+
+.img-2 .genre-label {
+    animation-delay: 4s;
+}
+
+.img-3 .genre-label {
     animation-delay: 8s;
 }
 /* Slideshow Animation Matrix */
@@ -1528,6 +1657,13 @@ body {
 
 @media (max-width: 950px) {
 
+    .genre-label {
+    position: absolute;
+
+    left: 70px;
+    bottom: 460px;
+    }
+
     .signup-page {
 
         padding: 25px;
@@ -1624,11 +1760,6 @@ body {
     }
 
 
-    .showcase-line {
-
-        display: none;
-    }
-
 
     .form-panel {
 
@@ -1645,6 +1776,43 @@ body {
 ========================================= */
 
 @media (max-width: 480px) {
+
+    .genre-label {
+    
+    display: none;
+
+    }
+
+    .card-slide img {
+
+    object-fit: cover;
+
+    object-position: center;
+
+    filter:
+        brightness(0.6)
+        saturate(1.05);
+         mask-image: linear-gradient(to bottom, black 7%, transparent 100%);
+  
+     -webkit-mask-image: linear-gradient(to bottom, black 7%, transparent 100%);
+
+}
+
+.showcase-text p {
+    color: rgb(235, 235, 235);
+}
+.showcase-line {
+
+    height: 4px;
+
+    background: #55c9ff;
+
+    box-shadow:
+        0 0 12px rgba(85, 249, 255, 0.856);
+    bottom: 2px;    
+    left: 130px;
+    border-radius: 50px;
+}
 
     .signup-page {
 

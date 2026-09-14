@@ -11,7 +11,8 @@ func main() {
 	http.HandleFunc("/", SplashIntro)
 	http.HandleFunc("/homepage", HomepageHandler)
 	http.HandleFunc("/movie", MovieDetailHandler)
-	http.HandleFunc("/signup",SignupHandler)
+	http.HandleFunc("/signup", SignupHandler)
+	http.HandleFunc("/login", LoginHandler)
 	fmt.Println("server running currently on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

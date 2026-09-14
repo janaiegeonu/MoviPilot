@@ -13,6 +13,7 @@ func main() {
 	http.HandleFunc("/movie", MovieDetailHandler)
 	http.HandleFunc("/signup", SignupHandler)
 	http.HandleFunc("/login", LoginHandler)
+	http.HandleFunc("/forgot-password", ForgotPasswordHandler)
 	fmt.Println("server running currently on http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

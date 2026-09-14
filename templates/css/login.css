@@ -1642,6 +1642,10 @@ body {
 
     .module-cardimg {
         min-height: 200px;
+        height: 410px;
+        transform: translateY(-230px);
+        filter: brightness(2);
+        
     }
 
 
@@ -1681,8 +1685,8 @@ body {
 
 
     .genre-label {
-        left: 17px;
-        bottom: 17px;
+        left: 150px;
+        bottom: 75px;
     }
 
 

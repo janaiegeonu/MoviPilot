@@ -18,6 +18,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/homepage.html",
 		"templates/signup.html",
 		"templates/login.html",
+		"templates/forgot-password.html",
 	)
 	if err != nil {
 		http.Error(
@@ -246,6 +247,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := renderTemplate(w, "login.html", nil)
+	if err != nil {
+		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+		return
+	}
+}
+
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	err := renderTemplate(w, "forgot-password.html", nil)
 	if err != nil {
 		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
 		return

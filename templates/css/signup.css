@@ -905,7 +905,7 @@ body {
 .img-3 .genre-label {
     animation-delay: 8s;
 }
-/* Slideshow Animation Matrix */
+/* Slideshow Animation */
 @keyframes infiniteCardSlider {
     0% {
         opacity: 0;
@@ -982,10 +982,6 @@ body {
     line-height: 1.7;
 }
 
-
-/* =========================================
-   DECORATIVE LINE
-========================================= */
 
 .showcase-line {
 

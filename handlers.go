@@ -12,6 +12,7 @@ import (
 
 const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
 
+
 func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) error {
 	tmpl, err := template.ParseFiles(
 		"templates/splash.html",

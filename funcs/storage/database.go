@@ -7,6 +7,27 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+func RGBG(text string) string {
+
+	G := "\033[32m"
+	reset := "\033[0m"
+	return G + text + reset
+}
+
+func RGBY(text string) string {
+
+	Y := "\033[33m"
+	reset := "\033[0m"
+	return Y + text + reset
+}
+
+func RGBR(text string, err error) string {
+
+	R := "\033[31m"
+	reset := "\033[0m"
+	return R + text + reset
+}
+
 var DB *sql.DB
 
 func InitDatabase() {
@@ -15,15 +36,15 @@ func InitDatabase() {
 
 	DB, err = sql.Open("sqlite", "movipilot.db")
 	if err != nil {
-		log.Fatal("Failed to open database:", err)
+		log.Fatal(RGBR("Failed to open database:", err))
 	}
 
 	err = DB.Ping()
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal(RGBR("Failed to connect to database:", err))
 	}
-
-	log.Println("SQLite database connected successfully")
+	
+	log.Println(RGBG("SQLite database connected successfully"))
 
 	createUsersTable()
 }
@@ -42,8 +63,8 @@ func createUsersTable() {
 
 	_, err := DB.Exec(query)
 	if err != nil {
-		log.Fatal("Failed to create users table:", err)
+		log.Fatal(RGBR("Failed to create users table:", err))
 	}
 
-	log.Println("Users table ready")
+	log.Println(RGBG("Users table ready"))
 }

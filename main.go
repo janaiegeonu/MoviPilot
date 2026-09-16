@@ -1,11 +1,13 @@
 package main
 
 import (
+	"MoviPilot/funcs/storage"
 	"fmt"
 	"net/http"
 )
 
 func main() {
+
 	http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("img"))))
 	http.HandleFunc("/", SplashIntro)
@@ -14,6 +16,8 @@ func main() {
 	http.HandleFunc("/signup", SignupHandler)
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/forgot-password", ForgotPasswordHandler)
-	fmt.Println("server running currently on http://localhost:8080")
+
+	storage.InitDatabase()
+	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)
 }

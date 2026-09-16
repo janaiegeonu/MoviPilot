@@ -195,98 +195,109 @@
 
                         <!-- FULL NAME -->
 
-                        <div class="input-group">
+                       <div class="input-group">
 
-                            <label for="fullname">
-                                Full Name
-                            </label>
+                    <label for="fullname">
+                        Full Name
+                    </label>
 
-                            <div class="input-wrapper">
+                    <div class="input-wrapper {{ if .FullNameError }}has-error{{ end }}">
 
-                                <span class="input-icon">
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                    >
-                                        <path
-                                            d="M20 21C20 17.6863 17.3137 15 14 15H10C6.68629 15 4 17.6863 4 21"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                            stroke-linecap="round"
-                                        />
+                        <span class="input-icon">
+            <svg
+            viewBox="0 0 24 24"
+            fill="none"
+        >
+            <path
+                d="M20 21C20 17.6863 17.3137 15 14 15H10C6.68629 15 4 17.6863 4 21"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+            />
 
-                                        <circle
-                                            cx="12"
-                                            cy="7"
-                                            r="4"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        />
-                                    </svg>
-                                </span>
+            <circle
+                cx="12"
+                cy="7"
+                r="4"
+                stroke="currentColor"
+                stroke-width="1.6"
+            />
+        </svg>                        </span>
 
-                                <input
-                                    type="text"
-                                    id="fullname"
-                                    name="fullname"
-                                    placeholder="Enter your full name"
-                                    autocomplete="name"
-                                    required
-                                >
+                        <input
+                            type="text"
+                            id="fullname"
+                            name="fullname"
+                            placeholder="Enter your full name"
+                            autocomplete="name"
+                            value="{{ .FullName }}"
+                            {{ if .FullNameError }}class="input-error"{{ end }}
+                            required
+                        >
 
-                            </div>
+                    </div>
 
-                        </div>
+                    {{ if .FullNameError }}
+                        <span class="field-error">{{ .FullNameError }}</span>
+                    {{ end }}
+
+                </div>
 
 
 
                         <!-- EMAIL -->
 
-                        <div class="input-group">
+                       <div class="input-group">
 
-                            <label for="email">
-                                Email Address
-                            </label>
+    <label for="email">
+        Email Address
+    </label>
 
-                            <div class="input-wrapper">
+    <div class="input-wrapper {{ if .EmailError }}has-error{{ end }}">
 
-                                <span class="input-icon">
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                    >
-                                        <rect
-                                            x="3"
-                                            y="5"
-                                            width="18"
-                                            height="14"
-                                            rx="2"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        />
+        <span class="input-icon">
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+        >
+            <rect
+                x="3"
+                y="5"
+                width="18"
+                height="14"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.6"
+            />
 
-                                        <path
-                                            d="M3 7L12 13L21 7"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        />
-                                    </svg>
-                                </span>
+            <path
+                d="M3 7L12 13L21 7"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+        </svg>  
+            </span>
 
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    placeholder="you@example.com"
-                                    autocomplete="email"
-                                    required
-                                >
+        <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            autocomplete="email"
+            value="{{ .Email }}"
+            {{ if .EmailError }}class="input-error"{{ end }}
+            required
+        >
 
-                            </div>
+    </div>
 
-                        </div>
+    {{ if .EmailError }}
+        <span class="field-error">{{ .EmailError }}</span>
+    {{ end }}
+
+</div>
 
 
 
@@ -294,150 +305,157 @@
 
                         <div class="input-group">
 
-                            <label for="password">
-                                Password
-                            </label>
+    <label for="password">
+        Password
+    </label>
 
-                            <div class="input-wrapper">
+    <div class="input-wrapper {{ if .PasswordError }}has-error{{ end }}">
 
-                                <span class="input-icon">
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <rect
-                                            x="4"
-                                            y="10"
-                                            width="16"
-                                            height="11"
-                                            rx="2"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        />
+        <span class="input-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+>
+    <rect
+        x="4"
+        y="10"
+        width="16"
+        height="11"
+        rx="2"
+        stroke="currentColor"
+        stroke-width="1.6"
+    />
 
-                                        <path
-                                            d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                            stroke-linecap="round"
-                                        />
+    <path
+        d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+    />
 
-                                    </svg>
-                                </span>
+</svg>        </span>
 
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    placeholder="Create a password"
-                                    autocomplete="new-password"
-                                    required
-                                >
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Create a password"
+            autocomplete="new-password"
+            {{ if .PasswordError }}class="input-error"{{ end }}
+            required
+        >
 
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="password"
-                                    aria-label="Show password"
-                                >
-                                    👁
-                                </button>
+        <button
+            type="button"
+            class="password-toggle"
+            data-target="password"
+            aria-label="Show password"
+        >
+            👁
+        </button>
 
-                            </div>
+    </div>
 
-                        </div>
+    {{ if .PasswordError }}
+        <span class="field-error">{{ .PasswordError }}</span>
+    {{ end }}
 
+</div>
 
 
                         <!-- CONFIRM PASSWORD -->
 
                         <div class="input-group">
 
-                            <label for="confirmPassword">
-                                Confirm Password
-                            </label>
+    <label for="confirmPassword">
+        Confirm Password
+    </label>
 
-                            <div class="input-wrapper">
+    <div class="input-wrapper {{ if .ConfirmPasswordError }}has-error{{ end }}">
 
-                                <span class="input-icon">
-                                  <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <rect
-                                            x="4"
-                                            y="10"
-                                            width="16"
-                                            height="11"
-                                            rx="2"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        />
+        <span class="input-icon">
+  <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+    >
+        <rect
+            x="4"
+            y="10"
+            width="16"
+            height="11"
+            rx="2"
+            stroke="currentColor"
+            stroke-width="1.6"
+        />
 
-                                        <path
-                                            d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                            stroke-linecap="round"
-                                        />
+        <path
+            d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+        />
 
-                                    </svg>
-                                </span>
+    </svg>        </span>
 
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    placeholder="Repeat your password"
-                                    autocomplete="new-password"
-                                    required
-                                >
+        <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            placeholder="Repeat your password"
+            autocomplete="new-password"
+            {{ if .ConfirmPasswordError }}class="input-error"{{ end }}
+            required
+        >
 
-                                <button
-                                    type="button"
-                                    class="password-toggle"
-                                    data-target="confirmPassword"
-                                    aria-label="Show password"
-                                >
-                                    👁
-                                </button>
+        <button
+            type="button"
+            class="password-toggle"
+            data-target="confirmPassword"
+            aria-label="Show password"
+        >
+            👁
+        </button>
 
-                            </div>
+    </div>
 
-                        </div>
+    {{ if .ConfirmPasswordError }}
+        <span class="field-error">{{ .ConfirmPasswordError }}</span>
+    {{ end }}
 
+</div>
 
 
                         <!-- TERMS -->
 
-                        <label class="terms">
+                        <div class="terms-group {{ if .TermsError }}has-error{{ end }}">
 
-                            <input
-                                type="checkbox"
-                                name="terms"
-                                required
-                            >
+    <label class="terms">
 
-                            <span class="custom-checkbox"></span>
+        <input
+            type="checkbox"
+            name="terms"
+            {{ if .TermsAccepted }}checked{{ end }}
+            required
+        >
 
-                            <span class="terms-text">
+        <span class="custom-checkbox"></span>
 
-                                I agree to the
-                                <a href="#">
-                                    Terms of Service
-                                </a>
+        <span class="terms-text">
+            I agree to the
+            <a href="#">Terms of Service</a>
+            and
+            <a href="#">Privacy Policy</a>
+        </span>
 
-                                and
+    </label>
 
-                                <a href="#">
-                                    Privacy Policy
-                                </a>
+    {{ if .TermsError }}
+        <span class="field-error terms-error">{{ .TermsError }}</span>
+    {{ end }}
 
-                            </span>
-
-                        </label>
+</div>
 
 
 

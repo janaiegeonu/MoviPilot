@@ -2,6 +2,7 @@ package main
 
 import (
 	"MoviPilot/funcs/API"
+	"MoviPilot/funcs/form"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 )
 
 const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
-
 
 func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) error {
 	tmpl, err := template.ParseFiles(
@@ -228,14 +228,88 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
+	err := renderTemplate(w, "signup.html", nil)
+	if err != nil {
+		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+		return
+	}
+
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	err := renderTemplate(w, "signup.html", nil)
+	type SignupPageData struct {
+		FullName             string
+		Email                string
+		FullNameError        string
+		EmailError           string
+		PasswordError        string
+		ConfirmPasswordError string
+		TermsError           string
+		TermsAccepted        bool
+	}
+
+	fullName := r.FormValue("fullname")
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	confirmPassword := r.FormValue("confirmPassword")
+	terms := r.FormValue("terms")
+
+	var data SignupPageData
+	var hasError bool
+
+	// NAME
+	validName, err := form.ValidateName(fullName)
+
 	if err != nil {
-		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+		data.FullName = fullName
+		data.FullNameError = err.Error()
+		hasError = true
+	} else {
+		data.FullName = validName
+	}
+
+	// EMAIL
+	validEmail, err := form.ValidateEmail(email)
+
+	if err != nil {
+		data.Email = email
+		data.EmailError = err.Error()
+		hasError = true
+	} else {
+		data.Email = validEmail
+	}
+
+	// PASSWORD
+	_, err = form.ValidatePassword(password)
+
+	if err != nil {
+		data.PasswordError = err.Error()
+		hasError = true
+	}
+
+	// CONFIRM PASSWORD
+	err = form.ValidatePasswordMatch(password, confirmPassword)
+
+	if err != nil {
+		data.ConfirmPasswordError = err.Error()
+		hasError = true
+	}
+
+	// TERMS
+	err = form.ValidateTerms(terms)
+
+	if err != nil {
+		data.TermsError = err.Error()
+		hasError = true
+	} else {
+		data.TermsAccepted = true
+	}
+
+	// STOP HERE IF VALIDATION FAILED
+	if hasError {
+		renderTemplate(w, "signup.html", data)
 		return
 	}
 }

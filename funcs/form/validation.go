@@ -79,3 +79,22 @@ func ValidatePassword(text string) (string, error) {
 
 	return text, nil
 }
+
+// password confirmation
+
+func ValidatePasswordMatch(password string, confirmPassword string) error {
+	if password != confirmPassword {
+		return errors.New("passwords do not match")
+	}
+
+	return nil
+}
+
+// Accepting form Terms of service
+func ValidateTerms(terms string) error {
+	if terms == "" {
+		return errors.New("you must accept the terms of service")
+	}
+
+	return nil
+}

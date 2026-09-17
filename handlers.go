@@ -228,12 +228,19 @@ func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
-	err := renderTemplate(w, "signup.html", nil)
-	if err != nil {
-		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+	// GET → show signup page
+	if r.Method == http.MethodGet {
+		err := renderTemplate(w, "signup.html", nil)
+
+		if err != nil {
+			http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+			return
+		}
+
 		return
 	}
 
+	// Only POST is allowed after this point
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -309,9 +316,16 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	// STOP HERE IF VALIDATION FAILED
 	if hasError {
-		renderTemplate(w, "signup.html", data)
+		err := renderTemplate(w, "signup.html", data)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render signup page", http.StatusInternalServerError)
+		}
+
 		return
 	}
+
+	// If we reach here, every field passed validation.
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {

@@ -1653,22 +1653,16 @@ body {
 
 .field-error {
 
-    display: block;
-
-    margin-top: 0;
-
+  display: block;
+    margin-top: 6px;
     padding-left: 2px;
 
     color: #e05252;
-
     font-size: 10px;
-
     font-weight: 600;
-
     line-height: 1.3;
 
     opacity: 1;
-
     transform: translateY(0);
 
     animation:

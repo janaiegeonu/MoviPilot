@@ -54,13 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 
-
     // =====================================
-    // PASSWORD MATCH CHECK
+    // PRESERVE PASSWORD DURING VALIDATION
     // =====================================
-
-    const signupForm =
-        document.getElementById("signupForm");
 
     const password =
         document.getElementById("password");
@@ -68,77 +64,66 @@ document.addEventListener("DOMContentLoaded", () => {
     const confirmPassword =
         document.getElementById("confirmPassword");
 
-
-    /*
-        Make sure all elements actually exist
-        before trying to use them.
-    */
-
-    if (
-        signupForm &&
-        password &&
-        confirmPassword
-    ) {
-
-        signupForm.addEventListener(
-            "submit",
-            (event) => {
-
-                if (
-                    password.value !==
-                    confirmPassword.value
-                ) {
-
-                    event.preventDefault();
-
-                    confirmPassword.focus();
-
-                    confirmPassword.style.borderColor =
-                        "#e45d6a";
-
-                    confirmPassword.style.boxShadow =
-                        "0 0 0 3px rgba(228, 93, 106, 0.10)";
-
-                    return;
-                }
+    const signupForm =
+        document.getElementById("signupForm");
 
 
-                confirmPassword.style.borderColor =
-                    "";
+    // Restore saved password
+    // after the page is re-rendered.
 
-                confirmPassword.style.boxShadow =
-                    "";
+    if (password) {
 
-            }
-        );
+        const savedPassword =
+            sessionStorage.getItem("movipilotPassword");
 
-
-        // =================================
-        // REMOVE ERROR WHILE TYPING
-        // =================================
-
-        confirmPassword.addEventListener(
-            "input",
-            () => {
-
-                if (
-                    password.value ===
-                    confirmPassword.value
-                ) {
-
-                    confirmPassword.style.borderColor =
-                        "";
-
-                    confirmPassword.style.boxShadow =
-                        "";
-
-                }
-
-            }
-        );
-
+        if (savedPassword) {
+            password.value = savedPassword;
+        }
     }
 
+
+    // Restore saved confirm password
+
+    if (confirmPassword) {
+
+        const savedConfirmPassword =
+            sessionStorage.getItem("movipilotConfirmPassword");
+
+        if (savedConfirmPassword) {
+            confirmPassword.value =
+                savedConfirmPassword;
+        }
+    }
+
+
+    // Save password before normal form submission
+
+    if (signupForm) {
+
+        signupForm.addEventListener("submit", () => {
+
+            if (password) {
+
+                sessionStorage.setItem(
+                    "movipilotPassword",
+                    password.value
+                );
+
+            }
+
+
+            if (confirmPassword) {
+
+                sessionStorage.setItem(
+                    "movipilotConfirmPassword",
+                    confirmPassword.value
+                );
+
+            }
+
+        });
+
+    }
 
 
     // =====================================

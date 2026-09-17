@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
+    
 
     // =====================================
     // PRESERVE PASSWORD DURING VALIDATION

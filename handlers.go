@@ -2,13 +2,18 @@ package main
 
 import (
 	"MoviPilot/funcs/API"
+	"MoviPilot/funcs/auth"
 	"MoviPilot/funcs/form"
+	"MoviPilot/funcs/storage"
+	"database/sql"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 
 	"github.com/benlei/go-tmdb/v2"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
@@ -288,6 +293,22 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		data.Email = validEmail
 	}
 
+	// checking if email already exist in database
+	exists, err := storage.EmailExists(email)
+
+	if err != nil {
+		http.Error(w, "Unable to check email", http.StatusInternalServerError)
+		return
+	}
+
+	if exists {
+		data.Email = email
+		data.EmailError = "Email already registered to MoviPilot"
+		hasError = true
+	} else {
+		data.Email = validEmail
+	}
+
 	// PASSWORD
 	_, err = form.ValidatePassword(password)
 
@@ -325,21 +346,126 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// If we reach here, every field passed validation.
+	hashedPassword, err := auth.HashPassword(password)
+	if err != nil {
+		http.Error(w, "Unable to process password", http.StatusInternalServerError)
+		return
+	}
+
+	user := storage.User{
+		FullName:     fullName,
+		Email:        email,
+		PasswordHash: hashedPassword,
+	}
+
+	err = storage.CreateUser(user)
+	if err != nil {
+		http.Error(w, "Unable to create account", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+
+}
+
+type LoginPageData struct {
+	Email          string
+	PasswordError  string
+	EmailError     string
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	if r.Method == http.MethodGet {
+		err := renderTemplate(w, "login.html", nil)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render login page", http.StatusInternalServerError)
+		}
+
 		return
 	}
 
-	err := renderTemplate(w, "login.html", nil)
-	if err != nil {
-		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	var data LoginPageData
+	var hasError bool
+
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	// EMAIL
+	if email == "" {
+		data.EmailError = "Email is required"
+		hasError = true
+	} else {
+		data.Email = email
+	}
+
+	// PASSWORD
+	if password == "" {
+		data.PasswordError = "Password is required"
+		hasError = true
+	}
+
+	// STOP HERE IF FORM VALIDATION FAILED
+	if hasError {
+		err := renderTemplate(w, "login.html", data)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render login page", http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// FIND USER BY EMAIL
+	user, err := storage.GetUserByEmail(email)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			data.Email = email
+			data.PasswordError = "Invalid email or password"
+
+			err := renderTemplate(w, "login.html", data)
+
+			if err != nil {
+				http.Error(w, "500 : Failed to render login page", http.StatusInternalServerError)
+			}
+
+			return
+		}
+
+		http.Error(w, "500 : Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// CHECK PASSWORD
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(user.PasswordHash),
+		[]byte(password),
+	)
+
+	if err != nil {
+		data.Email = email
+		data.PasswordError = "Invalid email or password"
+
+		err := renderTemplate(w, "login.html", data)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render login page", http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	// Password is correct.
+	// Session creation will come next.
+
+	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {

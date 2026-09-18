@@ -1448,6 +1448,128 @@ body {
 }
 
 
+/* =========================================
+   VALIDATION ERRORS
+========================================= */
+
+.field-error {
+
+  display: block;
+    margin-top: 6px;
+    padding-left: 2px;
+
+    color: #e05252;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    opacity: 1;
+    transform: translateY(0);
+
+    animation:
+        error-enter 0.35s ease-out,
+        error-sink 0.7s ease-in 4s forwards;
+}
+
+
+/* =========================================
+   ERROR INPUT
+========================================= */
+
+.input-wrapper.has-error input {
+
+    border-color: #e05252;
+
+    background: #fffafa;
+
+    box-shadow:
+        0 0 0 3px rgba(224, 82, 82, 0.08);
+
+    animation:
+        input-shake 0.42s cubic-bezier(.36, .07, .19, .97);
+}
+
+
+/* =========================================
+   ERROR ICON
+========================================= */
+
+.input-wrapper.has-error .input-icon {
+
+    color: #e05252;
+}
+
+
+/* =========================================
+   ERROR ENTER
+========================================= */
+
+@keyframes error-enter {
+
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================================
+   ERROR SINK
+========================================= */
+
+@keyframes error-sink {
+
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(7px);
+    }
+}
+
+
+/* =========================================
+   INPUT SHAKE
+========================================= */
+
+@keyframes input-shake {
+
+    0% {
+        transform: translateX(0);
+    }
+
+    15% {
+        transform: translateX(-7px);
+    }
+
+    30% {
+        transform: translateX(6px);
+    }
+
+    45% {
+        transform: translateX(-5px);
+    }
+
+    60% {
+        transform: translateX(4px);
+    }
+
+    75% {
+        transform: translateX(-2px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
 /* =========================================================
    TABLET
    ========================================================= */

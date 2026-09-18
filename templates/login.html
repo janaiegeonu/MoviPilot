@@ -223,7 +223,7 @@
                                 Email address
                             </label>
 
-                            <div class="input-wrapper">
+                            <div class="input-wrapper {{ if .EmailError }}has-error{{ end }}">
 
                                 <!-- Email Icon -->
 
@@ -258,12 +258,17 @@
                                     type="email"
                                     id="email"
                                     name="email"
-                                    placeholder="Enter your email"
+                                    placeholder="Enter your email.."
                                     autocomplete="email"
+                                      value="{{ .Email }}"
+                                      {{ if .EmailError }}class="input-error"{{ end }}
                                     required
                                 >
 
                             </div>
+                        {{ if .EmailError }}
+                        <span class="field-error">{{ .EmailError }}</span>
+                    {{ end }}
 
                         </div>
 
@@ -271,7 +276,7 @@
 
                         <!-- Password -->
 
-                        <div class="input-group">
+                        <div class="input-group {{ if .PasswordError }}has-error{{ end }}">
 
                             <div class="label-row">
 
@@ -406,6 +411,12 @@
                                 </button>
 
                             </div>
+
+                        {{ if .PasswordError }}
+                        <span class="field-error">{{ .PasswordError }}</span>
+                    {{ end }}
+
+
 
                         </div>
 

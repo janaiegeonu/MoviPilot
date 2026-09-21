@@ -20,4 +20,5 @@ func main() {
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)
+
 }

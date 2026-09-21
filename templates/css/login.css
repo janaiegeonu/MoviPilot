@@ -1024,7 +1024,7 @@ body {
 
     font-family: inherit;
 
-    font-size: 12px;
+    font-size: 13.5px;
 
     transition:
         border-color 0.25s ease,
@@ -1035,6 +1035,7 @@ body {
 
 .input-wrapper input::placeholder {
     color: #a6b0bb;
+    font-size: 12px
 }
 
 

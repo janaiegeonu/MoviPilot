@@ -14,3 +14,5 @@ func HashPassword(password string) (string, error) {
 
 	return string(hash), nil
 }
+
+

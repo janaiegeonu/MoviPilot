@@ -369,9 +369,9 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type LoginPageData struct {
-	Email          string
-	PasswordError  string
-	EmailError     string
+	Email         string
+	PasswordError string
+	EmailError    string
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -468,16 +468,61 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
+type Forgetdata struct {
+	Email       string
+	EmailError  string
+	EmailError1 string
+}
+
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	if r.Method == http.MethodGet {
+		err := renderTemplate(w, "forgot-password.html", nil)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render forgot-password page", http.StatusInternalServerError)
+		}
+
 		return
 	}
 
-	err := renderTemplate(w, "forgot-password.html", nil)
-	if err != nil {
-		http.Error(w, "404 : Page Not Found", http.StatusNotFound)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	var data Forgetdata
+	var hasError bool
+	var empty bool
+
+	email := r.FormValue("email")
+
+	if email == "" {
+		data.EmailError1 = "Email is required"
+		hasError = true
+		empty = true
+	}
+
+	exists, _ := storage.EmailExists(email)
+
+	if !exists && !empty {
+		data.Email = email
+		data.EmailError = "Email not registered to MoviPilot"
+		hasError = true
+	}
+
+	if hasError {
+		err := renderTemplate(w, "forgot-password.html", data)
+
+		if err != nil {
+			http.Error(w, "500 : Failed to render forgot-password page", http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	if exists {
+
+		VerCode := auth.GenerateNumericCode()
+	}
+
 }

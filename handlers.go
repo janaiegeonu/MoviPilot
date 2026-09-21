@@ -5,15 +5,19 @@ import (
 	"MoviPilot/funcs/auth"
 	"MoviPilot/funcs/form"
 	"MoviPilot/funcs/storage"
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/benlei/go-tmdb/v2"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/mail.v2"
 )
 
 const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
@@ -502,7 +506,12 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		empty = true
 	}
 
-	exists, _ := storage.EmailExists(email)
+	exists, err := storage.EmailExists(email)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to check email", http.StatusInternalServerError)
+		return
+	}
 
 	if !exists && !empty {
 		data.Email = email
@@ -520,9 +529,94 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if exists {
+	verificationCode := auth.GenerateNumericCode()
 
-		VerCode := auth.GenerateNumericCode()
+	if verificationCode == "" {
+		http.Error(w, "500 : Failed to generate verification code", http.StatusInternalServerError)
+		return
 	}
 
+	hashedCode, err := bcrypt.GenerateFromPassword(
+		[]byte(verificationCode),
+		bcrypt.DefaultCost,
+	)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to secure verification code", http.StatusInternalServerError)
+		return
+	}
+	expiresAt := time.Now().Add(10 * time.Minute)
+
+	err = storage.SavePasswordResetCode(
+		email,
+		string(hashedCode),
+		expiresAt,
+	)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to save verification code", http.StatusInternalServerError)
+		return
+	}
+
+	type PasswordResetEmailData struct {
+		Code string
+	}
+
+	// PREPARE EMAIL
+	emailData := PasswordResetEmailData{
+		Code: verificationCode,
+	}
+
+	tmpl, err := template.ParseFiles(
+		"templates/emailcode.html",
+	)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to load email template", http.StatusInternalServerError)
+		return
+	}
+
+	var bodyBuffer bytes.Buffer
+
+	err = tmpl.Execute(&bodyBuffer, emailData)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to create email", http.StatusInternalServerError)
+		return
+	}
+
+	//sending code to mail
+	m := mail.NewMessage()
+
+	m.SetAddressHeader(
+		"From",
+		os.Getenv("BREVO_SENDER_EMAIL"),
+		os.Getenv("BREVO_SENDER_NAME"),
+	)
+	m.SetHeader("To", email)
+	m.SetHeader("Subject", "MoviPilot Password Reset Code")
+
+	m.SetBody(
+		"text/html",
+		bodyBuffer.String(),
+	)
+	port, err := strconv.Atoi(os.Getenv("BREVO_SMTP_PORT"))
+
+	if err != nil {
+		http.Error(w, "Invalid SMTP port", http.StatusInternalServerError)
+		return
+	}
+
+	d := mail.NewDialer(
+		os.Getenv("BREVO_SMTP_HOST"),
+		port,
+		os.Getenv("BREVO_SMTP_LOGIN"),
+		os.Getenv("BREVO_SMTP_KEY"),
+	)
+	err = d.DialAndSend(m)
+
+	if err != nil {
+		http.Error(w, "500 : Failed to send verification email", http.StatusInternalServerError)
+		return
+	}
 }

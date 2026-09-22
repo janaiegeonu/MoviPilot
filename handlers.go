@@ -554,7 +554,13 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "500 : Failed to save verification code", http.StatusInternalServerError)
+		fmt.Println("SAVE PASSWORD RESET CODE ERROR:", err)
+
+		http.Error(
+			w,
+			"500 : Failed to save verification code",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
@@ -594,7 +600,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		os.Getenv("BREVO_SENDER_NAME"),
 	)
 	m.SetHeader("To", email)
-	m.SetHeader("Subject", "MoviPilot Password Reset Code")
+	m.SetHeader("Subject", "MoviPilot Verification Code")
 
 	m.SetBody(
 		"text/html",
@@ -616,7 +622,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	err = d.DialAndSend(m)
 
 	if err != nil {
+		fmt.Println("EMAIL ERROR:", err)
 		http.Error(w, "500 : Failed to send verification email", http.StatusInternalServerError)
 		return
 	}
+
 }

@@ -43,10 +43,11 @@ func InitDatabase() {
 	if err != nil {
 		log.Fatal(RGBR("Failed to connect to database:", err))
 	}
-	
+
 	log.Println(RGBG("SQLite database connected successfully"))
 
 	createUsersTable()
+	createPasswordResetCodesTable()
 }
 
 func createUsersTable() {
@@ -67,4 +68,23 @@ func createUsersTable() {
 	}
 
 	log.Println(RGBG("Users table ready"))
+}
+
+func createPasswordResetCodesTable() {
+
+	query := `
+	CREATE TABLE IF NOT EXISTS password_reset_codes (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		email TEXT NOT NULL,
+		code_hash TEXT NOT NULL,
+		expires_at DATETIME NOT NULL
+	);
+	`
+
+	_, err := DB.Exec(query)
+	if err != nil {
+		log.Fatal(RGBR("Failed to create password reset codes table:", err))
+	}
+
+	log.Println(RGBG("Password reset codes table ready"))
 }

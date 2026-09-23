@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>MoviPilot | Verify Email</title>
+
+    <link
+        rel="icon"
+        href="/img/logo favicon.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/templates/css/verifycode.css?v=1"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         CINEMATIC BACKGROUND
+         ===================================================== -->
+
+    <div class="home-background">
+
+        <div class="ambient-glow glow-one"></div>
+
+        <div class="ambient-glow glow-two"></div>
+
+        <div class="ambient-glow glow-three"></div>
+
+        <canvas id="particleCanvas"></canvas>
+
+        <div class="light-streak streak-one"></div>
+
+        <div class="light-streak streak-two"></div>
+
+        <div class="cinematic-overlay"></div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         VERIFICATION PAGE
+         ===================================================== -->
+
+    <main class="verification-page">
+
+
+        <!-- =================================================
+             MAIN TWO-CARD CONTAINER
+             ================================================= -->
+
+        <section class="verification-container">
+
+
+            <!-- =============================================
+                 LEFT FORM CARD
+                 ============================================= -->
+
+            <div class="verification-form-card">
+
+
+                <!-- Brand -->
+                <a
+                    href="/homepage"
+                    class="verification-brand"
+                >
+
+                    <img
+                        src="/img/logo favicon.png"
+                        alt="MoviPilot"
+                    >
+
+                    <span>
+                        Movi<span>Pilot</span>
+                    </span>
+
+                </a>
+
+
+
+                <!-- Header -->
+                <div class="verification-header">
+
+                    <div class="verification-icon">
+
+                        <!-- Shield / verification icon -->
+
+                        <svg
+                            viewBox="0 0 64 64"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M32 7L52 14V29C52 42.5 43.5 53.5 32 58C20.5 53.5 12 42.5 12 29V14L32 7Z"
+                                class="shield-shape"
+                            />
+
+                            <path
+                                d="M22 32L28.5 38.5L42.5 24"
+                                class="shield-check"
+                            />
+
+                        </svg>
+
+                    </div>
+
+
+                    <span class="verification-eyebrow">
+                        EMAIL VERIFICATION
+                    </span>
+
+
+                    <h1>
+                        Verify your email
+                    </h1>
+
+
+                    <p>
+                        We've sent a 6-digit verification code
+                        to your email address.
+                    </p>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     EMAIL INFORMATION
+                     ========================================= -->
+
+                <div class="verification-email">
+
+                    <span class="email-label">
+                        CODE SENT TO
+                    </span>
+                    <strong>
+                        {{ .Email }}
+                    </strong>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     VERIFICATION FORM
+                     ========================================= -->
+
+                <form
+                    action="/verify-code"
+                    method="POST"
+                    id="verificationForm"
+                    novalidate
+                >
+
+
+                    <!-- Hidden value that stores
+                         the complete code -->
+
+                    <input
+                        type="hidden"
+                        name="verification_code"
+                        id="verificationCode"
+                    >
+
+
+
+                    <!-- OTP INPUTS -->
+
+                    <div
+                        class="code-input-wrapper"
+                        id="codeInputWrapper"
+                    >
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            maxlength="1"
+                            aria-label="Verification digit 1"
+                            data-index="0"
+                        >
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            aria-label="Verification digit 2"
+                            data-index="1"
+                        >
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            aria-label="Verification digit 3"
+                            data-index="2"
+                        >
+
+                        <span class="code-divider"></span>
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            aria-label="Verification digit 4"
+                            data-index="3"
+                        >
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            aria-label="Verification digit 5"
+                            data-index="4"
+                        >
+
+                        <input
+                            class="code-input"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="1"
+                            aria-label="Verification digit 6"
+                            data-index="5"
+                        >
+
+                    </div>
+
+
+
+                    <!-- Error message -->
+
+                    <div
+                        class="verification-error"
+                        id="verificationError"
+                        role="alert"
+                    >
+                        <span class="error-icon">!</span>
+
+                        <span id="verificationErrorText">
+                            Please enter the 6-digit verification code.
+                        </span>
+                    </div>
+
+
+
+                    <!-- RESEND -->
+
+                    <div class="resend-section">
+
+                        <span>
+                            Didn't receive the code?
+                        </span>
+
+                        <button
+                            type="button"
+                            id="resendCode"
+                            class="resend-button"
+                        >
+                            Resend code
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- VERIFY BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="verify-button"
+                        id="verifyButton"
+                        disabled
+                    >
+
+                        <span class="verify-button-text">
+                            Verify email
+                        </span>
+
+                        <span
+                            class="verify-button-loader"
+                            aria-hidden="true"
+                        ></span>
+
+                        <svg
+                            class="verify-arrow"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M5 12H19"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M13 6L19 12L13 18"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                        </svg>
+
+                    </button>
+
+                </form>
+
+
+
+                <!-- BACK TO LOGIN -->
+
+                <a
+                    href="/login"
+                    class="back-login"
+                >
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+
+                        <path
+                            d="M19 12H5"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M11 18L5 12L11 6"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                    </svg>
+
+                    Back to login
+
+                </a>
+
+
+
+                <!-- SECURITY NOTE -->
+
+                <div class="security-note">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+
+                        <path
+                            d="M12 3L19 6V11.5C19 16.2 16.1 20.2 12 21C7.9 20.2 5 16.2 5 11.5V6L12 3Z"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                        />
+
+                        <path
+                            d="M9.5 12L11.2 13.7L14.8 10"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                    </svg>
+
+                    <span>
+                        Your verification code is private.
+                        Never share it with anyone.
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+
+            <!-- =============================================
+                 RIGHT IMAGE CARD
+                 ============================================= -->
+
+            <div class="verification-image-card">
+
+
+                <!--
+                    =================================================
+                    IMAGE PLACEHOLDER
+
+                    =================================================
+                -->
+
+
+                <div class="image-placeholder">
+
+                    <div class="placeholder-content">
+
+                        <div class="placeholder-icon">
+
+                            <svg
+                                viewBox="0 0 64 64"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+
+                                <rect
+                                    x="10"
+                                    y="14"
+                                    width="44"
+                                    height="36"
+                                    rx="7"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                />
+
+                                <circle
+                                    cx="24"
+                                    cy="27"
+                                    r="4"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                />
+
+                                <path
+                                    d="M12 44L26 34L35 41L41 36L54 46"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+
+                            </svg>
+
+                        </div>
+
+
+                        <span>
+                            YOUR IMAGE GOES HERE
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Image overlay -->
+
+                <div class="image-overlay"></div>
+
+
+                <!-- Decorative content -->
+
+                <div class="image-card-content">
+
+                    <span class="image-eyebrow">
+                        YOUR MOVIE JOURNEY
+                    </span>
+
+                    <h2>
+                        One more step
+                        <span>before the show begins.</span>
+                    </h2>
+
+                    <p>
+                        Verify your email and continue
+                        exploring movies picked for you.
+                    </p>
+
+                </div>
+
+
+                <!-- Decorative lines -->
+
+                <div class="image-decoration decoration-one"></div>
+
+                <div class="image-decoration decoration-two"></div>
+
+                <div class="image-orb orb-one"></div>
+
+                <div class="image-orb orb-two"></div>
+
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+
+
+    <!-- Background animation -->
+
+    <script src="/templates/js/homepage_bg.js"></script>
+
+    <!-- Verification interaction -->
+
+    <script src="/templates/js/verification.js"></script>
+
+
+</body>
+
+</html>

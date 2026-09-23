@@ -7,6 +7,7 @@ import (
 	"MoviPilot/funcs/storage"
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -29,6 +30,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/signup.html",
 		"templates/login.html",
 		"templates/forgot-password.html",
+		"templates/verifycode.html",
 	)
 	if err != nil {
 		http.Error(
@@ -472,69 +474,99 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
-type Forgetdata struct {
-	Email       string
-	EmailError  string
-	EmailError1 string
-}
-
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
+
 		err := renderTemplate(w, "forgot-password.html", nil)
 
 		if err != nil {
-			http.Error(w, "500 : Failed to render forgot-password page", http.StatusInternalServerError)
+			http.Error(
+				w,
+				"500 : Failed to render forgot-password page",
+				http.StatusInternalServerError,
+			)
 		}
 
 		return
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(
+			w,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
+		)
 		return
 	}
-	var data Forgetdata
-	var hasError bool
-	var empty bool
+
+	// We are returning JSON for POST requests.
+	w.Header().Set("Content-Type", "application/json")
 
 	email := r.FormValue("email")
 
+	// 1. CHECK EMPTY EMAIL
+
 	if email == "" {
-		data.EmailError1 = "Email is required"
-		hasError = true
-		empty = true
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"field":   "email",
+			"error":   "Email is required",
+		})
+
+		return
 	}
+
+	// 2. CHECK IF EMAIL EXISTS
 
 	exists, err := storage.EmailExists(email)
 
 	if err != nil {
-		http.Error(w, "500 : Failed to check email", http.StatusInternalServerError)
-		return
-	}
 
-	if !exists && !empty {
-		data.Email = email
-		data.EmailError = "Email not registered to MoviPilot"
-		hasError = true
-	}
-
-	if hasError {
-		err := renderTemplate(w, "forgot-password.html", data)
-
-		if err != nil {
-			http.Error(w, "500 : Failed to render forgot-password page", http.StatusInternalServerError)
-		}
+		http.Error(
+			w,
+			"500 : Failed to check email",
+			http.StatusInternalServerError,
+		)
 
 		return
 	}
+
+	// 3. EMAIL DOES NOT EXIST
+
+	if !exists {
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"field":   "email",
+			"error":   "Email not registered to MoviPilot",
+		})
+
+		return
+	}
+
+	// 4. EMAIL EXISTS
+	// Only now do we generate and send the verification code.
 
 	verificationCode := auth.GenerateNumericCode()
 
 	if verificationCode == "" {
-		http.Error(w, "500 : Failed to generate verification code", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"500 : Failed to generate verification code",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
+
+	// 5. HASH VERIFICATION CODE
 
 	hashedCode, err := bcrypt.GenerateFromPassword(
 		[]byte(verificationCode),
@@ -542,10 +574,19 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "500 : Failed to secure verification code", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"500 : Failed to secure verification code",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
+
 	expiresAt := time.Now().Add(10 * time.Minute)
+
+	// 6. SAVE CODE TO DATABASE
 
 	err = storage.SavePasswordResetCode(
 		email,
@@ -554,21 +595,27 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		fmt.Println("SAVE PASSWORD RESET CODE ERROR:", err)
+
+		fmt.Println(
+			"SAVE PASSWORD RESET CODE ERROR:",
+			err,
+		)
 
 		http.Error(
 			w,
 			"500 : Failed to save verification code",
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
+
+	// 7. PREPARE EMAIL
 
 	type PasswordResetEmailData struct {
 		Code string
 	}
 
-	// PREPARE EMAIL
 	emailData := PasswordResetEmailData{
 		Code: verificationCode,
 	}
@@ -578,20 +625,36 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		http.Error(w, "500 : Failed to load email template", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"500 : Failed to load email template",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
 	var bodyBuffer bytes.Buffer
 
-	err = tmpl.Execute(&bodyBuffer, emailData)
+	err = tmpl.Execute(
+		&bodyBuffer,
+		emailData,
+	)
 
 	if err != nil {
-		http.Error(w, "500 : Failed to create email", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"500 : Failed to create email",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
-	//sending code to mail
+	// 8. CREATE EMAIL
+
 	m := mail.NewMessage()
 
 	m.SetAddressHeader(
@@ -599,17 +662,36 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		os.Getenv("BREVO_SENDER_EMAIL"),
 		os.Getenv("BREVO_SENDER_NAME"),
 	)
-	m.SetHeader("To", email)
-	m.SetHeader("Subject", "MoviPilot Verification Code")
+
+	m.SetHeader(
+		"To",
+		email,
+	)
+
+	m.SetHeader(
+		"Subject",
+		"MoviPilot Verification Code",
+	)
 
 	m.SetBody(
 		"text/html",
 		bodyBuffer.String(),
 	)
-	port, err := strconv.Atoi(os.Getenv("BREVO_SMTP_PORT"))
+
+	// 9. SMTP
+
+	port, err := strconv.Atoi(
+		os.Getenv("BREVO_SMTP_PORT"),
+	)
 
 	if err != nil {
-		http.Error(w, "Invalid SMTP port", http.StatusInternalServerError)
+
+		http.Error(
+			w,
+			"Invalid SMTP port",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
@@ -619,12 +701,59 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		os.Getenv("BREVO_SMTP_LOGIN"),
 		os.Getenv("BREVO_SMTP_KEY"),
 	)
+
+	// 10. SEND EMAIL
+
 	err = d.DialAndSend(m)
 
 	if err != nil {
-		fmt.Println("EMAIL ERROR:", err)
-		http.Error(w, "500 : Failed to send verification email", http.StatusInternalServerError)
+
+		fmt.Println(
+			"EMAIL ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"500 : Failed to send verification email",
+			http.StatusInternalServerError,
+		)
+
 		return
 	}
 
+	// 11. SUCCESS
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+	})
+
+	http.Redirect(w, r, "/verify-code", http.StatusSeeOther)
+}
+
+func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodGet {
+
+		err := renderTemplate(w, "verifycode.html", nil)
+
+		if err != nil {
+			http.Error(
+				w,
+				"500 : Failed to render verifycode page",
+				http.StatusInternalServerError,
+			)
+		}
+
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(
+			w,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
+		)
+		return
+	}
 }

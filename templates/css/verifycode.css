@@ -176,7 +176,8 @@ a {
 
 .verification-container {
     width: min(1060px, 100%);
-    min-height: 610px;
+    height: 650px;
+    min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 47%) minmax(0, 53%);
     overflow: hidden;
@@ -204,7 +205,7 @@ a {
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 42px 48px 34px;
+    padding: 32px 46px 24px;
     background:
         linear-gradient(180deg, rgba(11, 29, 55, 0.97), rgba(4, 14, 29, 0.97));
 }
@@ -278,15 +279,15 @@ a {
 .verification-header {
     position: relative;
     z-index: 2;
-    margin-top: 48px;
+    margin-top: 26px;
 }
 
 .verification-icon {
-    width: 66px;
-    height: 66px;
+    width: 58px;
+    height: 58px;
     display: grid;
     place-items: center;
-    margin-bottom: 22px;
+    margin-bottom: 16px;
     border: 1px solid rgba(81, 168, 255, 0.22);
     border-radius: 20px;
     background: rgba(22, 65, 112, 0.21);
@@ -297,8 +298,8 @@ a {
 }
 
 .verification-icon svg {
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
 }
 
 .shield-shape {
@@ -336,7 +337,7 @@ a {
 
 .verification-header p {
     max-width: 420px;
-    margin-top: 15px;
+    margin-top: 10px;
     color: rgba(222, 233, 248, 0.67);
     font-size: 14px;
     line-height: 1.75;
@@ -350,8 +351,8 @@ a {
 .verification-email {
     position: relative;
     z-index: 2;
-    margin-top: 24px;
-    padding: 13px 15px;
+    margin-top: 16px;
+    padding: 11px 14px;
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.035);
@@ -384,13 +385,13 @@ a {
 #verificationForm {
     position: relative;
     z-index: 2;
-    margin-top: 27px;
+    margin-top: 18px;
 }
 
 .code-input-wrapper {
     position: relative;
     width: 100%;
-    height: 76px;
+    height: 70px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -471,19 +472,24 @@ a {
     z-index: 4;
     left: 50%;
     top: 50%;
-    width: 0;
-    height: 0;
+    width: 76px;
+    height: 76px;
     display: grid;
     place-items: center;
     pointer-events: none;
-    transform: translate(-50%, -50%);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.55);
+    transition:
+        opacity 0.2s ease,
+        transform 0.62s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 .verification-status::before {
     content: "";
     position: absolute;
-    width: 0;
-    height: 0;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     border: 1px solid rgba(98, 181, 255, 0.58);
     border-radius: 50%;
     background:
@@ -494,41 +500,42 @@ a {
         ),
         rgba(7, 26, 48, 0.94);
     box-shadow:
-        0 0 0 rgba(55, 155, 255, 0),
-        inset 0 0 0 rgba(255, 255, 255, 0);
-    transform: scale(0);
+        0 0 34px rgba(52, 149, 255, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     opacity: 0;
     transition:
-        width 0.62s cubic-bezier(0.2, 0.9, 0.2, 1),
-        height 0.62s cubic-bezier(0.2, 0.9, 0.2, 1),
-        transform 0.62s cubic-bezier(0.2, 0.9, 0.2, 1),
-        opacity 0.25s ease,
+        opacity 0.24s ease,
         border-color 0.35s ease,
         background 0.35s ease,
         box-shadow 0.45s ease;
 }
 
 .status-spinner {
-    position: relative;
-    z-index: 2;
-    width: 26px;
-    height: 26px;
-    border: 2px solid rgba(125, 186, 255, 0.2);
+    position: absolute;
+    z-index: 3;
+    top: 50%;
+    left: 50%;
+    width: 36px;
+    height: 36px;
+    margin: -18px 0 0 -18px;
+    border: 3px solid rgba(125, 186, 255, 0.18);
     border-top-color: #65bcff;
-    border-right-color: rgba(101, 188, 255, 0.7);
+    border-right-color: rgba(101, 188, 255, 0.82);
     border-radius: 50%;
     opacity: 0;
-    transform: 
-    scale(0.35);
+    transform: rotate(0deg);
 }
 
 .status-check {
-    position: relative;
-    z-index: 3;
-    width: 32px;
-    height: 32px;
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
     opacity: 0;
-    transform: scale(0.45);
+    transform: scale(0.5);
     transition:
         opacity 0.2s ease,
         transform 0.42s cubic-bezier(0.2, 0.9, 0.25, 1);
@@ -537,20 +544,17 @@ a {
 .status-check path {
     fill: none;
     stroke: #b6ffd9;
-    stroke-width: 3.2;
+    stroke-width: 3.4;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 43;
     stroke-dashoffset: 43;
 }
 
-
-/* Merge the six boxes toward the exact middle */
-
 .code-input-wrapper.checking .code-input {
     transform:
         translateX(var(--merge-x, 0px))
-        scale(0.18);
+        scale(0.15);
     opacity: 0;
 }
 
@@ -559,32 +563,23 @@ a {
     transform: scaleX(0);
 }
 
-.code-input-wrapper.checking .verification-status::before {
-    width: 68px;
-    height: 68px;
+.code-input-wrapper.checking .verification-status {
     opacity: 1;
-    transform: scale(1);
-    box-shadow:
-        0 0 34px rgba(52, 149, 255, 0.13),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.code-input-wrapper.checking .verification-status::before {
+    opacity: 1;
 }
 
 .code-input-wrapper.checking .status-spinner {
     opacity: 1;
-    transform: scale(1);
     animation: spinStatus 0.78s linear infinite;
-    transition:
-        opacity 0.25s ease,
-        transform 0.35s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
-
-
-/* Successful result */
 
 .code-input-wrapper.success .status-spinner {
     opacity: 0;
     animation: none;
-    transform: scale(0.45);
 }
 
 .code-input-wrapper.success .verification-status::before {
@@ -597,7 +592,7 @@ a {
         ),
         rgba(5, 42, 29, 0.95);
     box-shadow:
-        0 0 42px rgba(42, 223, 143, 0.15),
+        0 0 42px rgba(42, 223, 143, 0.17),
         inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -607,31 +602,23 @@ a {
 }
 
 .code-input-wrapper.success .status-check path {
-    animation: drawSuccessCheck 0.62s cubic-bezier(0.2, 0.85, 0.25, 1) 0.05s forwards;
+    animation:
+        drawSuccessCheck
+        0.62s
+        cubic-bezier(0.2, 0.85, 0.25, 1)
+        0.05s
+        forwards;
 }
 
-
-/* Failed result before boxes come back */
-
 .code-input-wrapper.failure .verification-status::before {
-    border-color: rgba(255, 90, 104, 0.52);
-    box-shadow: 0 0 35px rgba(255, 78, 96, 0.1);
+    border-color: rgba(255, 90, 104, 0.54);
+    box-shadow: 0 0 35px rgba(255, 78, 96, 0.12);
 }
 
 .code-input-wrapper.failure .status-spinner {
-    border-top-color: #b3414e;
-    border-right-color: rgba(255, 112, 128, 0.68);
-    transform: translateY(-30px);
+    border-top-color: #ff7080;
+    border-right-color: rgba(255, 112, 128, 0.75);
 }
-
-.status-spinner{
-        transform: translateY(-30px),
-        translateX(20px)
-        ;
-
-
-}
-
 
 /* =========================================================
    ERROR STATE
@@ -655,7 +642,7 @@ a {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 5px;
+    margin-top: 3px;
     color: #ff7482;
     font-size: 11px;
     font-weight: 650;
@@ -700,7 +687,7 @@ a {
     align-items: center;
     justify-content: center;
     gap: 7px;
-    margin-top: 13px;
+    margin-top: 8px;
     color: rgba(215, 227, 242, 0.52);
     font-size: 11px;
 }
@@ -746,7 +733,7 @@ a {
     align-items: center;
     justify-content: center;
     gap: 11px;
-    margin-top: 17px;
+    margin-top: 10px;
     overflow: hidden;
     cursor: pointer;
     border: 1px solid rgba(89, 174, 255, 0.45);
@@ -813,10 +800,10 @@ a {
 .verify-button.success-state {
     background: linear-gradient(
         110deg,
-        rgba(25, 151, 100, 0.97),
-        rgba(45, 194, 126, 0.97)
+        rgb(19, 133, 70),
+        rgba(74, 199, 62, 0.97)
     );
-    border-color: rgba(100, 242, 169, 0.38);
+    border-color: rgba(10, 240, 68, 0.295);
 }
 
 .verify-button-text {
@@ -863,7 +850,7 @@ a {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    margin: 17px auto 0;
+    margin: 12px auto 0;
     color: rgba(219, 231, 245, 0.57);
     font-size: 11px;
     transition:
@@ -887,8 +874,8 @@ a {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    margin-top: auto;
-    padding-top: 25px;
+    margin-top: 14px;
+    padding-top: 0;
     color: rgba(201, 216, 235, 0.34);
     font-size: 9.5px;
     line-height: 1.5;
@@ -909,7 +896,8 @@ a {
 
 .verification-image-card {
     position: relative;
-    min-height: 610px;
+    min-height: 0;
+    height: 100%;
     overflow: hidden;
     isolation: isolate;
     border-left: 1px solid rgba(255, 255, 255, 0.07);
@@ -971,6 +959,17 @@ a {
     font-size: 10px;
     font-weight: 750;
     letter-spacing: 2.4px;
+}
+
+.card-image {
+    position: absolute;
+    top: 40px;
+    left: 130px;
+    width: 55%;
+    height: 55%;
+    object-fit: cover; 
+    object-position: center;
+    z-index: 2; 
 }
 
 .image-overlay {
@@ -1127,7 +1126,7 @@ a {
 
 @keyframes spinStatus {
     to {
-        transform: scale(1) rotate(360deg);
+        transform: rotate(360deg);
     }
 }
 
@@ -1180,13 +1179,14 @@ a {
 
 @media (max-width: 900px) {
     .verification-container {
+        height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
     }
 
     .verification-form-card {
-        min-height: 620px;
-        padding: 40px 42px 30px;
+        min-height: 0;
+        padding: 34px 42px 28px;
     }
 
     .verification-image-card {
@@ -1204,8 +1204,8 @@ a {
     }
 
     .verification-form-card {
-        min-height: 610px;
-        padding: 30px 25px 25px;
+        min-height: 0;
+        padding: 28px 25px 24px;
     }
 
     .verification-header {
@@ -1242,8 +1242,8 @@ a {
     }
 
     .verification-form-card {
-        min-height: 600px;
-        padding: 25px 16px 22px;
+        min-height: 0;
+        padding: 24px 16px 20px;
     }
 
     .verification-brand {
@@ -1304,6 +1304,33 @@ a {
 
     .verification-error {
         font-size: 10.5px;
+    }
+}
+
+
+@media (max-width: 600px) {
+    .verification-status {
+        width: 70px;
+        height: 70px;
+    }
+
+    .status-spinner {
+        width: 34px;
+        height: 34px;
+        margin: -17px 0 0 -17px;
+    }
+}
+
+@media (max-width: 430px) {
+    .verification-status {
+        width: 66px;
+        height: 66px;
+    }
+
+    .status-spinner {
+        width: 32px;
+        height: 32px;
+        margin: -16px 0 0 -16px;
     }
 }
 

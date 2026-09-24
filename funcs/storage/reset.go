@@ -1,10 +1,15 @@
 package storage
 
 import (
+	"database/sql"
 	"time"
 )
 
-func SavePasswordResetCode(email string, codeHash string, expiresAt time.Time) error {
+func SavePasswordResetCode(
+	email string,
+	codeHash string,
+	expiresAt time.Time,
+) error {
 
 	_, err := DB.Exec(`
 		DELETE FROM password_reset_codes
@@ -51,7 +56,7 @@ func GetPasswordResetCode(email string) (string, time.Time, error) {
 	)
 
 	if err != nil {
-		return "",  time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	return codeHash, expiresAt, nil
@@ -69,4 +74,31 @@ func DeletePasswordResetCode(email string) error {
 	)
 
 	return err
+}
+
+func UpdateUserPassword(email string, passwordHash string) error {
+
+	result, err := DB.Exec(`
+        UPDATE users
+        SET password_hash = ?
+        WHERE email = ?
+    `,
+		passwordHash,
+		email,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }

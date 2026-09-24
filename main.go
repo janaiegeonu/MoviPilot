@@ -9,8 +9,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-
-
 func main() {
 
 	err := godotenv.Load()
@@ -28,6 +26,7 @@ func main() {
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/forgot-password", ForgotPasswordHandler)
 	http.HandleFunc("/verify-code", VerificationCodeHandler)
+	http.HandleFunc("/reset-password", ResetPasswordHandler)
 
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))

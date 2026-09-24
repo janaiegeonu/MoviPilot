@@ -32,6 +32,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/login.html",
 		"templates/forgot-password.html",
 		"templates/verifycode.html",
+		"templates/reset-password.html",
 	)
 	if err != nil {
 		http.Error(
@@ -370,6 +371,80 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unable to create account", http.StatusInternalServerError)
 		return
 	}
+
+	type WelcomeEmailData struct {
+		FullName string
+		HomeURL  string
+		Year     int
+	}
+
+	tmpl, err := template.ParseFiles(
+		"templates/welcomeEmail.html",
+	)
+
+	if err != nil {
+
+		fmt.Println(
+			"EMAIL TEMPLATE PARSE ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"500 : Failed to load email template",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	emailData := WelcomeEmailData{
+		FullName: fullName,
+		HomeURL:  "http://localhost:8080/homepage",
+		Year:     time.Now().Year(),
+	}
+
+	var bodyBuffer bytes.Buffer
+
+	err = tmpl.Execute(
+		&bodyBuffer,
+		emailData,
+	)
+
+	m := mail.NewMessage()
+
+	m.SetAddressHeader(
+		"From",
+		os.Getenv("BREVO_SENDER_EMAIL"),
+		os.Getenv("BREVO_SENDER_NAME"),
+	)
+
+	m.SetHeader(
+		"To",
+		email,
+	)
+
+	m.SetHeader(
+		"Subject",
+		"Welcome to MoviPilot — Your Personal Movie Compass",
+	)
+
+	m.SetBody(
+		"text/html",
+		bodyBuffer.String(),
+	)
+	port, _ := strconv.Atoi(
+		os.Getenv("BREVO_SMTP_PORT"),
+	)
+
+	d := mail.NewDialer(
+		os.Getenv("BREVO_SMTP_HOST"),
+		port,
+		os.Getenv("BREVO_SMTP_LOGIN"),
+		os.Getenv("BREVO_SMTP_KEY"),
+	)
+
+	err = d.DialAndSend(m)
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
@@ -817,21 +892,18 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 
-	/* -----------------------------------------------------
-	   GET
-
-	   Read the email from the HttpOnly reset cookie so
-	   {{ .Email }} on verifycode.html is populated.
-	   ----------------------------------------------------- */
+	// ============================================
+	// GET
+	// ============================================
 
 	if r.Method == http.MethodGet {
 
-		resetEmailCookie, err := r.Cookie(
+		resetCookie, err := r.Cookie(
 			"movipilot_reset_email",
 		)
 
 		if err != nil ||
-			strings.TrimSpace(resetEmailCookie.Value) == "" {
+			strings.TrimSpace(resetCookie.Value) == "" {
 
 			http.Redirect(
 				w,
@@ -843,10 +915,12 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		email := strings.ToLower(
+			strings.TrimSpace(resetCookie.Value),
+		)
+
 		pageData := VerificationPageData{
-			Email: strings.TrimSpace(
-				resetEmailCookie.Value,
-			),
+			Email: email,
 		}
 
 		err = renderTemplate(
@@ -872,9 +946,9 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   ONLY POST IS ALLOWED AFTER THIS POINT
-	   ----------------------------------------------------- */
+	// ============================================
+	// POST ONLY
+	// ============================================
 
 	if r.Method != http.MethodPost {
 
@@ -892,18 +966,20 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		"application/json",
 	)
 
-	/* -----------------------------------------------------
-	   1. GET EMAIL FROM RESET COOKIE
-	   ----------------------------------------------------- */
+	// ============================================
+	// 1. GET EMAIL FROM RESET COOKIE
+	// ============================================
 
-	resetEmailCookie, err := r.Cookie(
+	resetCookie, err := r.Cookie(
 		"movipilot_reset_email",
 	)
 
 	if err != nil ||
-		strings.TrimSpace(resetEmailCookie.Value) == "" {
+		strings.TrimSpace(resetCookie.Value) == "" {
 
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(
+			http.StatusUnauthorized,
+		)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -913,25 +989,27 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := strings.TrimSpace(
-		resetEmailCookie.Value,
+	email := strings.ToLower(
+		strings.TrimSpace(resetCookie.Value),
 	)
 
-	/* -----------------------------------------------------
-	   2. GET CODE FROM THE SIX INPUT BOXES
-	   ----------------------------------------------------- */
+	// ============================================
+	// 2. GET SIX DIGIT CODE
+	// ============================================
 
 	code := strings.TrimSpace(
 		r.FormValue("verification_code"),
 	)
 
-	/* -----------------------------------------------------
-	   3. BASIC CODE VALIDATION
-	   ----------------------------------------------------- */
+	// ============================================
+	// 3. VALIDATE CODE FORMAT
+	// ============================================
 
 	if !auth.IsSixDigitCode(code) {
 
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(
+			http.StatusBadRequest,
+		)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -942,37 +1020,19 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   4. GET THE STORED HASHED CODE
-	   ----------------------------------------------------- */
+	// ============================================
+	// 4. GET HASH FROM DATABASE
+	// ============================================
 
 	hashedCode, expiresAt, err :=
 		storage.GetPasswordResetCode(email)
 
-	if err != nil {
+	// No row exists
+	if errors.Is(err, sql.ErrNoRows) {
 
-		fmt.Println(
-			"GET PASSWORD RESET CODE ERROR:",
-			err,
+		w.WriteHeader(
+			http.StatusBadRequest,
 		)
-
-		http.Error(
-			w,
-			"500 : Failed to verify code",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-	var found bool
-
-	/* -----------------------------------------------------
-	   5. NO ACTIVE CODE
-	   ----------------------------------------------------- */
-
-	if !found {
-
-		w.WriteHeader(http.StatusBadRequest)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -982,13 +1042,42 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   6. CHECK EXPIRY
-	   ----------------------------------------------------- */
+	// Real database error
+	if err != nil {
+
+		fmt.Println(
+			"GET PASSWORD RESET CODE ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"500 : Failed to retrieve verification code",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	// Temporary debugging.
+	// Never print the real code or hash.
+	fmt.Printf(
+		"VERIFY DEBUG | email=%q | hashLength=%d | expires=%s | now=%s\n",
+		email,
+		len(hashedCode),
+		expiresAt.Format(time.RFC3339),
+		time.Now().Format(time.RFC3339),
+	)
+
+	// ============================================
+	// 5. CHECK EXPIRY
+	// ============================================
 
 	if time.Now().After(expiresAt) {
 
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(
+			http.StatusBadRequest,
+		)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -998,23 +1087,25 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   7. COMPARE THE USER CODE WITH THE HASH
+	// ============================================
+	// 6. COMPARE CODE WITH BCRYPT HASH
+	// ============================================
 
-	   bcrypt does the comparison safely.
-	   We NEVER compare the plain code with a plain
-	   database value because the database contains only
-	   the hash.
-	   ----------------------------------------------------- */
-
-	err = bcrypt.CompareHashAndPassword(
+	compareErr := bcrypt.CompareHashAndPassword(
 		[]byte(hashedCode),
 		[]byte(code),
 	)
 
-	if err != nil {
+	if compareErr != nil {
 
-		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println(
+			"VERIFY BCRYPT ERROR:",
+			compareErr,
+		)
+
+		w.WriteHeader(
+			http.StatusBadRequest,
+		)
 
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": false,
@@ -1024,18 +1115,15 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   8. CODE IS VALID
+	// ============================================
+	// 7. VALID CODE
+	// ============================================
 
-	   Delete the code so the same verification code cannot
-	   be used again.
+	err = storage.DeletePasswordResetCode(
+		email,
+	)
 
-	   NOTE:
-	   The reset-password handler should later consume the
-	   short-lived verified cookie below.
-	   ----------------------------------------------------- */
-
-	if err := storage.DeletePasswordResetCode(email); err != nil {
+	if err != nil {
 
 		fmt.Println(
 			"DELETE PASSWORD RESET CODE ERROR:",
@@ -1051,17 +1139,9 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* -----------------------------------------------------
-	   9. MARK THE RESET FLOW AS VERIFIED
-
-	   This lets the next reset-password page know that
-	   the user has successfully passed verification.
-
-	   For the current local project this is a short-lived
-	   HttpOnly flow cookie. When we build the final
-	   reset-password handler, this can be upgraded to a
-	   signed/session-backed reset token.
-	   ----------------------------------------------------- */
+	// ============================================
+	// 8. MARK RESET FLOW AS VERIFIED
+	// ============================================
 
 	http.SetCookie(
 		w,
@@ -1075,11 +1155,147 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	)
 
-	/* -----------------------------------------------------
-	   10. SUCCESS
-	   ----------------------------------------------------- */
+	// ============================================
+	// 9. SUCCESS
+	// ============================================
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success": true,
+		"success":  true,
+		"redirect": "/reset-password",
 	})
+}
+
+/*
+ResetPasswordHandler
+
+Requires the existing validators:
+    ValidatePassword(password)
+    ValidatePasswordMatch(password, confirmPassword)
+
+The code below expects the verification handler to set:
+    movipilot_reset_verified
+
+and uses storage.UpdateUserPassword() to update users.password_hash.
+*/
+
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodGet {
+
+		verifiedCookie, err := r.Cookie("movipilot_reset_verified")
+
+		if err != nil || strings.TrimSpace(verifiedCookie.Value) == "" {
+			http.Redirect(w, r, "/forgot-password", http.StatusSeeOther)
+			return
+		}
+
+		email := strings.ToLower(strings.TrimSpace(verifiedCookie.Value))
+
+		err = renderTemplate(
+			w,
+			"reset-password.html",
+			ResetPasswordPageData{Email: email},
+		)
+
+		if err != nil {
+			fmt.Println("RESET PASSWORD PAGE RENDER ERROR:", err)
+			http.Error(w, "500 : Failed to render reset password page", http.StatusInternalServerError)
+		}
+
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	verifiedCookie, err := r.Cookie("movipilot_reset_verified")
+	if err != nil || strings.TrimSpace(verifiedCookie.Value) == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Your password reset session has expired. Please start the recovery process again.",
+		})
+		return
+	}
+
+	email := strings.ToLower(strings.TrimSpace(verifiedCookie.Value))
+
+	password := r.FormValue("password")
+	confirmPassword := r.FormValue("confirm_password")
+
+	if _, err := form.ValidatePassword(password); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"field":   "password",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	if err := form.ValidatePasswordMatch(password, confirmPassword); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"field":   "confirm_password",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
+	if err != nil {
+		fmt.Println("RESET PASSWORD HASH ERROR:", err)
+		http.Error(w, "500 : Failed to secure new password", http.StatusInternalServerError)
+		return
+	}
+
+	if err := storage.UpdateUserPassword(email, string(passwordHash)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": false,
+				"error":   "Account could not be found.",
+			})
+			return
+		}
+
+		fmt.Println("UPDATE USER PASSWORD ERROR:", err)
+		http.Error(w, "500 : Failed to update password", http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "movipilot_reset_verified",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "movipilot_reset_email",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+	})
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
+		"redirect": "/login",
+	})
+}
+
+type ResetPasswordPageData struct {
+	Email string
 }

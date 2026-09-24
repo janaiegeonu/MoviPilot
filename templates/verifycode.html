@@ -19,7 +19,7 @@
 
     <link
         rel="stylesheet"
-        href="/templates/css/verifycode.css?v=1"
+        href="/templates/css/verifycode.css?v=2"
     >
 
 </head>
@@ -165,6 +165,7 @@
                     action="/verify-code"
                     method="POST"
                     id="verificationForm"
+                    data-email="{{ .Email }}"
                     novalidate
                 >
 
@@ -187,65 +188,92 @@
                         id="codeInputWrapper"
                     >
 
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            autocomplete="one-time-code"
-                            maxlength="1"
-                            aria-label="Verification digit 1"
-                            data-index="0"
+                        <div class="code-cluster" id="codeCluster">
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 1"
+                                data-index="0"
+                            >
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 2"
+                                data-index="1"
+                            >
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 3"
+                                data-index="2"
+                            >
+
+                            <span class="code-divider"></span>
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 4"
+                                data-index="3"
+                            >
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 5"
+                                data-index="4"
+                            >
+
+                            <input
+                                class="code-input"
+                                type="text"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="1"
+                                aria-label="Verification digit 6"
+                                data-index="5"
+                            >
+
+                        </div>
+
+                        <div
+                            class="verification-status"
+                            id="verificationStatus"
+                            aria-hidden="true"
                         >
 
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="1"
-                            aria-label="Verification digit 2"
-                            data-index="1"
-                        >
+                            <span class="status-spinner"></span>
 
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="1"
-                            aria-label="Verification digit 3"
-                            data-index="2"
-                        >
+                            <svg
+                                class="status-check"
+                                viewBox="0 0 48 48"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path d="M13 25L21 33L36 16" />
+                            </svg>
 
-                        <span class="code-divider"></span>
-
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="1"
-                            aria-label="Verification digit 4"
-                            data-index="3"
-                        >
-
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="1"
-                            aria-label="Verification digit 5"
-                            data-index="4"
-                        >
-
-                        <input
-                            class="code-input"
-                            type="text"
-                            inputmode="numeric"
-                            maxlength="1"
-                            aria-label="Verification digit 6"
-                            data-index="5"
-                        >
+                        </div>
 
                     </div>
-
 
 
                     <!-- Error message -->
@@ -530,6 +558,7 @@
     <!-- Verification interaction -->
 
     <script src="/templates/js/verification.js"></script>
+    <script src="/templates/js/otp.js"> </script>
 
 
 </body>

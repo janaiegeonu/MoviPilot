@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/benlei/go-tmdb/v2"
@@ -474,11 +475,23 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/home", http.StatusSeeOther)
 }
 
+type VerificationPageData struct {
+	Email string
+}
+
+/* =========================================================
+   FORGOT PASSWORD HANDLER
+   ========================================================= */
+
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
 
-		err := renderTemplate(w, "forgot-password.html", nil)
+		err := renderTemplate(
+			w,
+			"forgot-password.html",
+			nil,
+		)
 
 		if err != nil {
 			http.Error(
@@ -500,12 +513,18 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We are returning JSON for POST requests.
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
 
-	email := r.FormValue("email")
+	email := strings.TrimSpace(
+		r.FormValue("email"),
+	)
 
-	// 1. CHECK EMPTY EMAIL
+	/* -----------------------------------------------------
+	   1. CHECK EMPTY EMAIL
+	   ----------------------------------------------------- */
 
 	if email == "" {
 
@@ -520,11 +539,18 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. CHECK IF EMAIL EXISTS
+	/* -----------------------------------------------------
+	   2. CHECK IF EMAIL EXISTS
+	   ----------------------------------------------------- */
 
 	exists, err := storage.EmailExists(email)
 
 	if err != nil {
+
+		fmt.Println(
+			"EMAIL EXISTS CHECK ERROR:",
+			err,
+		)
 
 		http.Error(
 			w,
@@ -535,7 +561,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. EMAIL DOES NOT EXIST
+	/* -----------------------------------------------------
+	   3. EMAIL DOES NOT EXIST
+	   ----------------------------------------------------- */
 
 	if !exists {
 
@@ -550,8 +578,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. EMAIL EXISTS
-	// Only now do we generate and send the verification code.
+	/* -----------------------------------------------------
+	   4. GENERATE 6-DIGIT CODE
+	   ----------------------------------------------------- */
 
 	verificationCode := auth.GenerateNumericCode()
 
@@ -566,7 +595,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. HASH VERIFICATION CODE
+	/* -----------------------------------------------------
+	   5. HASH VERIFICATION CODE
+	   ----------------------------------------------------- */
 
 	hashedCode, err := bcrypt.GenerateFromPassword(
 		[]byte(verificationCode),
@@ -584,9 +615,13 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiresAt := time.Now().Add(10 * time.Minute)
+	expiresAt := time.Now().Add(
+		10 * time.Minute,
+	)
 
-	// 6. SAVE CODE TO DATABASE
+	/* -----------------------------------------------------
+	   6. SAVE CODE TO DATABASE
+	   ----------------------------------------------------- */
 
 	err = storage.SavePasswordResetCode(
 		email,
@@ -610,14 +645,20 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 7. PREPARE EMAIL
+	/* -----------------------------------------------------
+	   7. PREPARE EMAIL
+	   ----------------------------------------------------- */
 
 	type PasswordResetEmailData struct {
-		Code string
+		VerificationCode string
+		CopyCodeURL      string
+		Year             int
 	}
 
 	emailData := PasswordResetEmailData{
-		Code: verificationCode,
+		VerificationCode: verificationCode,
+		CopyCodeURL:      "http://localhost:8080/copy-code",
+		Year:             time.Now().Year(),
 	}
 
 	tmpl, err := template.ParseFiles(
@@ -625,6 +666,11 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
+
+		fmt.Println(
+			"EMAIL TEMPLATE PARSE ERROR:",
+			err,
+		)
 
 		http.Error(
 			w,
@@ -644,6 +690,11 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 
+		fmt.Println(
+			"EMAIL TEMPLATE EXECUTION ERROR:",
+			err,
+		)
+
 		http.Error(
 			w,
 			"500 : Failed to create email",
@@ -653,7 +704,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 8. CREATE EMAIL
+	/* -----------------------------------------------------
+	   8. CREATE EMAIL
+	   ----------------------------------------------------- */
 
 	m := mail.NewMessage()
 
@@ -678,7 +731,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		bodyBuffer.String(),
 	)
 
-	// 9. SMTP
+	/* -----------------------------------------------------
+	   9. SMTP
+	   ----------------------------------------------------- */
 
 	port, err := strconv.Atoi(
 		os.Getenv("BREVO_SMTP_PORT"),
@@ -702,7 +757,9 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		os.Getenv("BREVO_SMTP_KEY"),
 	)
 
-	// 10. SEND EMAIL
+	/* -----------------------------------------------------
+	   10. SEND EMAIL
+	   ----------------------------------------------------- */
 
 	err = d.DialAndSend(m)
 
@@ -722,22 +779,89 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 11. SUCCESS
+	/* -----------------------------------------------------
+	   11. KEEP THE EMAIL IN THE RESET FLOW
+
+	   The verification page reads this HttpOnly cookie
+	   so the page can know which account the code belongs to.
+	   ----------------------------------------------------- */
+
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:     "movipilot_reset_email",
+			Value:    email,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   10 * 60,
+		},
+	)
+
+	/* -----------------------------------------------------
+	   12. SUCCESS
+
+	   The existing forgot-password JavaScript should use
+	   this JSON response to navigate to /verify-code.
+	   ----------------------------------------------------- */
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"success": true,
+		"success":  true,
+		"redirect": "/verify-code",
 	})
-
-	http.Redirect(w, r, "/verify-code", http.StatusSeeOther)
 }
+
+/* =========================================================
+   VERIFICATION CODE HANDLER
+   ========================================================= */
 
 func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 
+	/* -----------------------------------------------------
+	   GET
+
+	   Read the email from the HttpOnly reset cookie so
+	   {{ .Email }} on verifycode.html is populated.
+	   ----------------------------------------------------- */
+
 	if r.Method == http.MethodGet {
 
-		err := renderTemplate(w, "verifycode.html", nil)
+		resetEmailCookie, err := r.Cookie(
+			"movipilot_reset_email",
+		)
+
+		if err != nil ||
+			strings.TrimSpace(resetEmailCookie.Value) == "" {
+
+			http.Redirect(
+				w,
+				r,
+				"/forgot-password",
+				http.StatusSeeOther,
+			)
+
+			return
+		}
+
+		pageData := VerificationPageData{
+			Email: strings.TrimSpace(
+				resetEmailCookie.Value,
+			),
+		}
+
+		err = renderTemplate(
+			w,
+			"verifycode.html",
+			pageData,
+		)
 
 		if err != nil {
+
+			fmt.Println(
+				"VERIFY PAGE RENDER ERROR:",
+				err,
+			)
+
 			http.Error(
 				w,
 				"500 : Failed to render verifycode page",
@@ -748,12 +872,214 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	/* -----------------------------------------------------
+	   ONLY POST IS ALLOWED AFTER THIS POINT
+	   ----------------------------------------------------- */
+
 	if r.Method != http.MethodPost {
+
 		http.Error(
 			w,
 			"Method not allowed",
 			http.StatusMethodNotAllowed,
 		)
+
 		return
 	}
+
+	w.Header().Set(
+		"Content-Type",
+		"application/json",
+	)
+
+	/* -----------------------------------------------------
+	   1. GET EMAIL FROM RESET COOKIE
+	   ----------------------------------------------------- */
+
+	resetEmailCookie, err := r.Cookie(
+		"movipilot_reset_email",
+	)
+
+	if err != nil ||
+		strings.TrimSpace(resetEmailCookie.Value) == "" {
+
+		w.WriteHeader(http.StatusUnauthorized)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "Your verification session has expired. Please request a new code.",
+		})
+
+		return
+	}
+
+	email := strings.TrimSpace(
+		resetEmailCookie.Value,
+	)
+
+	/* -----------------------------------------------------
+	   2. GET CODE FROM THE SIX INPUT BOXES
+	   ----------------------------------------------------- */
+
+	code := strings.TrimSpace(
+		r.FormValue("verification_code"),
+	)
+
+	/* -----------------------------------------------------
+	   3. BASIC CODE VALIDATION
+	   ----------------------------------------------------- */
+
+	if !auth.IsSixDigitCode(code) {
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"field":   "verification_code",
+			"error":   "Please enter the 6-digit verification code.",
+		})
+
+		return
+	}
+
+	/* -----------------------------------------------------
+	   4. GET THE STORED HASHED CODE
+	   ----------------------------------------------------- */
+
+	hashedCode, expiresAt, err :=
+		storage.GetPasswordResetCode(email)
+
+	if err != nil {
+
+		fmt.Println(
+			"GET PASSWORD RESET CODE ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"500 : Failed to verify code",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+	var found bool
+
+	/* -----------------------------------------------------
+	   5. NO ACTIVE CODE
+	   ----------------------------------------------------- */
+
+	if !found {
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "This verification code is invalid or has expired.",
+		})
+
+		return
+	}
+
+	/* -----------------------------------------------------
+	   6. CHECK EXPIRY
+	   ----------------------------------------------------- */
+
+	if time.Now().After(expiresAt) {
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "This verification code has expired. Please request a new code.",
+		})
+
+		return
+	}
+
+	/* -----------------------------------------------------
+	   7. COMPARE THE USER CODE WITH THE HASH
+
+	   bcrypt does the comparison safely.
+	   We NEVER compare the plain code with a plain
+	   database value because the database contains only
+	   the hash.
+	   ----------------------------------------------------- */
+
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(hashedCode),
+		[]byte(code),
+	)
+
+	if err != nil {
+
+		w.WriteHeader(http.StatusBadRequest)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": false,
+			"error":   "The verification code is incorrect.",
+		})
+
+		return
+	}
+
+	/* -----------------------------------------------------
+	   8. CODE IS VALID
+
+	   Delete the code so the same verification code cannot
+	   be used again.
+
+	   NOTE:
+	   The reset-password handler should later consume the
+	   short-lived verified cookie below.
+	   ----------------------------------------------------- */
+
+	if err := storage.DeletePasswordResetCode(email); err != nil {
+
+		fmt.Println(
+			"DELETE PASSWORD RESET CODE ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"500 : Failed to complete verification",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	/* -----------------------------------------------------
+	   9. MARK THE RESET FLOW AS VERIFIED
+
+	   This lets the next reset-password page know that
+	   the user has successfully passed verification.
+
+	   For the current local project this is a short-lived
+	   HttpOnly flow cookie. When we build the final
+	   reset-password handler, this can be upgraded to a
+	   signed/session-backed reset token.
+	   ----------------------------------------------------- */
+
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:     "movipilot_reset_verified",
+			Value:    email,
+			Path:     "/",
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   10 * 60,
+		},
+	)
+
+	/* -----------------------------------------------------
+	   10. SUCCESS
+	   ----------------------------------------------------- */
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+	})
 }

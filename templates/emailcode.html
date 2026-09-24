@@ -1,13 +1,576 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
 
-    <h2> MOVIPILOT IS ONLINE & AVALIBALE {{ .Code}}</h2>
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="color-scheme"
+        content="dark"
+    >
+
+    <meta
+        name="supported-color-schemes"
+        content="dark"
+    >
+
+    <title>MoviPilot Email Verification</title>
+
+</head>
+
+
+<body
+    style="
+        margin:0;
+        padding:0;
+        background:#020713;
+        font-family:Arial, Helvetica, sans-serif;
+        color:#ffffff;
+    "
+>
+
+
+<!-- =====================================================
+     OUTER EMAIL CONTAINER
+     ===================================================== -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        width:100%;
+        background:#020713;
+        margin:0;
+        padding:0;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding:45px 15px;
+    "
+>
+
+
+<!-- =====================================================
+     MAIN CARD
+     ===================================================== -->
+
+<table
+    width="600"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        width:100%;
+        max-width:600px;
+        background:#081525;
+        border:1px solid #142c43;
+        border-radius:20px;
+        overflow:hidden;
+    "
+>
+
+
+<!-- =====================================================
+     TOP BRAND SECTION
+     ===================================================== -->
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding:35px 30px 28px 30px;
+        background:#071321;
+        border-bottom:1px solid #132b42;
+    "
+>
+
+
+<!-- Logo -->
+
+<table
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding-bottom:12px;
+    "
+>
+
+
+<div
     
+>
+    <a href="https://imgbb.com/"><img src="https://i.ibb.co/zHNwWFCL/logo-favicon.png" alt="logo-favicon" width="70" style="display:block;"
+ /></a>
+
+</div>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#ffffff;
+        font-size:21px;
+        font-weight:700;
+        letter-spacing:-0.5px;
+    "
+>
+
+Movi<span style="color:#55aaff;">Pilot</span>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+     ===================================================== -->
+
+<tr>
+
+<td
+    style="
+        padding:42px 45px 38px 45px;
+    "
+>
+
+
+<!-- Eyebrow -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#5dbbfa;
+        font-size:10px;
+        font-weight:bold;
+        letter-spacing:2.5px;
+        padding-bottom:13px;
+    "
+>
+
+PASSWORD RESET
+
+</td>
+
+</tr>
+
+
+<!-- Heading -->
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#f4f9ff;
+        font-size:30px;
+        line-height:38px;
+        font-weight:700;
+        letter-spacing:-0.8px;
+        padding-bottom:14px;
+    "
+>
+
+Verify your email
+
+</td>
+
+</tr>
+
+
+<!-- Description -->
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#9db2c5;
+        font-size:14px;
+        line-height:23px;
+        padding:0 10px 30px 10px;
+    "
+>
+
+We received a request to reset your
+MoviPilot password. Use the verification
+code below to continue.
+
+</td>
+
+</tr>
+
+</table>
+
+
+
+<!-- =====================================================
+     VERIFICATION CODE
+     ===================================================== -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        background:#0c2035;
+        border:1px solid #1c405d;
+        border-radius:14px;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding:26px 20px 24px 20px;
+    "
+>
+
+
+<!-- Code label -->
+
+<div
+    style="
+        color:#66869f;
+        font-size:9px;
+        font-weight:bold;
+        letter-spacing:2px;
+        padding-bottom:12px;
+    "
+>
+
+YOUR VERIFICATION CODE
+
+</div>
+
+
+<!-- CODE -->
+
+<div
+    style="
+        color:#71c5ff;
+        font-family:
+            'Courier New',
+            Courier,
+            monospace;
+        font-size:31px;
+        line-height:42px;
+        font-weight:bold;
+        letter-spacing:8px;
+        padding-left:8px;
+    "
+>
+
+{{ .VerificationCode }}
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+
+
+<!-- =====================================================
+     COPY BUTTON
+     ===================================================== -->
+
+<table
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        margin-top:18px;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        border-radius:10px;
+        background:#208fd0;
+    "
+>
+
+<a
+    href="{{ .CopyCodeURL }}"
+    style="
+        display:inline-block;
+        padding:12px 24px;
+        border-radius:10px;
+        color:#ffffff;
+        font-size:12px;
+        font-weight:bold;
+        text-decoration:none;
+        letter-spacing:0.2px;
+    "
+>
+
+Copy verification code
+
+</a>
+
+</td>
+
+</tr>
+
+</table>
+
+
+<!--
+    IMPORTANT:
+
+    The button above should point to a small MoviPilot
+    webpage that receives the code and provides a
+    real "Copy" button using JavaScript.
+
+    Example:
+
+    {{ .CopyCodeURL }}
+
+    could eventually become something like:
+
+    https://movipilot.com/copy-code?token=....
+
+    Do NOT put the raw verification code directly
+    inside a public URL.
+-->
+
+
+<!-- =====================================================
+     EXPIRATION
+     ===================================================== -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        margin-top:25px;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#71889d;
+        font-size:11px;
+        line-height:18px;
+    "
+>
+
+This verification code expires in
+<strong style="color:#9ab3c7;">
+10 minutes
+</strong>.
+
+</td>
+
+</tr>
+
+</table>
+
+
+
+<!-- =====================================================
+     DIVIDER
+     ===================================================== -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        margin-top:30px;
+    "
+>
+
+<tr>
+
+<td
+    style="
+        border-top:1px solid #173148;
+        font-size:1px;
+        line-height:1px;
+    "
+>
+&nbsp;
+</td>
+
+</tr>
+
+</table>
+
+
+
+<!-- =====================================================
+     SECURITY MESSAGE
+     ===================================================== -->
+
+<table
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    role="presentation"
+    style="
+        margin-top:22px;
+    "
+>
+
+<tr>
+
+<td
+    align="center"
+    style="
+        color:#71889d;
+        font-size:11px;
+        line-height:19px;
+        padding:0 10px;
+    "
+>
+
+If you didn't request a password reset,
+you can safely ignore this email.
+
+<br>
+
+For your security, never share this
+verification code with anyone.
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<tr>
+
+<td
+    align="center"
+    style="
+        padding:22px 30px 28px 30px;
+        background:#06101d;
+        border-top:1px solid #12283c;
+    "
+>
+
+<div
+    style="
+        color:#50687c;
+        font-size:10px;
+        line-height:18px;
+    "
+>
+
+© {{ .Year }} MoviPilot
+
+</div>
+
+
+<div
+    style="
+        color:#3e5568;
+        font-size:9px;
+        line-height:17px;
+        padding-top:4px;
+    "
+>
+
+Your personal guide to better movies.
+
+</div>
+
+</td>
+
+</tr>
+
+
+</table>
+
+
+</td>
+
+</tr>
+
+</table>
+
+
 </body>
+
 </html>

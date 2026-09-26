@@ -904,293 +904,14 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		googleUser.Sub,
 	)
 
+	// --------------------------------------------------
+	// GOOGLE ACCOUNT ALREADY EXISTS
+	// --------------------------------------------------
+
 	if err == nil {
 
-		// Existing Google account.
 		sessionID, err := storage.CreateSession(user.ID)
 		if err != nil {
-			http.Error(
-				w,
-				"Unable to create login session",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		setLoginCookie(w, r, sessionID)
-
-		http.Redirect(
-			w,
-			r,
-			"/homepage",
-			http.StatusSeeOther,
-		)
-
-		return
-	}
-
-	if err != sql.ErrNoRows {
-
-		fmt.Println(
-			"GOOGLE USER LOOKUP ERROR:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Unable to check Google account",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	if err == sql.ErrNoRows {
-
-		// LOGIN MODE
-		if mode == "login" {
-
-			http.Redirect(
-				w,
-				r,
-				"/login?google=not_registered",
-				http.StatusSeeOther,
-			)
-
-			return
-		}
-
-		if mode == "signup" {
-
-			existingUser, err := storage.GetUserByEmail(
-				googleUser.Email,
-			)
-
-			if err == nil {
-
-				/*
-					The email already belongs to another
-					MoviPilot account.
-
-					We don't silently merge the accounts.
-				*/
-				if existingUser.AuthProvider == "local" {
-
-					http.Redirect(
-						w,
-						r,
-						"/login?google=existing",
-						http.StatusSeeOther,
-					)
-
-					return
-				}
-
-				http.Redirect(
-					w,
-					r,
-					"/login",
-					http.StatusSeeOther,
-				)
-
-				return
-			}
-
-			if err != sql.ErrNoRows {
-
-				fmt.Println(
-					"EMAIL LOOKUP ERROR:",
-					err,
-				)
-
-				http.Error(
-					w,
-					"Unable to check account email",
-					http.StatusInternalServerError,
-				)
-
-				return
-			}
-
-			// Brand-new Google account.
-			err = storage.CreateGoogleUser(
-				googleUser.Name,
-				googleUser.Email,
-				googleUser.Sub,
-			)
-
-			if err != nil {
-
-				fmt.Println(
-					"GOOGLE USER CREATION ERROR:",
-					err,
-				)
-
-				http.Error(
-					w,
-					"Unable to create MoviPilot account",
-					http.StatusInternalServerError,
-				)
-
-				return
-			}
-
-			// Load newly created user.
-			user, err = storage.GetUserByGoogleID(
-				googleUser.Sub,
-			)
-
-			if err != nil {
-
-				http.Error(
-					w,
-					"Account was created but could not be loaded",
-					http.StatusInternalServerError,
-				)
-
-				return
-			}
-
-			sessionID, err := storage.CreateSession(
-				user.ID,
-			)
-
-			if err != nil {
-
-				http.Error(
-					w,
-					"Unable to create login session",
-					http.StatusInternalServerError,
-				)
-
-				return
-			}
-
-			setLoginCookie(
-				w,
-				r,
-				sessionID,
-			)
-
-			http.Redirect(
-				w,
-				r,
-				"/homepage",
-				http.StatusSeeOther,
-			)
-
-			return
-		}
-
-		/*
-			The Google ID was not found.
-
-			Now check whether the email is already
-			connected to another MoviPilot account.
-		*/
-		existingUser, err := storage.GetUserByEmail(
-			googleUser.Email,
-		)
-
-		if err == nil {
-
-			/*
-				The email already belongs to another account.
-
-				Do NOT silently merge accounts.
-				That would be a separate account-linking decision.
-			*/
-			if existingUser.AuthProvider == "local" {
-
-				http.Redirect(
-					w,
-					r,
-					"/login?google=existing",
-					http.StatusSeeOther,
-				)
-
-				return
-			}
-
-			// Another Google record should not normally happen,
-			// but do not create a duplicate account.
-			http.Redirect(
-				w,
-				r,
-				"/login",
-				http.StatusSeeOther,
-			)
-
-			return
-		}
-
-		if err != sql.ErrNoRows {
-
-			fmt.Println(
-				"EMAIL LOOKUP ERROR:",
-				err,
-			)
-
-			http.Error(
-				w,
-				"Unable to check account email",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		/*
-			At this point:
-
-			Google ID does not exist.
-			Email does not exist.
-
-			So this is a brand-new MoviPilot account.
-		*/
-		err = storage.CreateGoogleUser(
-			googleUser.Name,
-			googleUser.Email,
-			googleUser.Sub,
-		)
-
-		if err != nil {
-
-			fmt.Println(
-				"GOOGLE USER CREATION ERROR:",
-				err,
-			)
-
-			http.Error(
-				w,
-				"Unable to create MoviPilot account",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		// Retrieve the newly created user so we get its database ID.
-		user, err = storage.GetUserByGoogleID(
-			googleUser.Sub,
-		)
-
-		if err != nil {
-
-			http.Error(
-				w,
-				"Account was created but could not be loaded",
-				http.StatusInternalServerError,
-			)
-			return
-		}
-
-		/*
-			Create normal MoviPilot session.
-		*/
-		sessionID, err := storage.CreateSession(
-			user.ID,
-		)
-
-		if err != nil {
-
 			http.Error(
 				w,
 				"Unable to create login session",
@@ -1205,16 +926,297 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 			sessionID,
 		)
 
-		/*
-			Google signup is successful.
-		*/
 		http.Redirect(
 			w,
 			r,
 			"/homepage",
 			http.StatusSeeOther,
 		)
+
+		return
 	}
+
+	// --------------------------------------------------
+	// GOOGLE DATABASE LOOKUP FAILED
+	// --------------------------------------------------
+
+	if err != sql.ErrNoRows {
+
+		fmt.Println(
+			"GOOGLE USER LOOKUP ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to check Google account",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	// --------------------------------------------------
+	// GOOGLE ACCOUNT DOES NOT EXIST
+	// --------------------------------------------------
+
+	// If this came from LOGIN, don't create an account.
+	if mode == "login" {
+
+		http.Redirect(
+			w,
+			r,
+			"/login?google=not_registered",
+			http.StatusSeeOther,
+		)
+
+		return
+	}
+
+	// --------------------------------------------------
+	// SIGNUP MODE
+	// --------------------------------------------------
+
+	existingUser, err := storage.GetUserByEmail(
+		googleUser.Email,
+	)
+
+	if err == nil {
+
+		// This email already belongs to a normal MoviPilot account.
+		if existingUser.AuthProvider == "local" {
+
+			http.Redirect(
+				w,
+				r,
+				"/login?google=existing",
+				http.StatusSeeOther,
+			)
+
+			return
+		}
+
+		http.Redirect(
+			w,
+			r,
+			"/login",
+			http.StatusSeeOther,
+		)
+
+		return
+	}
+
+	if err != sql.ErrNoRows {
+
+		fmt.Println(
+			"EMAIL LOOKUP ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to check account email",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	// --------------------------------------------------
+	// CREATE GOOGLE USER
+	// --------------------------------------------------
+
+	err = storage.CreateGoogleUser(
+		googleUser.Name,
+		googleUser.Email,
+		googleUser.Sub,
+	)
+
+	if err != nil {
+
+		fmt.Println(
+			"GOOGLE USER CREATION ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to create MoviPilot account",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	// --------------------------------------------------
+	// LOAD NEW USER
+	// --------------------------------------------------
+
+	user, err = storage.GetUserByGoogleID(
+		googleUser.Sub,
+	)
+
+	if err != nil {
+
+		fmt.Println(
+			"GOOGLE USER RELOAD ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Account was created but could not be loaded",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	// --------------------------------------------------
+	// SEND WELCOME EMAIL
+	// --------------------------------------------------
+
+	type WelcomeEmailData struct {
+		FullName string
+		HomeURL  string
+		Year     int
+	}
+
+	tmpl, err := template.ParseFiles(
+		"templates/welcomeEmail.html",
+	)
+
+	if err != nil {
+
+		fmt.Println(
+			"EMAIL TEMPLATE PARSE ERROR:",
+			err,
+		)
+
+		// Account was already created, so don't delete
+		// or invalidate the account just because the email failed.
+	} else {
+
+		emailData := WelcomeEmailData{
+			FullName: googleUser.Name,
+			HomeURL:  "http://localhost:8080/homepage",
+			Year:     time.Now().Year(),
+		}
+
+		var bodyBuffer bytes.Buffer
+
+		err = tmpl.Execute(
+			&bodyBuffer,
+			emailData,
+		)
+
+		if err != nil {
+
+			fmt.Println(
+				"EMAIL TEMPLATE EXECUTION ERROR:",
+				err,
+			)
+
+		} else {
+
+			m := mail.NewMessage()
+
+			m.SetAddressHeader(
+				"From",
+				os.Getenv("BREVO_SENDER_EMAIL"),
+				os.Getenv("BREVO_SENDER_NAME"),
+			)
+
+			m.SetHeader(
+				"To",
+				googleUser.Email,
+			)
+
+			m.SetHeader(
+				"Subject",
+				"Welcome to MoviPilot — Your Personal Movie Compass",
+			)
+
+			m.SetBody(
+				"text/html",
+				bodyBuffer.String(),
+			)
+
+			port, err := strconv.Atoi(
+				os.Getenv("BREVO_SMTP_PORT"),
+			)
+
+			if err != nil {
+
+				fmt.Println(
+					"SMTP PORT ERROR:",
+					err,
+				)
+
+			} else {
+
+				d := mail.NewDialer(
+					os.Getenv("BREVO_SMTP_HOST"),
+					port,
+					os.Getenv("BREVO_SMTP_LOGIN"),
+					os.Getenv("BREVO_SMTP_KEY"),
+				)
+
+				err = d.DialAndSend(m)
+
+				if err != nil {
+
+					fmt.Println(
+						"WELCOME EMAIL SEND ERROR:",
+						err,
+					)
+
+				} else {
+
+					fmt.Println(
+						"Welcome email sent successfully to:",
+						googleUser.Email,
+					)
+				}
+			}
+		}
+	}
+
+	// --------------------------------------------------
+	// CREATE MOVIPILOT SESSION
+	// --------------------------------------------------
+
+	sessionID, err := storage.CreateSession(
+		user.ID,
+	)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"Unable to create login session",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	setLoginCookie(
+		w,
+		r,
+		sessionID,
+	)
+
+	// --------------------------------------------------
+	// GOOGLE SIGNUP COMPLETE
+	// --------------------------------------------------
+
+	http.Redirect(
+		w,
+		r,
+		"/homepage",
+		http.StatusSeeOther,
+	)
 
 }
 

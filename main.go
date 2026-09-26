@@ -23,6 +23,8 @@ func main() {
 	http.HandleFunc("/homepage", HomepageHandler)
 	http.HandleFunc("/movie", MovieDetailHandler)
 	http.HandleFunc("/signup", SignupHandler)
+	http.HandleFunc("/auth/google", GoogleSignupHandler)
+	http.HandleFunc("/auth/google/callback", GoogleCallbackHandler)
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/forgot-password", ForgotPasswordHandler)
 	http.HandleFunc("/verify-code", VerificationCodeHandler)

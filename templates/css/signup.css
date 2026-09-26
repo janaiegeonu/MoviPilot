@@ -1617,6 +1617,9 @@ body {
     font-weight: 800;
 }
 
+.alternative-signup a {
+    text-decoration: none;
+}
 
 /* =========================================
    LOGIN

@@ -6,7 +6,11 @@ import (
 	"MoviPilot/funcs/form"
 	"MoviPilot/funcs/storage"
 	"bytes"
+	"context"
+	"crypto/rand"
+	"crypto/subtle"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,10 +23,10 @@ import (
 
 	"github.com/benlei/go-tmdb/v2"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 	"gopkg.in/mail.v2"
 )
-
-const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
 
 func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) error {
 	tmpl, err := template.ParseFiles(
@@ -126,6 +130,8 @@ func HomepageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func MovieDetailHandler(w http.ResponseWriter, r *http.Request) {
+
+	tmdbToken := os.Getenv("TMDB_TOKEN")
 
 	idStr := r.URL.Query().Get("id")
 
@@ -448,6 +454,550 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 
+}
+
+//=================
+//Google OAuth Handlers
+//=================
+
+const (
+	googleStateCookie    = "movipilot_google_state"
+	googleVerifierCookie = "movipilot_google_verifier"
+
+	googleUserInfoURL = "https://openidconnect.googleapis.com/v1/userinfo"
+)
+
+type GoogleUserInfo struct {
+	Sub           string `json:"sub"`
+	Name          string `json:"name"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+}
+
+func getGoogleOAuthConfig() (*oauth2.Config, error) {
+
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+	if clientID == "" || clientSecret == "" {
+		return nil, fmt.Errorf("Google OAuth environment variables are missing")
+	}
+
+	baseURL := os.Getenv("MOVIPILOT_BASE_URL")
+
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+
+	return &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Endpoint:     google.Endpoint,
+		RedirectURL:  strings.TrimRight(baseURL, "/") + "/auth/google/callback",
+
+		Scopes: []string{
+			"openid",
+			"profile",
+			"email",
+		},
+	}, nil
+}
+
+func randomOAuthValue(size int) (string, error) {
+
+	buffer := make([]byte, size)
+
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.RawURLEncoding.EncodeToString(buffer), nil
+}
+
+func GoogleSignupHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		http.Error(
+			w,
+			"Method Not Allowed",
+			http.StatusMethodNotAllowed,
+		)
+		return
+	}
+
+	config, err := getGoogleOAuthConfig()
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication is not configured",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// Random state protects the OAuth flow against CSRF.
+	state, err := randomOAuthValue(32)
+	if err != nil {
+		http.Error(
+			w,
+			"Unable to start Google authentication",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// PKCE verifier protects the authorization-code exchange.
+	verifier := oauth2.GenerateVerifier()
+
+	secure := r.TLS != nil
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleStateCookie,
+		Value:    state,
+		Path:     "/",
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleVerifierCookie,
+		Value:    verifier,
+		Path:     "/",
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	authURL := config.AuthCodeURL(
+		state,
+		oauth2.S256ChallengeOption(verifier),
+		oauth2.SetAuthURLParam("prompt", "select_account"),
+	)
+
+	http.Redirect(
+		w,
+		r,
+		authURL,
+		http.StatusFound,
+	)
+}
+
+func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+
+	config, err := getGoogleOAuthConfig()
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication is not configured",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	stateCookie, err := r.Cookie(googleStateCookie)
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication session expired",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	verifierCookie, err := r.Cookie(googleVerifierCookie)
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication session expired",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	// Always remove these cookies after receiving the callback.
+	clearGoogleOAuthCookies(w, r)
+
+	// Google can return an OAuth error when the user cancels.
+	if googleError := r.URL.Query().Get("error"); googleError != "" {
+
+		if googleError == "access_denied" {
+			http.Redirect(
+				w,
+				r,
+				"/signup?google=cancelled",
+				http.StatusSeeOther,
+			)
+			return
+		}
+
+		http.Error(
+			w,
+			"Google authentication failed",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	returnedState := r.URL.Query().Get("state")
+
+	if returnedState == "" {
+		http.Error(
+			w,
+			"Invalid Google authentication response",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	// Constant-time comparison.
+	if subtle.ConstantTimeCompare(
+		[]byte(returnedState),
+		[]byte(stateCookie.Value),
+	) != 1 {
+
+		http.Error(
+			w,
+			"Invalid Google authentication state",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	code := r.URL.Query().Get("code")
+
+	if code == "" {
+		http.Error(
+			w,
+			"Google authorization code is missing",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		15*time.Second,
+	)
+
+	defer cancel()
+
+	// Exchange authorization code for access token.
+	token, err := config.Exchange(
+		ctx,
+		code,
+		oauth2.VerifierOption(verifierCookie.Value),
+	)
+
+	if err != nil {
+		fmt.Println("GOOGLE TOKEN EXCHANGE ERROR:", err)
+
+		http.Error(
+			w,
+			"Unable to complete Google authentication",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// Create HTTP client using the Google access token.
+	client := config.Client(ctx, token)
+
+	response, err := client.Get(googleUserInfoURL)
+	if err != nil {
+		fmt.Println("GOOGLE USERINFO ERROR:", err)
+
+		http.Error(
+			w,
+			"Unable to retrieve Google account",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+
+		http.Error(
+			w,
+			"Google account information could not be retrieved",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	var googleUser GoogleUserInfo
+
+	err = json.NewDecoder(response.Body).Decode(&googleUser)
+	if err != nil {
+
+		http.Error(
+			w,
+			"Invalid Google account information",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	googleUser.Sub = strings.TrimSpace(googleUser.Sub)
+	googleUser.Name = strings.TrimSpace(googleUser.Name)
+	googleUser.Email = strings.ToLower(
+		strings.TrimSpace(googleUser.Email),
+	)
+
+	if googleUser.Sub == "" ||
+		googleUser.Name == "" ||
+		googleUser.Email == "" {
+
+		http.Error(
+			w,
+			"Google did not provide the required account information",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	// We only accept a verified Google email.
+	if !googleUser.EmailVerified {
+
+		http.Error(
+			w,
+			"Your Google email address is not verified",
+			http.StatusForbidden,
+		)
+		return
+	}
+
+	/*
+		Check whether this exact Google account already exists.
+
+		Google's "sub" is the stable identifier.
+	*/
+	user, err := storage.GetUserByGoogleID(
+		googleUser.Sub,
+	)
+
+	if err == nil {
+
+		// Existing Google account.
+		sessionID, err := storage.CreateSession(user.ID)
+		if err != nil {
+			http.Error(
+				w,
+				"Unable to create login session",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		setLoginCookie(w, r, sessionID)
+
+		http.Redirect(
+			w,
+			r,
+			"/homepage",
+			http.StatusSeeOther,
+		)
+
+		return
+	}
+
+	if err != sql.ErrNoRows {
+
+		fmt.Println(
+			"GOOGLE USER LOOKUP ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to check Google account",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	/*
+		The Google ID was not found.
+
+		Now check whether the email is already
+		connected to another MoviPilot account.
+	*/
+	existingUser, err := storage.GetUserByEmail(
+		googleUser.Email,
+	)
+
+	if err == nil {
+
+		/*
+			The email already belongs to another account.
+
+			Do NOT silently merge accounts.
+			That would be a separate account-linking decision.
+		*/
+		if existingUser.AuthProvider == "local" {
+
+			http.Redirect(
+				w,
+				r,
+				"/login?google=existing",
+				http.StatusSeeOther,
+			)
+
+			return
+		}
+
+		// Another Google record should not normally happen,
+		// but do not create a duplicate account.
+		http.Redirect(
+			w,
+			r,
+			"/login",
+			http.StatusSeeOther,
+		)
+
+		return
+	}
+
+	if err != sql.ErrNoRows {
+
+		fmt.Println(
+			"EMAIL LOOKUP ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to check account email",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	/*
+		At this point:
+
+		Google ID does not exist.
+		Email does not exist.
+
+		So this is a brand-new MoviPilot account.
+	*/
+	err = storage.CreateGoogleUser(
+		googleUser.Name,
+		googleUser.Email,
+		googleUser.Sub,
+	)
+
+	if err != nil {
+
+		fmt.Println(
+			"GOOGLE USER CREATION ERROR:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to create MoviPilot account",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// Retrieve the newly created user so we get its database ID.
+	user, err = storage.GetUserByGoogleID(
+		googleUser.Sub,
+	)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"Account was created but could not be loaded",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	/*
+		Create normal MoviPilot session.
+	*/
+	sessionID, err := storage.CreateSession(
+		user.ID,
+	)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"Unable to create login session",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	setLoginCookie(
+		w,
+		r,
+		sessionID,
+	)
+
+	/*
+		Google signup is successful.
+	*/
+	http.Redirect(
+		w,
+		r,
+		"/homepage",
+		http.StatusSeeOther,
+	)
+}
+
+func clearGoogleOAuthCookies(w http.ResponseWriter, r *http.Request) {
+
+	secure := r.TLS != nil
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleStateCookie,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleVerifierCookie,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func setLoginCookie(
+	w http.ResponseWriter,
+	r *http.Request,
+	sessionID string,
+) {
+
+	secure := r.TLS != nil
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "movipilot_session",
+		Value:    sessionID,
+		Path:     "/",
+		MaxAge:   7 * 24 * 60 * 60,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
 }
 
 type LoginPageData struct {
@@ -1059,16 +1609,6 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Temporary debugging.
-	// Never print the real code or hash.
-	fmt.Printf(
-		"VERIFY DEBUG | email=%q | hashLength=%d | expires=%s | now=%s\n",
-		email,
-		len(hashedCode),
-		expiresAt.Format(time.RFC3339),
-		time.Now().Format(time.RFC3339),
-	)
-
 	// ============================================
 	// 5. CHECK EXPIRY
 	// ============================================
@@ -1164,19 +1704,6 @@ func VerificationCodeHandler(w http.ResponseWriter, r *http.Request) {
 		"redirect": "/reset-password",
 	})
 }
-
-/*
-ResetPasswordHandler
-
-Requires the existing validators:
-    ValidatePassword(password)
-    ValidatePasswordMatch(password, confirmPassword)
-
-The code below expects the verification handler to set:
-    movipilot_reset_verified
-
-and uses storage.UpdateUserPassword() to update users.password_hash.
-*/
 
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 

@@ -1,8 +1,8 @@
 package storage
 
-import ( 
+import (
+	"database/sql"
 	"time"
-
 )
 
 type User struct {
@@ -10,13 +10,21 @@ type User struct {
 	FullName     string
 	Email        string
 	PasswordHash string
+	AuthProvider string
+	GoogleID     string
 	CreatedAt    time.Time
 }
 
 func CreateUser(user User) error {
+
 	query := `
-		INSERT INTO users (full_name, email, password_hash)
-		VALUES (?, ?, ?)
+		INSERT INTO users (
+			full_name,
+			email,
+			password_hash,
+			auth_provider
+		)
+		VALUES (?, ?, ?, 'local')
 	`
 
 	_, err := DB.Exec(
@@ -29,18 +37,53 @@ func CreateUser(user User) error {
 	return err
 }
 
+func CreateGoogleUser(fullName, email, googleID string) error {
+
+	query := `
+		INSERT INTO users (
+			full_name,
+			email,
+			password_hash,
+			auth_provider,
+			google_id
+		)
+		VALUES (?, ?, '', 'google', ?)
+	`
+
+	_, err := DB.Exec(
+		query,
+		fullName,
+		email,
+		googleID,
+	)
+
+	return err
+}
+
 func GetUserByEmail(email string) (User, error) {
+
 	var user User
 
+	var googleID sql.NullString
+
 	err := DB.QueryRow(`
-        SELECT id, full_name, email, password_hash, created_at
-        FROM users
-        WHERE email = ?
-    `, email).Scan(
+		SELECT
+			id,
+			full_name,
+			email,
+			password_hash,
+			auth_provider,
+			google_id,
+			created_at
+		FROM users
+		WHERE email = ?
+	`, email).Scan(
 		&user.ID,
 		&user.FullName,
 		&user.Email,
 		&user.PasswordHash,
+		&user.AuthProvider,
+		&googleID,
 		&user.CreatedAt,
 	)
 
@@ -48,10 +91,53 @@ func GetUserByEmail(email string) (User, error) {
 		return User{}, err
 	}
 
+	if googleID.Valid {
+		user.GoogleID = googleID.String
+	}
+
+	return user, nil
+}
+
+func GetUserByGoogleID(googleID string) (User, error) {
+
+	var user User
+
+	var storedGoogleID sql.NullString
+
+	err := DB.QueryRow(`
+		SELECT
+			id,
+			full_name,
+			email,
+			password_hash,
+			auth_provider,
+			google_id,
+			created_at
+		FROM users
+		WHERE google_id = ?
+	`, googleID).Scan(
+		&user.ID,
+		&user.FullName,
+		&user.Email,
+		&user.PasswordHash,
+		&user.AuthProvider,
+		&storedGoogleID,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		return User{}, err
+	}
+
+	if storedGoogleID.Valid {
+		user.GoogleID = storedGoogleID.String
+	}
+
 	return user, nil
 }
 
 func EmailExists(email string) (bool, error) {
+
 	var exists bool
 
 	err := DB.QueryRow(`

@@ -463,6 +463,7 @@ func SignupHandler(w http.ResponseWriter, r *http.Request) {
 const (
 	googleStateCookie    = "movipilot_google_state"
 	googleVerifierCookie = "movipilot_google_verifier"
+	googleModeCookie     = "movipilot_google_mode"
 
 	googleUserInfoURL = "https://openidconnect.googleapis.com/v1/userinfo"
 )
@@ -516,6 +517,7 @@ func randomOAuthValue(size int) (string, error) {
 }
 
 func GoogleSignupHandler(w http.ResponseWriter, r *http.Request) {
+	startGoogleAuth(w, r, "signup")
 
 	if r.Method != http.MethodGet {
 		http.Error(
@@ -586,6 +588,106 @@ func GoogleSignupHandler(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
+func GoogleLoginHandler(w http.ResponseWriter, r *http.Request) {
+	startGoogleAuth(w, r, "login")
+}
+
+func startGoogleAuth(w http.ResponseWriter, r *http.Request, mode string) {
+
+	if r.Method != http.MethodGet {
+		http.Error(
+			w,
+			"Method Not Allowed",
+			http.StatusMethodNotAllowed,
+		)
+		return
+	}
+
+	if mode != "signup" && mode != "login" {
+		http.Error(
+			w,
+			"Invalid Google authentication mode",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	config, err := getGoogleOAuthConfig()
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication is not configured",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// Random state protects the OAuth flow against CSRF.
+	state, err := randomOAuthValue(32)
+	if err != nil {
+		http.Error(
+			w,
+			"Unable to start Google authentication",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// PKCE verifier protects the authorization-code exchange.
+	verifier := oauth2.GenerateVerifier()
+
+	secure := r.TLS != nil
+
+	// Store state.
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleStateCookie,
+		Value:    state,
+		Path:     "/",
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Store PKCE verifier.
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleVerifierCookie,
+		Value:    verifier,
+		Path:     "/",
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	// Remember whether this came from signup or login.
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleModeCookie,
+		Value:    mode,
+		Path:     "/",
+		MaxAge:   600,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	authURL := config.AuthCodeURL(
+		state,
+		oauth2.S256ChallengeOption(verifier),
+		oauth2.SetAuthURLParam(
+			"prompt",
+			"select_account",
+		),
+	)
+
+	http.Redirect(
+		w,
+		r,
+		authURL,
+		http.StatusFound,
+	)
+}
+
 func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	config, err := getGoogleOAuthConfig()
@@ -613,6 +715,27 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(
 			w,
 			"Google authentication session expired",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	modeCookie, err := r.Cookie(googleModeCookie)
+	if err != nil {
+		http.Error(
+			w,
+			"Google authentication session expired",
+			http.StatusBadRequest,
+		)
+		return
+	}
+
+	mode := modeCookie.Value
+
+	if mode != "signup" && mode != "login" {
+		http.Error(
+			w,
+			"Invalid Google authentication mode",
 			http.StatusBadRequest,
 		)
 		return
@@ -821,139 +944,278 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/*
-		The Google ID was not found.
+	if err == sql.ErrNoRows {
 
-		Now check whether the email is already
-		connected to another MoviPilot account.
-	*/
-	existingUser, err := storage.GetUserByEmail(
-		googleUser.Email,
-	)
-
-	if err == nil {
-
-		/*
-			The email already belongs to another account.
-
-			Do NOT silently merge accounts.
-			That would be a separate account-linking decision.
-		*/
-		if existingUser.AuthProvider == "local" {
+		// LOGIN MODE
+		if mode == "login" {
 
 			http.Redirect(
 				w,
 				r,
-				"/login?google=existing",
+				"/login?google=not_registered",
 				http.StatusSeeOther,
 			)
 
 			return
 		}
 
-		// Another Google record should not normally happen,
-		// but do not create a duplicate account.
+		if mode == "signup" {
+
+			existingUser, err := storage.GetUserByEmail(
+				googleUser.Email,
+			)
+
+			if err == nil {
+
+				/*
+					The email already belongs to another
+					MoviPilot account.
+
+					We don't silently merge the accounts.
+				*/
+				if existingUser.AuthProvider == "local" {
+
+					http.Redirect(
+						w,
+						r,
+						"/login?google=existing",
+						http.StatusSeeOther,
+					)
+
+					return
+				}
+
+				http.Redirect(
+					w,
+					r,
+					"/login",
+					http.StatusSeeOther,
+				)
+
+				return
+			}
+
+			if err != sql.ErrNoRows {
+
+				fmt.Println(
+					"EMAIL LOOKUP ERROR:",
+					err,
+				)
+
+				http.Error(
+					w,
+					"Unable to check account email",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			// Brand-new Google account.
+			err = storage.CreateGoogleUser(
+				googleUser.Name,
+				googleUser.Email,
+				googleUser.Sub,
+			)
+
+			if err != nil {
+
+				fmt.Println(
+					"GOOGLE USER CREATION ERROR:",
+					err,
+				)
+
+				http.Error(
+					w,
+					"Unable to create MoviPilot account",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			// Load newly created user.
+			user, err = storage.GetUserByGoogleID(
+				googleUser.Sub,
+			)
+
+			if err != nil {
+
+				http.Error(
+					w,
+					"Account was created but could not be loaded",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			sessionID, err := storage.CreateSession(
+				user.ID,
+			)
+
+			if err != nil {
+
+				http.Error(
+					w,
+					"Unable to create login session",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			setLoginCookie(
+				w,
+				r,
+				sessionID,
+			)
+
+			http.Redirect(
+				w,
+				r,
+				"/homepage",
+				http.StatusSeeOther,
+			)
+
+			return
+		}
+
+		/*
+			The Google ID was not found.
+
+			Now check whether the email is already
+			connected to another MoviPilot account.
+		*/
+		existingUser, err := storage.GetUserByEmail(
+			googleUser.Email,
+		)
+
+		if err == nil {
+
+			/*
+				The email already belongs to another account.
+
+				Do NOT silently merge accounts.
+				That would be a separate account-linking decision.
+			*/
+			if existingUser.AuthProvider == "local" {
+
+				http.Redirect(
+					w,
+					r,
+					"/login?google=existing",
+					http.StatusSeeOther,
+				)
+
+				return
+			}
+
+			// Another Google record should not normally happen,
+			// but do not create a duplicate account.
+			http.Redirect(
+				w,
+				r,
+				"/login",
+				http.StatusSeeOther,
+			)
+
+			return
+		}
+
+		if err != sql.ErrNoRows {
+
+			fmt.Println(
+				"EMAIL LOOKUP ERROR:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to check account email",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		/*
+			At this point:
+
+			Google ID does not exist.
+			Email does not exist.
+
+			So this is a brand-new MoviPilot account.
+		*/
+		err = storage.CreateGoogleUser(
+			googleUser.Name,
+			googleUser.Email,
+			googleUser.Sub,
+		)
+
+		if err != nil {
+
+			fmt.Println(
+				"GOOGLE USER CREATION ERROR:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to create MoviPilot account",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		// Retrieve the newly created user so we get its database ID.
+		user, err = storage.GetUserByGoogleID(
+			googleUser.Sub,
+		)
+
+		if err != nil {
+
+			http.Error(
+				w,
+				"Account was created but could not be loaded",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		/*
+			Create normal MoviPilot session.
+		*/
+		sessionID, err := storage.CreateSession(
+			user.ID,
+		)
+
+		if err != nil {
+
+			http.Error(
+				w,
+				"Unable to create login session",
+				http.StatusInternalServerError,
+			)
+			return
+		}
+
+		setLoginCookie(
+			w,
+			r,
+			sessionID,
+		)
+
+		/*
+			Google signup is successful.
+		*/
 		http.Redirect(
 			w,
 			r,
-			"/login",
+			"/homepage",
 			http.StatusSeeOther,
 		)
-
-		return
 	}
 
-	if err != sql.ErrNoRows {
-
-		fmt.Println(
-			"EMAIL LOOKUP ERROR:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Unable to check account email",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	/*
-		At this point:
-
-		Google ID does not exist.
-		Email does not exist.
-
-		So this is a brand-new MoviPilot account.
-	*/
-	err = storage.CreateGoogleUser(
-		googleUser.Name,
-		googleUser.Email,
-		googleUser.Sub,
-	)
-
-	if err != nil {
-
-		fmt.Println(
-			"GOOGLE USER CREATION ERROR:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Unable to create MoviPilot account",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	// Retrieve the newly created user so we get its database ID.
-	user, err = storage.GetUserByGoogleID(
-		googleUser.Sub,
-	)
-
-	if err != nil {
-
-		http.Error(
-			w,
-			"Account was created but could not be loaded",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	/*
-		Create normal MoviPilot session.
-	*/
-	sessionID, err := storage.CreateSession(
-		user.ID,
-	)
-
-	if err != nil {
-
-		http.Error(
-			w,
-			"Unable to create login session",
-			http.StatusInternalServerError,
-		)
-		return
-	}
-
-	setLoginCookie(
-		w,
-		r,
-		sessionID,
-	)
-
-	/*
-		Google signup is successful.
-	*/
-	http.Redirect(
-		w,
-		r,
-		"/homepage",
-		http.StatusSeeOther,
-	)
 }
 
 func clearGoogleOAuthCookies(w http.ResponseWriter, r *http.Request) {
@@ -972,6 +1234,16 @@ func clearGoogleOAuthCookies(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     googleVerifierCookie,
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   secure,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     googleModeCookie,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,

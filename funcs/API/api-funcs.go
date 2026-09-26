@@ -2,11 +2,10 @@ package API
 
 import (
 	"html/template"
+	"os"
 
 	"github.com/benlei/go-tmdb/v2"
 )
-
-const tmdbToken = "4b219f39bcc74d2bc3b1b077c439a7ea"
 
 type MovieInfo struct {
 	ID          int64
@@ -24,6 +23,9 @@ type PageData struct {
 }
 
 func GetTrendingMovies() ([]MovieInfo, error) {
+
+	tmdbToken := os.Getenv("TMDB_TOKEN")
+
 	tmdbClient, err := tmdb.Init(tmdbToken)
 	if err != nil {
 		return nil, err
@@ -57,6 +59,9 @@ func GetTrendingMovies() ([]MovieInfo, error) {
 }
 
 func SearchMovies(query string) ([]MovieInfo, error) {
+
+	tmdbToken := os.Getenv("TMDB_TOKEN")
+
 	tmdbClient, err := tmdb.Init(tmdbToken)
 	if err != nil {
 		return nil, err

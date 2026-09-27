@@ -1296,6 +1296,20 @@ body {
     height: 17px;
 }
 
+/* Hide the closed eye icon by default */
+.password-toggle .eye-closed {
+    display: none;
+}
+
+/* When the toggle has an 'is-visible' class, swap which eye shows */
+.password-toggle.is-visible .eye-open {
+    display: none;
+}
+.password-toggle.is-visible .eye-closed {
+    display: block;
+}
+
+
 
 /* =========================================
    TERMS

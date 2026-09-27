@@ -108,6 +108,27 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         );
 
+ocument.querySelectorAll('.password-toggle').forEach(button => {
+    button.addEventListener('click', function() {
+        // Reads "password" or "confirmPassword" dynamically based on the clicked button
+        const targetId = this.getAttribute('data-target');
+        const passwordInput = document.getElementById(targetId);
+        
+        if (!passwordInput) return;
+
+        // Toggle input type
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+
+        // Toggle icon state
+        this.classList.toggle('is-visible', isPassword);
+
+        // Update accessibility label
+        this.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    });
+});
+
+        
 
         // =================================
         // REMOVE ERROR WHILE TYPING

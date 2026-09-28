@@ -399,7 +399,7 @@ function createParticles() {
         Keep mobile lighter than desktop.
     */
 
-    let particleCount = 80;
+    let particleCount = 130;
 
 
     if (window.innerWidth < 720) {
@@ -432,10 +432,10 @@ function createParticles() {
                 (Math.random() - 0.5) * 0.18,
 
             velocityY:
-                (Math.random() - 0.5) * 0.18,
+                (Math.random() - 0.5) * 1.18,
 
             opacity:
-                Math.random() * 0.45 + 0.10
+                Math.random() * 0.45 + 0.30
 
         });
 
@@ -580,7 +580,7 @@ function drawParticles() {
             if (distance < 105) {
 
                 const opacity =
-                    (1 - distance / 105) * 0.07;
+                    (1 - distance / 105) * 0.09;
 
 
                 context.beginPath();

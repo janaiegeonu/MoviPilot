@@ -3,11 +3,573 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+
+    <title>MoviPilot Dashboard</title>
+
+    <link rel="icon" href="/img/logo favicon.png">
+    <link rel="stylesheet" href="/templates/css/dashboard.css">
 </head>
+
 <body>
 
-    <h2> dashboard </h2>
-    
+    <!-- =========================================================
+         CINEMATIC BACKGROUND
+         ========================================================= -->
+
+    <div class="dashboard-background">
+
+        <canvas id="particleCanvas"></canvas>
+
+        <div class="cinematic-glow glow-one"></div>
+        <div class="cinematic-glow glow-two"></div>
+        <div class="cinematic-overlay"></div>
+
+    </div>
+
+
+    <!-- =========================================================
+         TOP NAVBAR
+         ========================================================= -->
+
+    <header class="dashboard-navbar">
+
+        <!-- Mobile menu button -->
+        <button
+            class="mobile-menu-button"
+            id="mobileMenuButton"
+            aria-label="Open navigation menu"
+        >
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+
+        <!-- LOGO -->
+        <a href="#" class="dashboard-logo">
+
+            <!-- Change this path to your actual MoviPilot logo -->
+            <img
+                src="/img/movipilot-logo.png"
+                alt="MoviPilot"
+            >
+
+        </a>
+
+
+        <!-- MAIN NAVIGATION -->
+        <nav class="main-navigation">
+
+            <button class="nav-link active" data-page="home">
+                Home
+            </button>
+
+            <button class="nav-link" data-page="tv">
+                TV Series
+            </button>
+
+            <button class="nav-link" data-page="movies">
+                Movies
+            </button>
+
+            <button class="nav-link" data-page="anime">
+                Anime
+            </button>
+
+        </nav>
+
+
+        <!-- RIGHT SIDE -->
+        <div class="navbar-right">
+
+            <!-- SEARCH -->
+            <div class="search-container">
+
+                <div class="search-box">
+
+                    <input
+                        type="text"
+                        id="dashboardSearch"
+                        placeholder="Search movies..."
+                        autocomplete="off"
+                    >
+
+                    <!-- Search / microscope style SVG -->
+                    <button
+                        class="search-button"
+                        id="searchButton"
+                        aria-label="Search"
+                    >
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <circle
+                                cx="11"
+                                cy="11"
+                                r="6.5"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                            />
+
+                            <path
+                                d="M16 16L21 21"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M8.5 8.5L13.5 13.5"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linecap="round"
+                                opacity="0.45"
+                            />
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- PROFILE -->
+            <button
+                class="profile-button"
+                id="profileButton"
+                aria-label="Open profile"
+            >
+
+                <span class="profile-avatar">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <circle
+                            cx="12"
+                            cy="8"
+                            r="3.2"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                        />
+
+                        <path
+                            d="M5.5 20C6.5 16.6 8.7 14.9 12 14.9C15.3 14.9 17.5 16.6 18.5 20"
+                            stroke="currentColor"
+                            stroke-width="1.7"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+
+                </span>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         DASHBOARD LAYOUT
+         ========================================================= -->
+
+    <div class="dashboard-layout">
+
+
+        <!-- =====================================================
+             SIDEBAR
+             ===================================================== -->
+
+        <aside class="dashboard-sidebar" id="dashboardSidebar">
+
+            <!-- SIDEBAR TOP -->
+            <div class="sidebar-top">
+
+                <button
+                    class="sidebar-toggle"
+                    id="sidebarToggle"
+                    aria-label="Toggle sidebar"
+                >
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M9 6L15 12L9 18"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                    <span class="toggle-label">
+                        Collapse
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- SIDEBAR MENU -->
+            <div class="sidebar-menu">
+
+
+                <!-- =================================================
+                     GENRE DROPDOWN
+                     ================================================= -->
+
+                <div class="sidebar-group">
+
+                    <button
+                        class="sidebar-item genre-button"
+                        id="genreButton"
+                        aria-expanded="false"
+                    >
+
+                        <span class="sidebar-icon">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M4 5.5C4 4.67 4.67 4 5.5 4H18.5C19.33 4 20 4.67 20 5.5V18.5C20 19.33 19.33 20 18.5 20H5.5C4.67 20 4 19.33 4 18.5V5.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                />
+
+                                <path
+                                    d="M8 8H16"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                />
+
+                                <path
+                                    d="M8 12H16"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                />
+
+                                <path
+                                    d="M8 16H13"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                />
+                            </svg>
+
+                        </span>
+
+                        <span class="sidebar-label">
+                            Genre
+                        </span>
+
+                        <svg
+                            class="dropdown-arrow"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M6 9L12 15L18 9"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </button>
+
+
+                    <!-- GENRE LIST -->
+                    <div class="genre-dropdown" id="genreDropdown">
+
+                        <button class="genre-option">
+                            Action
+                        </button>
+
+                        <button class="genre-option">
+                            Adventure
+                        </button>
+
+                        <button class="genre-option">
+                            Comedy
+                        </button>
+
+                        <button class="genre-option">
+                            Anime
+                        </button>
+
+                        <button class="genre-option">
+                            Horror
+                        </button>
+
+                        <button class="genre-option">
+                            Romance
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     TOP RATED
+                     ================================================= -->
+
+                <button class="sidebar-item">
+
+                    <span class="sidebar-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M12 3.5L14.6 8.8L20.5 9.65L16.25 13.8L17.25 19.65L12 16.9L6.75 19.65L7.75 13.8L3.5 9.65L9.4 8.8L12 3.5Z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-label">
+                        Top Rated Movies
+                    </span>
+
+                </button>
+
+
+                <!-- =================================================
+                     WATCHLIST
+                     ================================================= -->
+
+                <button class="sidebar-item">
+
+                    <span class="sidebar-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M6 5.5C6 4.67 6.67 4 7.5 4H16.5C17.33 4 18 4.67 18 5.5V20L12 16.8L6 20V5.5Z"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-label">
+                        Watchlist
+                    </span>
+
+                </button>
+
+
+                <!-- =================================================
+                     TRENDING
+                     ================================================= -->
+
+                <button class="sidebar-item">
+
+                    <span class="sidebar-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M13.2 3.5C13.2 3.5 14.1 7.1 11.5 9.3C10.5 8 9.8 6.7 9.8 5.5C7.6 7.5 6 10.1 6 13C6 17 8.7 20 12 20C15.8 20 18 17.4 18 14.1C18 10.2 15.1 7.2 13.2 3.5Z"
+                                stroke="currentColor"
+                                stroke-width="1.6"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-label">
+                        Trending Movies
+                    </span>
+
+                </button>
+
+
+                <!-- =================================================
+                     COMING SOON
+                     ================================================= -->
+
+                <button class="sidebar-item">
+
+                    <span class="sidebar-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <rect
+                                x="4"
+                                y="5"
+                                width="16"
+                                height="15"
+                                rx="2"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                            <path
+                                d="M8 3V7"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M16 3V7"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M4 10H20"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                            <path
+                                d="M8 14H8.01"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M12 14H12.01"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M16 14H16.01"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-label">
+                        Coming Soon
+                    </span>
+
+                </button>
+
+            </div>
+
+
+            <!-- =====================================================
+                 LOGOUT
+                 ===================================================== -->
+
+            <div class="sidebar-bottom">
+
+                <button class="sidebar-item logout-item">
+
+                    <span class="sidebar-icon">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M10 5H6.5C5.67 5 5 5.67 5 6.5V17.5C5 18.33 5.67 19 6.5 19H10"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M14 8L18 12L14 16"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                            <path
+                                d="M18 12H9"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+
+                    </span>
+
+                    <span class="sidebar-label">
+                        Logout
+                    </span>
+
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+             MAIN CONTENT
+             
+             INTENTIONALLY EMPTY FOR NOW
+             ===================================================== -->
+
+        <main class="dashboard-main" id="dashboardMain">
+
+            <!--
+                Your dashboard content will be designed here later.
+
+                Example future sections:
+                - Hero movie
+                - Trending carousel
+                - Recommended movies
+                - Continue watching
+                - Popular TV series
+            -->
+
+        </main>
+
+    </div>
+
+
+    <script src="/templates/js/dashboard.js"></script>
+
 </body>
 </html>

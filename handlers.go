@@ -39,6 +39,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/reset-password.html",
 		"templates/terms.html",
 		"templates/policy.html",
+		"templates/dashboard.html",
 	)
 	if err != nil {
 		http.Error(
@@ -931,7 +932,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(
 			w,
 			r,
-			"/homepage",
+			"/dashboard",
 			http.StatusSeeOther,
 		)
 
@@ -1216,7 +1217,7 @@ func GoogleCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(
 		w,
 		r,
-		"/homepage",
+		"/dashboard",
 		http.StatusSeeOther,
 	)
 
@@ -2155,4 +2156,35 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 type ResetPasswordPageData struct {
 	Email string
+}
+
+func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodGet {
+
+		err := renderTemplate(
+			w,
+			"dashboard.html",
+			nil,
+		)
+
+		if err != nil {
+			http.Error(
+				w,
+				"500 : Failed to render forgot-password page",
+				http.StatusInternalServerError,
+			)
+		}
+
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(
+			w,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
+		)
+		return
+	}
 }

@@ -37,6 +37,7 @@ func main() {
 	http.HandleFunc("/forgot-password", ForgotPasswordHandler)
 	http.HandleFunc("/verify-code", VerificationCodeHandler)
 	http.HandleFunc("/reset-password", ResetPasswordHandler)
+	http.HandleFunc("/dashboard", DashBoardHandler)
 
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))

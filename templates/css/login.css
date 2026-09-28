@@ -1503,6 +1503,67 @@ body {
     color: #e05252;
 }
 
+.password-toggle {
+
+    position: absolute;
+
+    right: 14px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 28px;
+    height: 28px;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    color: #8da0b2;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.password-toggle:hover {
+
+    color: #3189dc;
+
+}
+
+
+.password-toggle svg {
+
+    width: 17px;
+    height: 17px;
+}
+
+/* Hide the closed eye icon by default */
+.password-toggle .eye-closed {
+    display: none;
+}
+
+/* When the toggle has an 'is-visible' class, swap which eye shows */
+.password-toggle.is-visible .eye-open {
+    display: none;
+}
+.password-toggle.is-visible .eye-closed {
+    display: block;
+}
+
+
+
+
+
 
 /* =========================================
    ERROR ENTER

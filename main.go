@@ -26,6 +26,8 @@ func main() {
 	http.HandleFunc(
 		"/auth/google/signup",
 		GoogleSignupHandler)
+	http.HandleFunc("/terms", TermsHandler)
+	http.HandleFunc("/privacy-policy", PrivacyPolicyHandler)
 	http.HandleFunc(
 		"/auth/google/login",
 		GoogleLoginHandler,

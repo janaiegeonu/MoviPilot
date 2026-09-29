@@ -2,64 +2,87 @@
    MOVIPILOT DASHBOARD JS
    ========================================================= */
 
-console.log("MOVIPILOT DASHBOARD JS LOADED");
+console.log(
+    "MOVIPILOT DASHBOARD JS LOADED"
+);
 
 
 /* =========================================================
-   SIDEBAR
+   ELEMENTS
    ========================================================= */
 
 const sidebar =
-    document.getElementById("dashboardSidebar");
+    document.getElementById(
+        "dashboardSidebar"
+    );
+
 
 const sidebarToggle =
-    document.getElementById("sidebarToggle");
+    document.getElementById(
+        "sidebarToggle"
+    );
+
 
 const mobileMenuButton =
-    document.getElementById("mobileMenuButton");
+    document.getElementById(
+        "mobileMenuButton"
+    );
 
 
-/*
-    Desktop:
-    Clicking the toggle changes the sidebar between:
+const genreButton =
+    document.getElementById(
+        "genreButton"
+    );
 
-    252px = expanded
-     82px = collapsed
-*/
 
-sidebarToggle.addEventListener("click", () => {
+const genreDropdown =
+    document.getElementById(
+        "genreDropdown"
+    );
+
+
+/* =========================================================
+   MOBILE CHECK
+   ========================================================= */
+
+function isMobile() {
+
+    return window.innerWidth <= 720;
+
+}
+
+
+/* =========================================================
+   DESKTOP SIDEBAR STATE
+   ========================================================= */
+
+function setSidebarCollapsed(
+    collapsed
+) {
 
     /*
-        On mobile we don't actually collapse the sidebar.
-        We use it as a normal slide-out menu.
+        Mobile does not use this function.
     */
 
-    if (window.innerWidth <= 720) {
-
-        sidebar.classList.toggle("mobile-open");
+    if (isMobile()) {
 
         return;
+
     }
 
 
-    sidebar.classList.toggle("collapsed");
+    sidebar.classList.toggle(
+        "collapsed",
+        collapsed
+    );
 
-
-    /*
-        Save the user's preference.
-
-        That means if they reload the dashboard,
-        their sidebar state can be restored.
-    */
-
-    const collapsed =
-        sidebar.classList.contains("collapsed");
 
     localStorage.setItem(
         "movipilotSidebarCollapsed",
         collapsed
     );
-});
+
+}
 
 
 /* =========================================================
@@ -74,130 +97,287 @@ const savedSidebarState =
 
 if (
     savedSidebarState === "true" &&
-    window.innerWidth > 720
+    !isMobile()
 ) {
 
-    sidebar.classList.add("collapsed");
+    sidebar.classList.add(
+        "collapsed"
+    );
 
 }
 
 
 /* =========================================================
-   MOBILE MENU
+   SIDEBAR TOGGLE
    ========================================================= */
 
-mobileMenuButton.addEventListener("click", () => {
+sidebarToggle.addEventListener(
+    "click",
+    (event) => {
 
-    sidebar.classList.toggle("mobile-open");
+        event.stopPropagation();
 
-});
+
+        /*
+            On mobile, this button closes
+            the sidebar instead of changing
+            it into icon mode.
+
+            The hamburger opens it again.
+        */
+
+        if (isMobile()) {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+            return;
+
+        }
+
+
+        const shouldCollapse =
+            !sidebar.classList.contains(
+                "collapsed"
+            );
+
+
+        setSidebarCollapsed(
+            shouldCollapse
+        );
+
+
+        /*
+            Close the Genre dropdown
+            when entering icon-only mode.
+        */
+
+        if (shouldCollapse) {
+
+            genreDropdown.classList.remove(
+                "open"
+            );
+
+            genreButton.classList.remove(
+                "open"
+            );
+
+            genreButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MOBILE HAMBURGER
+   ========================================================= */
+
+mobileMenuButton.addEventListener(
+    "click",
+    (event) => {
+
+        event.stopPropagation();
+
+
+        sidebar.classList.toggle(
+            "mobile-open"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   CLOSE MOBILE SIDEBAR
+   WHEN CLICKING OUTSIDE
+   ========================================================= */
+
+document.addEventListener(
+    "click",
+    (event) => {
+
+        if (!isMobile()) {
+
+            return;
+
+        }
+
+
+        const clickedInsideSidebar =
+            sidebar.contains(
+                event.target
+            );
+
+
+        const clickedHamburger =
+            mobileMenuButton.contains(
+                event.target
+            );
+
+
+        if (
+            !clickedInsideSidebar &&
+            !clickedHamburger
+        ) {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+        }
+
+    }
+);
 
 
 /* =========================================================
    GENRE DROPDOWN
    ========================================================= */
 
-const genreButton =
-    document.getElementById("genreButton");
+genreButton.addEventListener(
+    "click",
+    (event) => {
 
-const genreDropdown =
-    document.getElementById("genreDropdown");
-
-
-genreButton.addEventListener("click", () => {
-
-    const isOpen =
-        genreDropdown.classList.contains("open");
-
-
-    genreDropdown.classList.toggle(
-        "open"
-    );
-
-    genreButton.classList.toggle(
-        "open"
-    );
-
-
-    genreButton.setAttribute(
-        "aria-expanded",
-        !isOpen
-    );
-
-});
-
-
-/* =========================================================
-   CLOSE SIDEBAR ON MOBILE
-   WHEN CLICKING OUTSIDE
-   ========================================================= */
-
-document.addEventListener("click", (event) => {
-
-    const clickedInsideSidebar =
-        sidebar.contains(event.target);
-
-    const clickedMobileButton =
-        mobileMenuButton.contains(event.target);
-
-
-    if (
-        window.innerWidth <= 720 &&
-        !clickedInsideSidebar &&
-        !clickedMobileButton
-    ) {
-
-        sidebar.classList.remove(
-            "mobile-open"
-        );
-
-    }
-
-});
-
-
-/* =========================================================
-   MAIN NAVIGATION
-   ========================================================= */
-
-const navigationButtons =
-    document.querySelectorAll(".nav-link");
-
-
-navigationButtons.forEach((button) => {
-
-    button.addEventListener("click", () => {
-
-        navigationButtons.forEach((item) => {
-
-            item.classList.remove("active");
-
-        });
-
-
-        button.classList.add("active");
+        event.stopPropagation();
 
 
         /*
-            Later you can connect these
-            buttons to your Go routes.
-
-            Example:
-
-            home    -> /dashboard
-            tv      -> /tv-series
-            movies  -> /movies
-            anime   -> /anime
+            Don't open Genre dropdown
+            while desktop sidebar is
+            icon-only.
         */
 
-        console.log(
-            "Selected page:",
-            button.dataset.page
+        if (
+            !isMobile() &&
+            sidebar.classList.contains(
+                "collapsed"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const isOpen =
+            genreDropdown.classList.contains(
+                "open"
+            );
+
+
+        genreDropdown.classList.toggle(
+            "open"
         );
 
-    });
 
-});
+        genreButton.classList.toggle(
+            "open"
+        );
+
+
+        genreButton.setAttribute(
+            "aria-expanded",
+            String(!isOpen)
+        );
+
+    }
+);
+
+
+/* =========================================================
+   GENRE HOVER ANIMATION
+   ========================================================= */
+
+genreButton.addEventListener(
+    "mouseenter",
+    () => {
+
+        /*
+            Remove first so the animation
+            can restart every time the user
+            leaves and comes back.
+        */
+
+        genreButton.classList.remove(
+            "is-animating"
+        );
+
+
+        requestAnimationFrame(
+            () => {
+
+                genreButton.classList.add(
+                    "is-animating"
+                );
+
+            }
+        );
+
+    }
+);
+
+
+genreButton.addEventListener(
+    "mouseleave",
+    () => {
+
+        genreButton.classList.remove(
+            "is-animating"
+        );
+
+    }
+);
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+const navigationButtons =
+    document.querySelectorAll(
+        ".nav-link"
+    );
+
+
+navigationButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                navigationButtons.forEach(
+                    (item) => {
+
+                        item.classList.remove(
+                            "active"
+                        );
+
+                    }
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                console.log(
+                    "Selected page:",
+                    button.dataset.page
+                );
+
+            }
+        );
+
+    }
+);
 
 
 /* =========================================================
@@ -205,35 +385,43 @@ navigationButtons.forEach((button) => {
    ========================================================= */
 
 const genreOptions =
-    document.querySelectorAll(".genre-option");
+    document.querySelectorAll(
+        ".genre-option"
+    );
 
 
-genreOptions.forEach((option) => {
+genreOptions.forEach(
+    (option) => {
 
-    option.addEventListener("click", () => {
+        option.addEventListener(
+            "click",
+            () => {
 
-        const selectedGenre =
-            option.textContent.trim();
+                const selectedGenre =
+                    option.textContent.trim();
 
 
-        console.log(
-            "Selected genre:",
-            selectedGenre
+                console.log(
+                    "Selected genre:",
+                    selectedGenre
+                );
+
+
+                /*
+                    Later:
+
+                    window.location.href =
+                        "/genre?q=" +
+                        encodeURIComponent(
+                            selectedGenre
+                        );
+                */
+
+            }
         );
 
-
-        /*
-            Later this can become:
-
-            /genre?action
-            /genre?adventure
-            /genre?comedy
-            etc.
-        */
-
-    });
-
-});
+    }
+);
 
 
 /* =========================================================
@@ -241,10 +429,15 @@ genreOptions.forEach((option) => {
    ========================================================= */
 
 const searchInput =
-    document.getElementById("dashboardSearch");
+    document.getElementById(
+        "dashboardSearch"
+    );
+
 
 const searchButton =
-    document.getElementById("searchButton");
+    document.getElementById(
+        "searchButton"
+    );
 
 
 function performSearch() {
@@ -258,6 +451,7 @@ function performSearch() {
         searchInput.focus();
 
         return;
+
     }
 
 
@@ -268,25 +462,22 @@ function performSearch() {
 
 
     /*
-        Later connect this to your Go backend.
-
-        Example idea:
+        Later connect to your Go backend:
 
         window.location.href =
-            "/search?q=" + encodeURIComponent(query);
+            "/search?q=" +
+            encodeURIComponent(query);
     */
 
 }
 
 
-/* Search button */
 searchButton.addEventListener(
     "click",
     performSearch
 );
 
 
-/* Search using Enter */
 searchInput.addEventListener(
     "keydown",
     (event) => {
@@ -302,26 +493,18 @@ searchInput.addEventListener(
 
 
 /* =========================================================
-   PROFILE BUTTON
+   PROFILE
    ========================================================= */
 
 const profileButton =
-    document.getElementById("profileButton");
+    document.getElementById(
+        "profileButton"
+    );
 
 
 profileButton.addEventListener(
     "click",
     () => {
-
-        /*
-            Later this can open:
-
-            - Profile
-            - Account settings
-            - Saved movies
-            - Security
-            - Logout
-        */
 
         console.log(
             "Profile clicked"
@@ -332,40 +515,108 @@ profileButton.addEventListener(
 
 
 /* =========================================================
-   PARTICLE BACKGROUND
+   RESPONSIVE STATE
+   ========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {
+
+        /*
+            Moving into mobile:
+            remove desktop collapse.
+        */
+
+        if (isMobile()) {
+
+            sidebar.classList.remove(
+                "collapsed"
+            );
+
+            return;
+
+        }
+
+
+        /*
+            Moving back to desktop:
+            close mobile drawer.
+        */
+
+        sidebar.classList.remove(
+            "mobile-open"
+        );
+
+
+        /*
+            Restore desktop preference.
+        */
+
+        const savedState =
+            localStorage.getItem(
+                "movipilotSidebarCollapsed"
+            );
+
+
+        if (
+            savedState === "true"
+        ) {
+
+            sidebar.classList.add(
+                "collapsed"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   CINEMATIC PARTICLES
    ========================================================= */
 
 const canvas =
-    document.getElementById("particleCanvas");
+    document.getElementById(
+        "particleCanvas"
+    );
+
 
 const context =
-    canvas.getContext("2d");
+    canvas.getContext(
+        "2d"
+    );
 
 
 let particles = [];
 
-let animationFrame;
-
 
 /* =========================================================
-   CANVAS SIZE
+   RESIZE CANVAS
    ========================================================= */
 
 function resizeCanvas() {
 
     const devicePixelRatio =
-        Math.min(window.devicePixelRatio || 1, 2);
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
 
 
     canvas.width =
-        window.innerWidth * devicePixelRatio;
+        window.innerWidth *
+        devicePixelRatio;
+
 
     canvas.height =
-        window.innerHeight * devicePixelRatio;
+        window.innerHeight *
+        devicePixelRatio;
 
 
     canvas.style.width =
         window.innerWidth + "px";
+
 
     canvas.style.height =
         window.innerHeight + "px";
@@ -395,16 +646,21 @@ function createParticles() {
     particles = [];
 
 
+    let particleCount =
+        260;
+
+
     /*
-        Keep mobile lighter than desktop.
+        Reduce the number of
+        particles on small screens.
     */
 
-    let particleCount = 130;
+    if (
+        window.innerWidth < 720
+    ) {
 
-
-    if (window.innerWidth < 720) {
-
-        particleCount = 42;
+        particleCount =
+            42;
 
     }
 
@@ -426,16 +682,22 @@ function createParticles() {
                 window.innerHeight,
 
             radius:
-                Math.random() * 1.5 + 0.35,
+                Math.random() *
+                1.5 +
+                0.45,
 
             velocityX:
-                (Math.random() - 0.5) * 0.18,
+                (Math.random() - 0.5) *
+                0.18,
 
             velocityY:
-                (Math.random() - 0.5) * 1.18,
+                (Math.random() - 0.5) *
+                0.68,
 
             opacity:
-                Math.random() * 0.45 + 0.30
+                Math.random() *
+                0.45 +
+                0.30
 
         });
 
@@ -458,12 +720,6 @@ function drawParticles() {
     );
 
 
-    /*
-        Draw subtle connection lines.
-        This gives the background a more
-        cinematic "network / atmosphere" effect.
-    */
-
     for (
         let i = 0;
         i < particles.length;
@@ -474,9 +730,9 @@ function drawParticles() {
             particles[i];
 
 
-        /* -----------------------------------------
-           Move particle
-           ----------------------------------------- */
+        /*
+            Movement
+        */
 
         particle.x +=
             particle.velocityX;
@@ -485,11 +741,13 @@ function drawParticles() {
             particle.velocityY;
 
 
-        /* -----------------------------------------
-           Wrap particles around screen
-           ----------------------------------------- */
+        /*
+            Horizontal wrap
+        */
 
-        if (particle.x < -10) {
+        if (
+            particle.x < -10
+        ) {
 
             particle.x =
                 window.innerWidth + 10;
@@ -497,7 +755,8 @@ function drawParticles() {
         }
 
 
-        if (particle.x >
+        if (
+            particle.x >
             window.innerWidth + 10
         ) {
 
@@ -506,7 +765,13 @@ function drawParticles() {
         }
 
 
-        if (particle.y < -10) {
+        /*
+            Vertical wrap
+        */
+
+        if (
+            particle.y < -10
+        ) {
 
             particle.y =
                 window.innerHeight + 10;
@@ -514,7 +779,8 @@ function drawParticles() {
         }
 
 
-        if (particle.y >
+        if (
+            particle.y >
             window.innerHeight + 10
         ) {
 
@@ -523,11 +789,12 @@ function drawParticles() {
         }
 
 
-        /* -----------------------------------------
-           Draw particle
-           ----------------------------------------- */
+        /*
+            Draw particle
+        */
 
         context.beginPath();
+
 
         context.arc(
             particle.x,
@@ -538,20 +805,21 @@ function drawParticles() {
         );
 
 
-        /*
-            Muted sea-green / cyan atmosphere.
-        */
-
         context.fillStyle =
-            `rgba(102, 211, 207, ${particle.opacity})`;
+            `rgba(
+                102,
+                211,
+                207,
+                ${particle.opacity}
+            )`;
 
 
         context.fill();
 
 
-        /* -----------------------------------------
-           Connect nearby particles
-           ----------------------------------------- */
+        /*
+            Connect nearby particles
+        */
 
         for (
             let j = i + 1;
@@ -564,31 +832,44 @@ function drawParticles() {
 
 
             const differenceX =
-                particle.x - other.x;
+                particle.x -
+                other.x;
+
 
             const differenceY =
-                particle.y - other.y;
+                particle.y -
+                other.y;
 
 
             const distance =
                 Math.sqrt(
-                    differenceX * differenceX +
-                    differenceY * differenceY
+                    differenceX *
+                    differenceX +
+
+                    differenceY *
+                    differenceY
                 );
 
 
-            if (distance < 105) {
+            if (
+                distance < 105
+            ) {
 
                 const opacity =
-                    (1 - distance / 105) * 0.09;
+                    (
+                        1 -
+                        distance / 105
+                    ) * 0.09;
 
 
                 context.beginPath();
+
 
                 context.moveTo(
                     particle.x,
                     particle.y
                 );
+
 
                 context.lineTo(
                     other.x,
@@ -597,10 +878,17 @@ function drawParticles() {
 
 
                 context.strokeStyle =
-                    `rgba(85, 170, 255, ${opacity})`;
+                    `rgba(
+                        85,
+                        170,
+                        255,
+                        ${opacity}
+                    )`;
 
 
-                context.lineWidth = 0.7;
+                context.lineWidth =
+                    0.7;
+
 
                 context.stroke();
 
@@ -611,16 +899,15 @@ function drawParticles() {
     }
 
 
-    animationFrame =
-        requestAnimationFrame(
-            drawParticles
-        );
+    requestAnimationFrame(
+        drawParticles
+    );
 
 }
 
 
 /* =========================================================
-   START BACKGROUND
+   START PARTICLE SYSTEM
    ========================================================= */
 
 resizeCanvas();
@@ -629,34 +916,10 @@ drawParticles();
 
 
 /* =========================================================
-   RESIZE EVENT
+   RESIZE
    ========================================================= */
 
 window.addEventListener(
     "resize",
-    () => {
-
-        resizeCanvas();
-
-    }
-);
-
-
-/* =========================================================
-   MOBILE RESIZE SAFETY
-   ========================================================= */
-
-window.addEventListener(
-    "resize",
-    () => {
-
-        if (window.innerWidth > 720) {
-
-            sidebar.classList.remove(
-                "mobile-open"
-            );
-
-        }
-
-    }
+    resizeCanvas
 );

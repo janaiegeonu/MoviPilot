@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>MoviPilot Dashboard</title>
 
-    <link rel="icon" href="/img/logo favicon.png">
-    <link rel="stylesheet" href="/templates/css/dashboard.css">
+    <link
+        rel="icon"
+        href="/img/logo favicon.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/templates/css/dashboard.css"
+    >
+
 </head>
 
+
 <body>
+
 
     <!-- =========================================================
          CINEMATIC BACKGROUND
@@ -21,10 +37,13 @@
         <canvas id="particleCanvas"></canvas>
 
         <div class="cinematic-glow glow-one"></div>
+
         <div class="cinematic-glow glow-two"></div>
+
         <div class="cinematic-overlay"></div>
 
     </div>
+
 
 
     <!-- =========================================================
@@ -33,20 +52,27 @@
 
     <header class="dashboard-navbar">
 
-        <!-- Mobile menu button -->
+
+        <!-- MOBILE HAMBURGER -->
+
         <button
             class="mobile-menu-button"
             id="mobileMenuButton"
             aria-label="Open navigation menu"
+            type="button"
         >
+
             <span></span>
             <span></span>
             <span></span>
+
         </button>
 
 
+
         <!-- LOGO -->
-         <a
+
+        <a
             href="/home"
             class="legal-brand"
         >
@@ -62,32 +88,60 @@
 
         </a>
 
+
+
         <!-- MAIN NAVIGATION -->
+
         <nav class="main-navigation">
 
-            <button class="nav-link active" data-page="home">
+            <button
+                class="nav-link active"
+                data-page="home"
+                type="button"
+            >
                 Home
             </button>
 
-            <button class="nav-link" data-page="tv">
+
+            <button
+                class="nav-link"
+                data-page="tv"
+                type="button"
+            >
                 TV Series
             </button>
 
-            <button class="nav-link" data-page="movies">
+
+            <button
+                class="nav-link"
+                data-page="movies"
+                type="button"
+            >
                 Movies
             </button>
 
-            <button class="nav-link" data-page="anime">
+
+            <button
+                class="nav-link"
+                data-page="anime"
+                type="button"
+            >
                 Anime
             </button>
 
         </nav>
 
 
-        <!-- RIGHT SIDE -->
+
+        <!-- =====================================================
+             NAVBAR RIGHT
+             ===================================================== -->
+
         <div class="navbar-right">
 
+
             <!-- SEARCH -->
+
             <div class="search-container">
 
                 <div class="search-box">
@@ -99,11 +153,12 @@
                         autocomplete="off"
                     >
 
-                    <!-- Search / microscope style SVG -->
+
                     <button
                         class="search-button"
                         id="searchButton"
                         aria-label="Search"
+                        type="button"
                     >
 
                         <svg
@@ -111,6 +166,7 @@
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
                             <circle
                                 cx="11"
                                 cy="11"
@@ -133,8 +189,8 @@
                                 stroke-linecap="round"
                                 opacity="0.45"
                             />
+
                         </svg>
-                        
 
                     </button>
 
@@ -143,11 +199,14 @@
             </div>
 
 
+
             <!-- PROFILE -->
+
             <button
                 class="profile-button"
                 id="profileButton"
                 aria-label="Open profile"
+                type="button"
             >
 
                 <span class="profile-avatar">
@@ -157,6 +216,7 @@
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                     >
+
                         <circle
                             cx="12"
                             cy="8"
@@ -171,6 +231,7 @@
                             stroke-width="1.7"
                             stroke-linecap="round"
                         />
+
                     </svg>
 
                 </span>
@@ -182,6 +243,7 @@
     </header>
 
 
+
     <!-- =========================================================
          DASHBOARD LAYOUT
          ========================================================= -->
@@ -189,34 +251,100 @@
     <div class="dashboard-layout">
 
 
+
         <!-- =====================================================
              SIDEBAR
              ===================================================== -->
 
-        <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <aside
+            class="dashboard-sidebar"
+            id="dashboardSidebar"
+        >
 
-            <!-- SIDEBAR TOP -->
+
+            <!-- =================================================
+                 SIDEBAR TOGGLE
+                 ================================================= -->
+
             <div class="sidebar-top">
 
                 <button
                     class="sidebar-toggle"
                     id="sidebarToggle"
                     aria-label="Toggle sidebar"
+                    type="button"
                 >
 
+
+                    <!-- Expanded arrow -->
+
                     <svg
+                        class="toggle-icon toggle-expanded-icon"
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                     >
+
                         <path
                             d="M9 6L15 12L9 18"
                             stroke="currentColor"
-                            stroke-width="2"
+                            stroke-width="1.9"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
+
                     </svg>
+
+
+
+                    <!-- Collapsed sidebar icon -->
+
+                    <svg
+                        class="toggle-icon toggle-collapsed-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+
+                        <rect
+                            x="4"
+                            y="5"
+                            width="16"
+                            height="14"
+                            rx="2"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                        />
+
+                        <path
+                            d="M9 5V19"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                        />
+
+                        <path
+                            d="M13 9H17"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M13 12H17"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M13 15H16"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
 
                     <span class="toggle-label">
                         Collapse
@@ -227,12 +355,17 @@
             </div>
 
 
-            <!-- SIDEBAR MENU -->
+
+            <!-- =================================================
+                 SIDEBAR MENU
+                 ================================================= -->
+
             <div class="sidebar-menu">
 
 
+
                 <!-- =================================================
-                     GENRE DROPDOWN
+                     GENRE
                      ================================================= -->
 
                 <div class="sidebar-group">
@@ -241,17 +374,28 @@
                         class="sidebar-item genre-button"
                         id="genreButton"
                         aria-expanded="false"
+                        type="button"
                     >
 
-                        <span class="sidebar-icon">
+
+                        <span class="sidebar-icon genre-icon">
+
+
+                            <!-- NORMAL GENRE SVG -->
 
                             <svg
+                                class="genre-normal-svg"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                             >
-                                <path
-                                    d="M4 5.5C4 4.67 4.67 4 5.5 4H18.5C19.33 4 20 4.67 20 5.5V18.5C20 19.33 19.33 20 18.5 20H5.5C4.67 20 4 19.33 4 18.5V5.5Z"
+
+                                <rect
+                                    x="4"
+                                    y="4"
+                                    width="16"
+                                    height="16"
+                                    rx="2.5"
                                     stroke="currentColor"
                                     stroke-width="1.6"
                                 />
@@ -276,13 +420,31 @@
                                     stroke-width="1.6"
                                     stroke-linecap="round"
                                 />
+
                             </svg>
 
-                        </span>
+                            <!-- KONOHA STYLE SVG -->
 
-                        <span class="sidebar-label">
+                            <svg
+    class="hidden-leaf-svg"
+    viewBox="0 0 20 20"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+>
+    <path
+        d="M10.593931 17.99997H7.738773C6.968159 17.99997 6.488644 17.06497 6.879434 16.39897L7.994979 14.53898C8.577177 15.87897 9.474398 16.99997 10.593931 17.99997M11.722437 5.45598C14.470925 3.13098 17.528457 4.06498 20.109464 4.56598C20.872102 4.71498 21.651688 4.40498 22.106281 3.77298L23.81798 1.53099C24.094125 1.14599 24.052254 0.61799 23.718289 0.28299C23.288619 -0.14801 22.572836 -0.07701 22.235879 0.42999C20.40455 2.83398 20.703624 2.84898 17.294182 2.05899C16.470732 1.86799 15.615381 1.78999 14.779968 1.92499C10.230058 2.65998 6.838561 6.82598 7.288168 11.65598L4.277491 16.89197C3.496909 18.22497 4.455939 19.99997 5.997166 19.99997H15.963304C19.950955 20.00997 22.511027 17.40397 23.039391 13.90298C23.611619 10.10298 21.175164 6.76798 17.732824 5.98398C14.524758 5.25298 11.234946 7.47998 11.215008 10.77998C11.201051 13.26898 13.008454 15.33897 15.373131 15.73997C17.163587 16.04297 18.997906 14.94598 19.18732 13.13498C19.376733 11.33198 17.975074 9.80998 16.21652 9.80998C15.666224 9.80998 15.220604 10.25698 15.220604 10.80998C15.220604 11.36198 15.667221 11.80998 16.218513 11.80998C16.768809 11.80998 17.215426 12.25698 17.215426 12.80998C17.215426 13.36198 16.768809 13.80998 16.218513 13.80998C14.459959 13.80998 13.056306 12.28698 13.244722 10.48498C13.435133 8.67298 15.264468 7.57598 17.054923 7.87998C19.4196 8.28098 21.217034 10.35098 21.203078 12.83898C21.184136 16.08197 17.970089 18.31997 14.803894 17.66597C11.62773 17.00998 9.240124 14.18898 9.240124 10.80998C9.240124 8.66198 10.205135 6.73998 11.722437 5.45598"
+        fill="currentColor"
+        transform="translate(2 0) scale(0.65)"
+        transform-origin="center"
+    />
+</svg>
+   
+
+
+                        <span class="sidebar-genre sidebar-label">
                             Genre
                         </span>
+
 
                         <svg
                             class="dropdown-arrow"
@@ -290,6 +452,7 @@
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
                             <path
                                 d="M6 9L12 15L18 9"
                                 stroke="currentColor"
@@ -297,35 +460,64 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                             />
+
                         </svg>
 
                     </button>
 
 
-                    <!-- GENRE LIST -->
-                    <div class="genre-dropdown" id="genreDropdown">
 
-                        <button class="genre-option">
+                    <!-- GENRE OPTIONS -->
+
+                    <div
+                        class="genre-dropdown"
+                        id="genreDropdown"
+                    >
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Action
                         </button>
 
-                        <button class="genre-option">
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Adventure
                         </button>
 
-                        <button class="genre-option">
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Comedy
                         </button>
 
-                        <button class="genre-option">
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Anime
                         </button>
 
-                        <button class="genre-option">
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Horror
                         </button>
 
-                        <button class="genre-option">
+
+                        <button
+                            class="genre-option"
+                            type="button"
+                        >
                             Romance
                         </button>
 
@@ -334,28 +526,56 @@
                 </div>
 
 
+
                 <!-- =================================================
                      TOP RATED
                      ================================================= -->
 
-                <button class="sidebar-item">
+                <button
+                    class="sidebar-item star"
+                    type="button"
+                >
 
-                    <span class="sidebar-icon">
+                    <span class="sidebar-icon star-icon">
 
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
+
+                            <!-- SPARK RAYS -->
+
+                            <g class="star-sparks">
+
+                                <path d="M12 1.8V4.2" />
+                                <path d="M12 19.8V22.2" />
+
+                                <path d="M1.8 12H4.2" />
+                                <path d="M19.8 12H22.2" />
+
+                                <path d="M4.6 4.6L6.3 6.3" />
+                                <path d="M17.7 17.7L19.4 19.4" />
+
+                                <path d="M19.4 4.6L17.7 6.3" />
+                                <path d="M6.3 17.7L4.6 19.4" />
+
+                            </g>
+
+
+
+                            <!-- STAR -->
+
                             <path
-                                d="M12 3.5L14.6 8.8L20.5 9.65L16.25 13.8L17.25 19.65L12 16.9L6.75 19.65L7.75 13.8L3.5 9.65L9.4 8.8L12 3.5Z"
-                                stroke="currentColor"
-                                stroke-width="1.6"
-                                stroke-linejoin="round"
+                                class="star-shape"
+                                d="M12 4L14.45 8.95L20 9.75L16 13.62L16.95 19.1L12 16.5L7.05 19.1L8 13.62L4 9.75L9.55 8.95L12 4Z"
                             />
+
                         </svg>
 
                     </span>
+
 
                     <span class="sidebar-label">
                         Top Rated Movies
@@ -364,28 +584,46 @@
                 </button>
 
 
+
                 <!-- =================================================
                      WATCHLIST
                      ================================================= -->
 
-                <button class="sidebar-item">
+                <button
+                    class="sidebar-item"
+                    type="button"
+                >
 
-                    <span class="sidebar-icon">
+                    <span class="sidebar-icon watchlist-icon">
 
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
-                            <path
-                                d="M6 5.5C6 4.67 6.67 4 7.5 4H16.5C17.33 4 18 4.67 18 5.5V20L12 16.8L6 20V5.5Z"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linejoin="round"
-                            />
+
+                            <g class="watchlist-page">
+
+                                <path
+                                    d="M6 5.5C6 4.67 6.67 4 7.5 4H16.5C17.33 4 18 4.67 18 5.5V20L12 16.8L6 20V5.5Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linejoin="round"
+                                />
+
+                                <path
+                                    d="M9 8H15"
+                                    stroke="currentColor"
+                                    stroke-width="1.45"
+                                    stroke-linecap="round"
+                                />
+
+                            </g>
+
                         </svg>
 
                     </span>
+
 
                     <span class="sidebar-label">
                         Watchlist
@@ -394,28 +632,63 @@
                 </button>
 
 
+
                 <!-- =================================================
                      TRENDING
                      ================================================= -->
 
-                <button class="sidebar-item">
+                <button
+                    class="sidebar-item"
+                    type="button"
+                >
 
-                    <span class="sidebar-icon">
+                    <span class="sidebar-icon flame-icon">
 
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
+
+                            <!-- HEAT / FLAME PARTICLES -->
+
+                            <g class="flame-sparks">
+
+                                <path d="M8.1 8.3L7.2 6.6" />
+                                <path d="M16.1 7.9L16.9 6.3" />
+                                <path d="M18.8 11.1L20.1 10.2" />
+
+                            </g>
+
+
+
+                            <!-- OUTER FLAME -->
+
                             <path
+                                class="flame-outer"
                                 d="M13.2 3.5C13.2 3.5 14.1 7.1 11.5 9.3C10.5 8 9.8 6.7 9.8 5.5C7.6 7.5 6 10.1 6 13C6 17 8.7 20 12 20C15.8 20 18 17.4 18 14.1C18 10.2 15.1 7.2 13.2 3.5Z"
                                 stroke="currentColor"
-                                stroke-width="1.6"
+                                stroke-width="1.55"
                                 stroke-linejoin="round"
                             />
+
+
+
+                            <!-- INNER FLAME -->
+
+                            <path
+                                class="flame-inner"
+                                d="M12.7 10.2C12.7 10.2 13.1 12.2 11.6 13.7C11 13 10.7 12.3 10.8 11.5C9.8 12.7 9.2 14 9.4 15.2C9.7 17 10.8 18 12.2 18C13.9 18 15 16.8 15 15.3C15 13.3 13.7 11.8 12.7 10.2Z"
+                                stroke="currentColor"
+                                stroke-width="1.2"
+                                stroke-linejoin="round"
+                            />
+
                         </svg>
 
                     </span>
+
 
                     <span class="sidebar-label">
                         Trending Movies
@@ -424,19 +697,24 @@
                 </button>
 
 
+
                 <!-- =================================================
                      COMING SOON
                      ================================================= -->
 
-                <button class="sidebar-item">
+                <button
+                    class="sidebar-item"
+                    type="button"
+                >
 
-                    <span class="sidebar-icon">
+                    <span class="sidebar-icon calendar-icon">
 
                         <svg
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
                             <rect
                                 x="4"
                                 y="5"
@@ -444,52 +722,55 @@
                                 height="15"
                                 rx="2"
                                 stroke="currentColor"
-                                stroke-width="1.7"
+                                stroke-width="1.55"
                             />
 
                             <path
                                 d="M8 3V7"
                                 stroke="currentColor"
-                                stroke-width="1.7"
+                                stroke-width="1.55"
                                 stroke-linecap="round"
                             />
 
                             <path
                                 d="M16 3V7"
                                 stroke="currentColor"
-                                stroke-width="1.7"
+                                stroke-width="1.55"
                                 stroke-linecap="round"
                             />
 
                             <path
                                 d="M4 10H20"
                                 stroke="currentColor"
-                                stroke-width="1.7"
+                                stroke-width="1.55"
                             />
 
-                            <path
-                                d="M8 14H8.01"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
 
-                            <path
-                                d="M12 14H12.01"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
+                            <!-- FRONT PAGE -->
 
-                            <path
-                                d="M16 14H16.01"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            />
+                            <g class="calendar-flap">
+
+                                <path
+                                    d="M9 13H17V19H9Z"
+                                    stroke="currentColor"
+                                    stroke-width="1.4"
+                                    stroke-linejoin="round"
+                                />
+
+                                <path
+                                    d="M9 13L13 16L17 13"
+                                    stroke="currentColor"
+                                    stroke-width="1.25"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                />
+
+                            </g>
+
                         </svg>
 
                     </span>
+
 
                     <span class="sidebar-label">
                         Coming Soon
@@ -500,21 +781,27 @@
             </div>
 
 
+
             <!-- =====================================================
                  LOGOUT
                  ===================================================== -->
 
             <div class="sidebar-bottom">
 
-                <button class="sidebar-item logout-item">
+                <button
+                    class="sidebar-item logout-item"
+                    type="button"
+                >
 
                     <span class="sidebar-icon">
 
-                        <svg class="logout-svg"
+                        <svg
+                            class="logout-svg"
                             viewBox="0 0 24 24"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
                         >
+
                             <path
                                 d="M10 5H6.5C5.67 5 5 5.67 5 6.5V17.5C5 18.33 5.67 19 6.5 19H10"
                                 stroke="currentColor"
@@ -536,9 +823,11 @@
                                 stroke-width="1.7"
                                 stroke-linecap="round"
                             />
+
                         </svg>
 
                     </span>
+
 
                     <span class="sidebar-label">
                         Logout
@@ -551,24 +840,15 @@
         </aside>
 
 
+
         <!-- =====================================================
-             MAIN CONTENT
-             
-             INTENTIONALLY EMPTY FOR NOW
+             EMPTY DASHBOARD BODY
              ===================================================== -->
 
-        <main class="dashboard-main" id="dashboardMain">
-
-            <!--
-                Your dashboard content will be designed here later.
-
-                Example future sections:
-                - Hero movie
-                - Trending carousel
-                - Recommended movies
-                - Continue watching
-                - Popular TV series
-            -->
+        <main
+            class="dashboard-main"
+            id="dashboardMain"
+        >
 
         </main>
 
@@ -578,4 +858,5 @@
     <script src="/templates/js/dashboard.js"></script>
 
 </body>
+
 </html>

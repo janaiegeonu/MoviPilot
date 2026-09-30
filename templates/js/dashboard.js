@@ -923,3 +923,1092 @@ window.addEventListener(
     "resize",
     resizeCanvas
 );
+
+
+/* =========================================================
+   MOVIPILOT HERO CAROUSEL
+   + YOUTUBE TRAILER PLAYER
+   ========================================================= */
+
+
+/* =========================================================
+   HERO ELEMENTS
+   ========================================================= */
+
+const trendingHero =
+    document.getElementById("trendingHero");
+
+
+const trendingHeroCarousel =
+    document.getElementById("trendingHeroCarousel");
+
+
+const trendingHeroTrack =
+    document.getElementById("trendingHeroTrack");
+
+
+const heroSlides =
+    trendingHeroTrack
+        ? Array.from(
+            trendingHeroTrack.querySelectorAll(
+                ".hero-slide"
+            )
+        )
+        : [];
+
+
+const heroPrevious =
+    document.getElementById("heroPrevious");
+
+
+const heroNext =
+    document.getElementById("heroNext");
+
+
+const heroDots =
+    document.querySelectorAll(".hero-dot");
+
+
+const heroCurrentNumber =
+    document.getElementById(
+        "heroCurrentNumber"
+    );
+
+
+let heroCurrentIndex = 0;
+
+
+let heroAutoPlayTimer = null;
+
+
+let heroTouchStartX = 0;
+
+
+/* =========================================================
+   HERO SETTINGS
+   ========================================================= */
+
+const HERO_AUTO_PLAY_DELAY = 7000;
+
+
+const HERO_SWIPE_DISTANCE = 45;
+
+
+const heroReducedMotion =
+    window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    );
+
+
+/* =========================================================
+   ACTIVE TRAILER
+   ========================================================= */
+
+let activeHeroTrailerSlide = null;
+
+
+/* =========================================================
+   EXTRACT YOUTUBE VIDEO ID
+   ---------------------------------------------------------
+   TMDB currently gives us the normal YouTube watch URL.
+
+   Example:
+
+   https://www.youtube.com/watch?v=abcdef12345
+
+   We convert that into:
+
+   https://www.youtube.com/embed/abcdef12345
+   ========================================================= */
+
+function getYouTubeVideoID(url) {
+
+    if (!url) {
+
+        return null;
+
+    }
+
+
+    try {
+
+        const parsedURL =
+            new URL(url);
+
+
+        /* Standard watch URL */
+
+        if (
+            parsedURL.hostname.includes(
+                "youtube.com"
+            ) &&
+            parsedURL.searchParams.get(
+                "v"
+            )
+        ) {
+
+            return parsedURL.searchParams.get(
+                "v"
+            );
+
+        }
+
+
+        /* youtu.be/VIDEO_ID */
+
+        if (
+            parsedURL.hostname ===
+            "youtu.be"
+        ) {
+
+            return parsedURL.pathname
+                .replace(
+                    "/",
+                    ""
+                );
+
+        }
+
+
+        /* Existing embed URL */
+
+        if (
+            parsedURL.pathname.startsWith(
+                "/embed/"
+            )
+        ) {
+
+            return parsedURL.pathname
+                .split(
+                    "/embed/"
+                )[1]
+                .split(
+                    "/"
+                )[0];
+
+        }
+
+
+    } catch (error) {
+
+        console.warn(
+            "Invalid YouTube trailer URL:",
+            url
+        );
+
+    }
+
+
+    return null;
+
+}
+
+
+/* =========================================================
+   CLOSE ACTIVE TRAILER
+   ========================================================= */
+
+function closeHeroTrailer(
+    restartAutoPlay = true
+) {
+
+    if (
+        !activeHeroTrailerSlide
+    ) {
+
+        return;
+
+    }
+
+
+    const slide =
+        activeHeroTrailerSlide;
+
+
+    const player =
+        slide.querySelector(
+            ".hero-trailer-player"
+        );
+
+
+    /*
+        Remove the iframe completely.
+
+        This is important because it also
+        stops the video's audio.
+    */
+
+    if (player) {
+
+        player.innerHTML = "";
+
+    }
+
+
+    slide.classList.remove(
+        "is-trailer-playing"
+    );
+
+
+    activeHeroTrailerSlide =
+        null;
+
+
+    /*
+        Start carousel again when the
+        user returns to movie mode.
+    */
+
+    if (restartAutoPlay) {
+
+        startHeroAutoPlay();
+
+    }
+
+}
+
+
+/* =========================================================
+   OPEN YOUTUBE TRAILER
+   ========================================================= */
+
+function openHeroTrailer(
+    slide
+) {
+
+    if (!slide) {
+
+        return;
+
+    }
+
+
+    const trailerButton =
+        slide.querySelector(
+            ".hero-trailer-button:not(.is-disabled)"
+        );
+
+
+    if (!trailerButton) {
+
+        return;
+
+    }
+
+
+    const trailerURL =
+        trailerButton.dataset.trailerUrl;
+
+
+    const videoID =
+        getYouTubeVideoID(
+            trailerURL
+        );
+
+
+    if (!videoID) {
+
+        console.warn(
+            "Could not extract YouTube video ID:",
+            trailerURL
+        );
+
+        return;
+
+    }
+
+
+    /*
+        Close any trailer that might
+        already be active.
+    */
+
+    closeHeroTrailer(
+        false
+    );
+
+
+    const player =
+        slide.querySelector(
+            ".hero-trailer-player"
+        );
+
+
+    if (!player) {
+
+        return;
+
+    }
+
+
+    /*
+        Build the official YouTube
+        embedded-player URL.
+
+        autoplay=1
+        --------------------------------
+        Starts playback after the user
+        clicked Watch Trailer.
+
+        playsinline=1
+        --------------------------------
+        Keeps playback inline on
+        compatible mobile browsers.
+
+        rel=0
+        --------------------------------
+        Related videos are limited to
+        the same channel after playback.
+
+        enablejsapi=1
+        --------------------------------
+        Allows JavaScript control later.
+    */
+
+    const origin =
+        encodeURIComponent(
+            window.location.origin
+        );
+
+
+    const embedURL =
+        "https://www.youtube.com/embed/" +
+        encodeURIComponent(videoID) +
+        "?autoplay=1" +
+        "&playsinline=1" +
+        "&rel=0" +
+        "&enablejsapi=1" +
+        "&origin=" +
+        origin;
+
+
+    const iframe =
+        document.createElement(
+            "iframe"
+        );
+
+
+    iframe.src =
+        embedURL;
+
+
+    iframe.title =
+        "MoviPilot trailer player";
+
+
+    iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+
+
+    iframe.allowFullscreen =
+        true;
+
+
+    iframe.referrerPolicy =
+        "strict-origin-when-cross-origin";
+
+
+    iframe.loading =
+        "eager";
+
+
+    player.appendChild(
+        iframe
+    );
+
+
+    slide.classList.add(
+        "is-trailer-playing"
+    );
+
+
+    activeHeroTrailerSlide =
+        slide;
+
+
+    /*
+        Stop the carousel while
+        the trailer is playing.
+    */
+
+    stopHeroAutoPlay();
+
+}
+
+
+/* =========================================================
+   MOVE TO HERO SLIDE
+   ========================================================= */
+
+function goToHeroSlide(
+    index
+) {
+
+    if (
+        !heroSlides.length ||
+        !trendingHeroTrack
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        If another trailer is playing,
+        close it before changing slides.
+    */
+
+    closeHeroTrailer(
+        false
+    );
+
+
+    /*
+        Wrap around.
+    */
+
+    if (index < 0) {
+
+        index =
+            heroSlides.length - 1;
+
+    }
+
+
+    if (
+        index >=
+        heroSlides.length
+    ) {
+
+        index = 0;
+
+    }
+
+
+    heroCurrentIndex =
+        index;
+
+
+    trendingHeroTrack.style.transform =
+        `translate3d(-${index * 100}%, 0, 0)`;
+
+
+    heroSlides.forEach(
+        (
+            slide,
+            slideIndex
+        ) => {
+
+            slide.classList.toggle(
+                "is-active",
+                slideIndex === index
+            );
+
+        }
+    );
+
+
+    heroDots.forEach(
+        (
+            dot,
+            dotIndex
+        ) => {
+
+            const isActive =
+                dotIndex === index;
+
+
+            dot.classList.toggle(
+                "is-active",
+                isActive
+            );
+
+
+            dot.setAttribute(
+                "aria-current",
+                isActive
+                    ? "true"
+                    : "false"
+            );
+
+        }
+    );
+
+
+    if (
+        heroCurrentNumber
+    ) {
+
+        heroCurrentNumber.textContent =
+            String(
+                index + 1
+            ).padStart(
+                2,
+                "0"
+            );
+
+    }
+
+}
+
+
+/* =========================================================
+   AUTOPLAY
+   ========================================================= */
+
+function stopHeroAutoPlay() {
+
+    if (
+        heroAutoPlayTimer
+    ) {
+
+        clearInterval(
+            heroAutoPlayTimer
+        );
+
+
+        heroAutoPlayTimer =
+            null;
+
+    }
+
+}
+
+
+function startHeroAutoPlay() {
+
+    stopHeroAutoPlay();
+
+
+    if (
+        heroReducedMotion.matches ||
+        heroSlides.length <= 1 ||
+        activeHeroTrailerSlide
+    ) {
+
+        return;
+
+    }
+
+
+    heroAutoPlayTimer =
+        setInterval(
+            () => {
+
+                goToHeroSlide(
+                    heroCurrentIndex + 1
+                );
+
+            },
+            HERO_AUTO_PLAY_DELAY
+        );
+
+}
+
+
+/* =========================================================
+   MANUAL SLIDE MOVEMENT
+   ========================================================= */
+
+function moveHeroSlide(
+    index
+) {
+
+    goToHeroSlide(
+        index
+    );
+
+
+    startHeroAutoPlay();
+
+}
+
+
+/* =========================================================
+   TRAILER BUTTONS
+   ========================================================= */
+
+const heroTrailerButtons =
+    document.querySelectorAll(
+        ".hero-trailer-button:not(.is-disabled)"
+    );
+
+
+heroTrailerButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const slide =
+                    button.closest(
+                        ".hero-slide"
+                    );
+
+
+                openHeroTrailer(
+                    slide
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   TRAILER CLOSE BUTTONS
+   ========================================================= */
+
+const heroTrailerCloseButtons =
+    document.querySelectorAll(
+        ".hero-trailer-close"
+    );
+
+
+heroTrailerCloseButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                closeHeroTrailer(
+                    true
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   ARROW CONTROLS
+   ========================================================= */
+
+if (heroPrevious) {
+
+    heroPrevious.addEventListener(
+        "click",
+        () => {
+
+            moveHeroSlide(
+                heroCurrentIndex - 1
+            );
+
+        }
+    );
+
+}
+
+
+if (heroNext) {
+
+    heroNext.addEventListener(
+        "click",
+        () => {
+
+            moveHeroSlide(
+                heroCurrentIndex + 1
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   DOT CONTROLS
+   ========================================================= */
+
+heroDots.forEach(
+    (dot) => {
+
+        dot.addEventListener(
+            "click",
+            () => {
+
+                const slideIndex =
+                    Number(
+                        dot.dataset.slideTo
+                    );
+
+
+                moveHeroSlide(
+                    slideIndex
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   PAUSE AUTOPLAY WHEN HOVERING HERO
+   ========================================================= */
+
+if (trendingHero) {
+
+    trendingHero.addEventListener(
+        "mouseenter",
+        () => {
+
+            stopHeroAutoPlay();
+
+        }
+    );
+
+
+    trendingHero.addEventListener(
+        "mouseleave",
+        () => {
+
+            if (
+                !activeHeroTrailerSlide
+            ) {
+
+                startHeroAutoPlay();
+
+            }
+
+        }
+    );
+
+
+    trendingHero.addEventListener(
+        "focusin",
+        () => {
+
+            stopHeroAutoPlay();
+
+        }
+    );
+
+
+    trendingHero.addEventListener(
+        "focusout",
+        (event) => {
+
+            if (
+                !trendingHero.contains(
+                    event.relatedTarget
+                )
+            ) {
+
+                if (
+                    !activeHeroTrailerSlide
+                ) {
+
+                    startHeroAutoPlay();
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   KEYBOARD NAVIGATION
+   ========================================================= */
+
+if (
+    trendingHeroCarousel
+) {
+
+    trendingHeroCarousel.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key ===
+                "ArrowLeft"
+            ) {
+
+                event.preventDefault();
+
+
+                moveHeroSlide(
+                    heroCurrentIndex - 1
+                );
+
+            }
+
+
+            if (
+                event.key ===
+                "ArrowRight"
+            ) {
+
+                event.preventDefault();
+
+
+                moveHeroSlide(
+                    heroCurrentIndex + 1
+                );
+
+            }
+
+
+            /*
+                Escape closes an active trailer.
+            */
+
+            if (
+                event.key ===
+                "Escape"
+            ) {
+
+                if (
+                    activeHeroTrailerSlide
+                ) {
+
+                    event.preventDefault();
+
+
+                    closeHeroTrailer(
+                        true
+                    );
+
+                }
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   TOUCH SWIPE
+   ========================================================= */
+
+if (
+    trendingHeroCarousel
+) {
+
+    trendingHeroCarousel.addEventListener(
+        "touchstart",
+        (event) => {
+
+            heroTouchStartX =
+                event.changedTouches[0]
+                    .clientX;
+
+        },
+        {
+            passive: true
+        }
+    );
+
+
+    trendingHeroCarousel.addEventListener(
+        "touchend",
+        (event) => {
+
+            /*
+                Don't treat a touch on the
+                YouTube player as carousel
+                navigation.
+            */
+
+            if (
+                activeHeroTrailerSlide
+            ) {
+
+                return;
+
+            }
+
+
+            const heroTouchEndX =
+                event.changedTouches[0]
+                    .clientX;
+
+
+            const distance =
+                heroTouchEndX -
+                heroTouchStartX;
+
+
+            if (
+                Math.abs(distance) <
+                HERO_SWIPE_DISTANCE
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                distance < 0
+            ) {
+
+                moveHeroSlide(
+                    heroCurrentIndex + 1
+                );
+
+            } else {
+
+                moveHeroSlide(
+                    heroCurrentIndex - 1
+                );
+
+            }
+
+        },
+        {
+            passive: true
+        }
+    );
+
+}
+
+
+/* =========================================================
+   WATCHLIST VISUAL STATE
+   ========================================================= */
+
+const heroWatchlistButtons =
+    document.querySelectorAll(
+        ".hero-watchlist-button"
+    );
+
+
+heroWatchlistButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                const isAdded =
+                    button.classList.toggle(
+                        "is-added"
+                    );
+
+
+                button.setAttribute(
+                    "aria-pressed",
+                    String(
+                        isAdded
+                    )
+                );
+
+
+                const label =
+                    button.querySelector(
+                        ".hero-watchlist-label"
+                    );
+
+
+                if (label) {
+
+                    label.textContent =
+                        isAdded
+                            ? "Added to Watchlist"
+                            : "Add to Watchlist";
+
+                }
+
+
+                console.log(
+                    isAdded
+                        ? "Added movie to watchlist:"
+                        : "Removed movie from watchlist:",
+                    button.dataset.movieId
+                );
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   KNOW MORE BUTTON
+   ========================================================= */
+
+const heroDetailsButtons =
+    document.querySelectorAll(
+        ".hero-details-button"
+    );
+
+
+heroDetailsButtons.forEach(
+    (button) => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                console.log(
+                    "Know more about movie:",
+                    button.dataset.movieId
+                );
+
+                /*
+                    Later:
+
+                    window.location.href =
+                        "/movie?id=" +
+                        encodeURIComponent(
+                            button.dataset.movieId
+                        );
+                */
+
+            }
+        );
+
+    }
+);
+
+
+/* =========================================================
+   INITIALIZE HERO
+   ========================================================= */
+
+goToHeroSlide(
+    0
+);
+
+
+startHeroAutoPlay();
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+heroReducedMotion.addEventListener(
+    "change",
+    () => {
+
+        if (
+            heroReducedMotion.matches
+        ) {
+
+            stopHeroAutoPlay();
+
+        } else {
+
+            startHeroAutoPlay();
+
+        }
+
+    }
+);

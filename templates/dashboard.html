@@ -434,7 +434,7 @@
     <path
         d="M10.593931 17.99997H7.738773C6.968159 17.99997 6.488644 17.06497 6.879434 16.39897L7.994979 14.53898C8.577177 15.87897 9.474398 16.99997 10.593931 17.99997M11.722437 5.45598C14.470925 3.13098 17.528457 4.06498 20.109464 4.56598C20.872102 4.71498 21.651688 4.40498 22.106281 3.77298L23.81798 1.53099C24.094125 1.14599 24.052254 0.61799 23.718289 0.28299C23.288619 -0.14801 22.572836 -0.07701 22.235879 0.42999C20.40455 2.83398 20.703624 2.84898 17.294182 2.05899C16.470732 1.86799 15.615381 1.78999 14.779968 1.92499C10.230058 2.65998 6.838561 6.82598 7.288168 11.65598L4.277491 16.89197C3.496909 18.22497 4.455939 19.99997 5.997166 19.99997H15.963304C19.950955 20.00997 22.511027 17.40397 23.039391 13.90298C23.611619 10.10298 21.175164 6.76798 17.732824 5.98398C14.524758 5.25298 11.234946 7.47998 11.215008 10.77998C11.201051 13.26898 13.008454 15.33897 15.373131 15.73997C17.163587 16.04297 18.997906 14.94598 19.18732 13.13498C19.376733 11.33198 17.975074 9.80998 16.21652 9.80998C15.666224 9.80998 15.220604 10.25698 15.220604 10.80998C15.220604 11.36198 15.667221 11.80998 16.218513 11.80998C16.768809 11.80998 17.215426 12.25698 17.215426 12.80998C17.215426 13.36198 16.768809 13.80998 16.218513 13.80998C14.459959 13.80998 13.056306 12.28698 13.244722 10.48498C13.435133 8.67298 15.264468 7.57598 17.054923 7.87998C19.4196 8.28098 21.217034 10.35098 21.203078 12.83898C21.184136 16.08197 17.970089 18.31997 14.803894 17.66597C11.62773 17.00998 9.240124 14.18898 9.240124 10.80998C9.240124 8.66198 10.205135 6.73998 11.722437 5.45598"
         fill="currentColor"
-        transform="translate(2 0) scale(0.65)"
+        transform="translate(2 0) scale(0.69)"
         transform-origin="center"
     />
 </svg>
@@ -849,7 +849,504 @@
             class="dashboard-main"
             id="dashboardMain"
         >
+        <!-- =========================================================
+     MOVIPILOT DASHBOARD HOME
+     TRENDING HERO
+     ========================================================= -->
 
+<div class="dashboard-home-layout">
+
+    <!-- =====================================================
+         PRIMARY CONTENT COLUMN
+         ===================================================== -->
+
+    <section class="dashboard-primary-column">
+
+        <section
+            class="dashboard-hero"
+            id="trendingHero"
+            aria-label="Trending today"
+        >
+
+            <div class="hero-carousel" id="trendingHeroCarousel" tabindex="0">
+
+                <div class="hero-track" id="trendingHeroTrack">
+
+                    {{ if .TrendingMovies }}
+
+                        {{ range $index, $movie := .TrendingMovies }}
+
+                            <article
+                                class="hero-slide{{ if eq $index 0 }} is-active{{ end }}"
+                                data-slide-index="{{ $index }}"
+                                data-movie-id="{{ $movie.ID }}"
+                            >
+
+                                <!-- BACKDROP -->
+                                <img
+                                    class="hero-backdrop"
+                                    src="{{ $movie.BackdropURL }}"
+                                    alt="{{ $movie.Title }} backdrop"
+                                    {{ if eq $index 0 }}loading="eager" fetchpriority="high"{{ else }}loading="lazy"{{ end }}
+                                >
+
+                                <!-- =================================================
+                                    YOUTUBE TRAILER PLAYER
+                                    Hidden until Watch Trailer is clicked.
+                                    ================================================= -->
+
+                                <div class="hero-trailer-view">
+
+                                    <div class="hero-trailer-player"></div>
+
+                                    <button
+                                        class="hero-trailer-close"
+                                        type="button"
+                                        aria-label="Close trailer"
+                                    >
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M6 6L18 18"
+                                                stroke="currentColor"
+                                                stroke-width="1.7"
+                                                stroke-linecap="round"
+                                            />
+
+                                            <path
+                                                d="M18 6L6 18"
+                                                stroke="currentColor"
+                                                stroke-width="1.7"
+                                                stroke-linecap="round"
+                                            />
+
+                                        </svg>
+
+                                        <span>
+                                            Back to movie
+                                        </span>
+
+                                    </button>
+
+                                </div>
+
+
+                                <!-- CINEMATIC IMAGE LAYERS -->
+                                <div class="hero-backdrop-shade"></div>
+                                <div class="hero-edge-vignette"></div>
+
+
+                                <!-- =================================================
+                                     HERO INFORMATION
+                                     ================================================= -->
+
+                                <div class="hero-content">
+
+                                    <div class="hero-eyebrow-row">
+
+                                        <span class="hero-eyebrow">
+                                            TRENDING TODAY
+                                        </span>
+
+                                        <span class="hero-popularity-dot"></span>
+
+                                        <span class="hero-rank-label">
+                                            #{{ $movie.TrendingRank }}
+                                        </span>
+
+                                    </div>
+
+
+                                    <div class="hero-meta">
+
+                                        <span class="hero-genre-pill">
+                                            {{ if $movie.Genre }}{{ $movie.Genre }}{{ else }}Movie{{ end }}
+                                        </span>
+
+                                        {{ if $movie.ReleaseDate }}
+                                            <span class="hero-meta-item">
+                                                {{ $movie.ReleaseDate }}
+                                            </span>
+                                        {{ end }}
+
+                                        {{ if $movie.Runtime }}
+                                            <span class="hero-meta-separator">•</span>
+
+                                            <span class="hero-meta-item">
+                                                {{ $movie.Runtime }}
+                                            </span>
+                                        {{ end }}
+
+                                        {{ if $movie.Rating }}
+                                            <span class="hero-meta-separator">•</span>
+
+                                            <span class="hero-rating">
+                                                <span class="hero-star">★</span>
+                                                {{ printf "%.1f" $movie.Rating }}
+                                            </span>
+                                        {{ end }}
+
+                                    </div>
+
+
+                                    <h1 class="hero-title">
+                                        {{ $movie.Title }}
+                                    </h1>
+
+
+                                    <p class="hero-overview">
+                                        {{ if $movie.Overview }}
+                                            {{ $movie.Overview }}
+                                        {{ else }}
+                                            Discover more about this trending movie on MoviPilot.
+                                        {{ end }}
+                                    </p>
+
+
+                                    <!-- =================================================
+                                         HERO ACTIONS
+                                         ================================================= -->
+
+                                    <div class="hero-actions">
+
+                                        {{ if $movie.TrailerURL }}
+
+                                             {{ if $movie.TrailerURL }}
+
+                                <button
+                                    class="hero-action hero-trailer-button"
+                                    type="button"
+                                    data-trailer-url="{{ $movie.TrailerURL }}"
+                                    data-movie-id="{{ $movie.ID }}"
+                                >
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+
+                                        <path
+                                            d="M8 5.5L18.5 12L8 18.5V5.5Z"
+                                            fill="currentColor"
+                                        />
+
+                                    </svg>
+
+                                    <span>
+                                        Watch Trailer
+                                    </span>
+
+                                </button>
+
+                            {{ else }}
+
+                                <button
+                                    class="hero-action hero-trailer-button is-disabled"
+                                    type="button"
+                                    disabled
+                                >
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+
+                                        <path
+                                            d="M8 5.5L18.5 12L8 18.5V5.5Z"
+                                            fill="currentColor"
+                                        />
+
+                                    </svg>
+
+                                    <span>
+                                        Trailer Unavailable
+                                    </span>
+
+                                </button>
+
+                            {{ end }}
+
+                                        {{ else }}
+
+                                            <button
+                                                class="hero-action hero-trailer-button is-disabled"
+                                                type="button"
+                                                disabled
+                                            >
+
+                                                <svg
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    aria-hidden="true"
+                                                >
+                                                    <path
+                                                        d="M8 5.5L18.5 12L8 18.5V5.5Z"
+                                                        fill="currentColor"
+                                                    />
+                                                </svg>
+
+                                                <span>Trailer Unavailable</span>
+
+                                            </button>
+
+                                        {{ end }}
+
+
+                                        <button
+                                            class="hero-action hero-watchlist-button"
+                                            type="button"
+                                            data-movie-id="{{ $movie.ID }}"
+                                            aria-pressed="false"
+                                        >
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                aria-hidden="true"
+                                            >
+                                                <path
+                                                    d="M6.5 5.5C6.5 4.67 7.17 4 8 4H16C16.83 4 17.5 4.67 17.5 5.5V20L12 16.9L6.5 20V5.5Z"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.6"
+                                                    stroke-linejoin="round"
+                                                />
+                                                <path
+                                                    d="M9.5 8.5H14.5"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.35"
+                                                    stroke-linecap="round"
+                                                />
+                                            </svg>
+
+                                            <span class="hero-watchlist-label">
+                                                Add to Watchlist
+                                            </span>
+
+                                        </button>
+
+
+                                        <button
+                                            class="hero-action hero-details-button"
+                                            type="button"
+                                            data-movie-id="{{ $movie.ID }}"
+                                        >
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                aria-hidden="true"
+                                            >
+                                                <circle
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="8.5"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                />
+                                                <path
+                                                    d="M12 10.5V16"
+                                                    stroke="currentColor"
+                                                    stroke-width="1.5"
+                                                    stroke-linecap="round"
+                                                />
+                                                <circle
+                                                    cx="12"
+                                                    cy="7.6"
+                                                    r="0.8"
+                                                    fill="currentColor"
+                                                />
+                                            </svg>
+
+                                            <span>Know More</span>
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- =================================================
+                                     FLOATING POSTER ART
+                                     ================================================= -->
+
+                                <div class="hero-poster-shell">
+
+                                    <div class="hero-poster-glow"></div>
+
+                                    <img
+                                        class="hero-poster"
+                                        src="{{ $movie.PosterURL }}"
+                                        alt="{{ $movie.Title }} poster"
+                                        {{ if eq $index 0 }}loading="eager" fetchpriority="high"{{ else }}loading="lazy"{{ end }}
+                                    >
+
+                                </div>
+
+                            </article>
+
+                        {{ end }}
+
+                    {{ else }}
+
+                        <!-- FAIL-SAFE EMPTY STATE -->
+                        <article class="hero-slide hero-empty-slide is-active">
+
+                            <div class="hero-empty-state">
+
+                                <span class="hero-eyebrow">
+                                    MOVIPILOT
+                                </span>
+
+                                <h1>
+                                    Trending movies are taking a little longer to arrive.
+                                </h1>
+
+                                <p>
+                                    Please refresh the dashboard in a moment.
+                                </p>
+
+                            </div>
+
+                        </article>
+
+                    {{ end }}
+
+                </div>
+
+
+                <!-- =================================================
+                     CAROUSEL ARROWS
+                     ================================================= -->
+
+                {{ if .TrendingMovies }}
+
+                    <button
+                        class="hero-arrow hero-arrow-prev"
+                        id="heroPrevious"
+                        type="button"
+                        aria-label="Previous trending movie"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M14.5 6L8.5 12L14.5 18"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+
+
+                    <button
+                        class="hero-arrow hero-arrow-next"
+                        id="heroNext"
+                        type="button"
+                        aria-label="Next trending movie"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+                            <path
+                                d="M9.5 6L15.5 12L9.5 18"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+                        </svg>
+                    </button>
+
+
+                    <!-- =================================================
+                         HERO PROGRESS
+                         ================================================= -->
+
+                    <div class="hero-bottom-bar">
+
+                        <div class="hero-dots" id="heroDots">
+
+                            {{ range $index, $movie := .TrendingMovies }}
+
+                                <button
+                                    class="hero-dot{{ if eq $index 0 }} is-active{{ end }}"
+                                    type="button"
+                                    data-slide-to="{{ $index }}"
+                                    aria-label="Go to trending movie"
+                                >
+                                </button>
+
+                            {{ end }}
+
+                        </div>
+
+
+                        <div class="hero-counter">
+                            <span id="heroCurrentNumber">01</span>
+                            <span class="hero-counter-divider">/</span>
+                            <span>{{ printf "%02d" (len .TrendingMovies) }}</span>
+                        </div>
+
+                    </div>
+
+                {{ end }}
+
+            </div>
+
+        </section>
+
+    </section>
+
+
+    <!-- =====================================================
+         RESERVED RIGHT-SIDE RAIL
+         Leave this area available for future widgets.
+         ===================================================== -->
+
+    <aside
+        class="dashboard-right-rail"
+        aria-label="Dashboard discovery rail"
+    >
+
+        <div class="dashboard-rail-frame">
+
+            <span class="dashboard-rail-kicker">
+                DISCOVERY SPACE
+            </span>
+
+            <div class="dashboard-rail-line"></div>
+
+            <span class="dashboard-rail-note">
+                Reserved for upcoming MoviPilot features.
+            </span>
+
+        </div>
+
+    </aside>
+
+</div>
         </main>
 
     </div>

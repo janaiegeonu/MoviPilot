@@ -2158,33 +2158,529 @@ type ResetPasswordPageData struct {
 	Email string
 }
 
+//DASHBOARD HANDLER
+
+type DashboardPageData struct {
+	TrendingMovies []DashboardHeroMovie
+}
+
+type DashboardHeroMovie struct {
+	ID int64
+
+	TrendingRank string
+
+	Title string
+
+	Genre string
+
+	ReleaseDate string
+
+	Runtime string
+
+	Overview string
+
+	Rating float32
+
+	PosterURL string
+
+	BackdropURL string
+
+	TrailerURL string
+}
+
+/* =========================================================
+   DASHBOARD HANDLER
+   ========================================================= */
+
 func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == http.MethodGet {
+	if r.Method != http.MethodGet {
 
-		err := renderTemplate(
-			w,
-			"dashboard.html",
-			nil,
-		)
-
-		if err != nil {
-			http.Error(
-				w,
-				"500 : Failed to render forgot-password page",
-				http.StatusInternalServerError,
-			)
-		}
-
-		return
-	}
-
-	if r.Method != http.MethodPost {
 		http.Error(
 			w,
 			"Method not allowed",
 			http.StatusMethodNotAllowed,
 		)
+
 		return
+
 	}
+
+	/*
+	   Keep the TMDB API key on the server.
+	   Never place TMDB_API_KEY directly in
+	   the HTML or browser JavaScript.
+	*/
+
+	apiKey :=
+		strings.TrimSpace(
+			os.Getenv("TMDB_TOKEN"),
+		)
+
+	if apiKey == "" {
+
+		http.Error(
+			w,
+			"TMDB_TOKEN is not configured",
+			http.StatusInternalServerError,
+		)
+
+		return
+
+	}
+
+	/*
+	   Create the TMDB client using the v2
+	   wrapper already used by MoviPilot.
+	*/
+
+	tmdbClient, err :=
+		tmdb.Init(apiKey)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"Failed to initialize TMDB client",
+			http.StatusInternalServerError,
+		)
+
+		return
+
+	}
+
+	/*
+	   TMDB can return 429 responses when an application
+	   sends too many requests. The wrapper supports
+	   automatic retry behavior for that case.
+	*/
+
+	tmdbClient.SetClientAutoRetry()
+
+	/*
+	   Keep each dashboard request from hanging forever
+	   if TMDB becomes slow or unreachable.
+	*/
+
+	tmdbClient.SetClientConfig(
+		&http.Client{
+			Timeout: 12 * time.Second,
+		},
+	)
+
+	trendingMovies, err :=
+		getDashboardTrendingMovies(
+			tmdbClient,
+			6,
+		)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"Failed to load trending movies",
+			http.StatusBadGateway,
+		)
+
+		return
+
+	}
+
+	pageData :=
+		DashboardPageData{
+			TrendingMovies: trendingMovies,
+		}
+
+	err = renderTemplate(
+		w,
+		"dashboard.html",
+		pageData,
+	)
+
+	if err != nil {
+
+		http.Error(
+			w,
+			"500 : Failed to render dashboard page",
+			http.StatusInternalServerError,
+		)
+
+	}
+}
+
+/* =========================================================
+   LOAD TRENDING TODAY
+   ========================================================= */
+
+func getDashboardTrendingMovies(
+	tmdbClient *tmdb.Client,
+	limit int,
+) ([]DashboardHeroMovie, error) {
+
+	trending, err :=
+		tmdbClient.GetTrending(
+			"movie",
+			"day",
+		)
+
+	if err != nil {
+
+		return nil, err
+
+	}
+
+	if trending == nil ||
+		trending.TrendingResults == nil {
+
+		return nil,
+			fmt.Errorf(
+				"TMDB returned no trending movie results",
+			)
+
+	}
+
+	movies :=
+		make(
+			[]DashboardHeroMovie,
+			0,
+			limit,
+		)
+
+	/*
+	   Trending results contain the poster/backdrop,
+	   title, overview, release date and rating.
+
+	   Runtime, full genre names and trailers come from
+	   the individual movie-details request below.
+	*/
+
+	for _, item := range trending.Results {
+
+		if item == nil {
+
+			continue
+
+		}
+
+		/*
+		   We need both image types for the hero.
+		   Skip movies whose required artwork is missing.
+		*/
+
+		if item.BackdropPath == "" ||
+			item.PosterPath == "" {
+
+			continue
+
+		}
+
+		movie :=
+			DashboardHeroMovie{
+				ID: item.ID,
+
+				TrendingRank: fmt.Sprintf("%02d", len(movies)+1),
+
+				Title: item.Title,
+
+				Overview: item.Overview,
+
+				ReleaseDate: formatDashboardDate(
+					item.ReleaseDate,
+				),
+
+				Rating: item.VoteAverage,
+
+				/*
+				   w1280 keeps the wide hero sharp
+				   without forcing original-size
+				   files into every browser.
+				*/
+				BackdropURL: tmdb.GetImageURL(
+					item.BackdropPath,
+					tmdb.W1280,
+				),
+
+				/*
+				   w780 gives the portrait artwork
+				   plenty of detail for the floating
+				   poster card.
+				*/
+				PosterURL: tmdb.GetImageURL(
+					item.PosterPath,
+					tmdb.W780,
+				),
+			}
+
+		/*
+		   Fetch the extra information required by
+		   the hero: runtime, proper genre name and trailer.
+
+		   Failure here does NOT throw away the movie.
+		   The trending data is still useful even if
+		   one movie-details request fails.
+		*/
+
+		details, detailErr :=
+			tmdbClient.GetMovieDetails(
+				item.ID,
+				map[string]string{
+					"language":           "en-US",
+					"append_to_response": "videos",
+				},
+			)
+
+		if detailErr == nil &&
+			details != nil {
+
+			if details.Title != "" {
+
+				movie.Title =
+					details.Title
+
+			}
+
+			if details.Overview != "" {
+
+				movie.Overview =
+					details.Overview
+
+			}
+
+			if details.ReleaseDate != "" {
+
+				movie.ReleaseDate =
+					formatDashboardDate(
+						details.ReleaseDate,
+					)
+
+			}
+
+			movie.Runtime =
+				formatDashboardRuntime(
+					details.Runtime,
+				)
+
+			movie.Genre =
+				firstDashboardGenre(
+					details.Genres,
+				)
+
+			movie.TrailerURL =
+				findDashboardTrailer(
+					details,
+				)
+
+		}
+
+		if movie.Genre == "" {
+
+			movie.Genre = "Movie"
+
+		}
+
+		movies =
+			append(
+				movies,
+				movie,
+			)
+
+		if len(movies) >= limit {
+
+			break
+
+		}
+
+	}
+
+	if len(movies) == 0 {
+
+		return nil,
+			fmt.Errorf(
+				"TMDB returned no usable trending movies",
+			)
+
+	}
+
+	return movies, nil
+}
+
+/* =========================================================
+   FORMAT RELEASE DATE
+   ========================================================= */
+
+func formatDashboardDate(
+	value string,
+) string {
+
+	if value == "" {
+
+		return ""
+
+	}
+
+	parsed, err :=
+		time.Parse(
+			"2006-01-02",
+			value,
+		)
+
+	if err != nil {
+
+		/*
+		   Keep the original TMDB value instead of
+		   displaying nothing if the format changes.
+		*/
+
+		return value
+
+	}
+
+	return parsed.Format(
+		"Jan 2, 2006",
+	)
+}
+
+/* =========================================================
+   FORMAT RUNTIME
+   ========================================================= */
+
+func formatDashboardRuntime(
+	minutes int,
+) string {
+
+	if minutes <= 0 {
+
+		return ""
+
+	}
+
+	hours :=
+		minutes / 60
+
+	remainingMinutes :=
+		minutes % 60
+
+	if hours == 0 {
+
+		return fmt.Sprintf(
+			"%dm",
+			remainingMinutes,
+		)
+
+	}
+
+	if remainingMinutes == 0 {
+
+		return fmt.Sprintf(
+			"%dh",
+			hours,
+		)
+
+	}
+
+	return fmt.Sprintf(
+		"%dh %dm",
+		hours,
+		remainingMinutes,
+	)
+}
+
+/* =========================================================
+   PRIMARY GENRE
+   ========================================================= */
+
+func firstDashboardGenre(
+	genres []*tmdb.Genre,
+) string {
+
+	for _, genre := range genres {
+
+		if genre == nil ||
+			genre.Name == "" {
+
+			continue
+
+		}
+
+		return genre.Name
+
+	}
+
+	return ""
+}
+
+/* =========================================================
+   FIND A USABLE TRAILER
+   ========================================================= */
+
+func findDashboardTrailer(
+	details *tmdb.MovieDetails,
+) string {
+
+	if details == nil ||
+		details.MovieVideosAppend == nil ||
+		details.MovieVideosAppend.Videos == nil ||
+		details.MovieVideosAppend.Videos.MovieVideosResults == nil {
+
+		return ""
+
+	}
+
+	videos :=
+		details.
+			MovieVideosAppend.
+			Videos.
+			MovieVideosResults.
+			Results
+
+	var fallbackTrailer string
+
+	for _, video := range videos {
+
+		if video == nil ||
+			video.Key == "" {
+
+			continue
+
+		}
+
+		if !strings.EqualFold(
+			video.Site,
+			"YouTube",
+		) {
+
+			continue
+
+		}
+
+		if !strings.EqualFold(
+			video.Type,
+			"Trailer",
+		) {
+
+			continue
+
+		}
+
+		trailerURL :=
+			tmdb.GetVideoURL(
+				video.Key,
+			)
+
+		if video.Official {
+
+			return trailerURL
+
+		}
+
+		if fallbackTrailer == "" {
+
+			fallbackTrailer =
+				trailerURL
+
+		}
+
+	}
+
+	return fallbackTrailer
 }

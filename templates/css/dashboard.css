@@ -2193,3 +2193,1511 @@ input:focus-visible {
     }
 
 }
+
+
+
+
+/* =========================================================
+   MOVIPILOT HOME CONTENT
+   HERO + RESERVED RIGHT RAIL
+   ========================================================= */
+
+.dashboard-home-layout {
+    width: 100%;
+    min-width: 0;
+
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1fr)
+        245px;
+
+    gap: 18px;
+    align-items: start;
+}
+
+
+.dashboard-primary-column {
+    min-width: 0;
+}
+
+
+/* =========================================================
+   HERO CONTAINER
+   ========================================================= */
+
+.dashboard-hero {
+    position: relative;
+
+    width: 100%;
+    height: clamp(455px, 55vw, 575px);
+    min-height: 455px;
+
+    border: 1px solid rgba(105, 193, 207, 0.14);
+    border-radius: 24px;
+
+    overflow: hidden;
+    isolation: isolate;
+
+    background: #04101f;
+
+    box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.30),
+        0 0 36px rgba(44, 151, 178, 0.055);
+}
+
+
+.hero-carousel {
+    position: absolute;
+    inset: 0;
+
+    min-width: 0;
+    outline: none;
+}
+
+
+.hero-track {
+    display: flex;
+
+    width: 100%;
+    height: 100%;
+
+    transform: translate3d(0, 0, 0);
+
+    transition:
+        transform 0.88s cubic-bezier(.22, .8, .25, 1);
+
+    will-change: transform;
+}
+
+
+.hero-slide {
+    position: relative;
+
+    flex: 0 0 100%;
+    min-width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   HERO IMAGE
+   ========================================================= */
+
+.hero-backdrop {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center center;
+
+    transform:
+        scale(1.055);
+
+    filter:
+        saturate(1.04)
+        contrast(1.04)
+        brightness(0.86);
+
+    transition:
+        transform 8s cubic-bezier(.2, .65, .2, 1),
+        filter 0.8s ease;
+}
+
+
+.hero-slide.is-active
+.hero-backdrop {
+    transform:
+        scale(1.015);
+
+    filter:
+        saturate(1.08)
+        contrast(1.045)
+        brightness(0.89);
+}
+
+
+.hero-backdrop-shade {
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(2, 7, 19, 0.97) 0%,
+            rgba(2, 7, 19, 0.86) 19%,
+            rgba(2, 7, 19, 0.56) 42%,
+            rgba(2, 7, 19, 0.20) 68%,
+            rgba(2, 7, 19, 0.48) 100%
+        ),
+        linear-gradient(
+            0deg,
+            rgba(2, 7, 19, 0.82) 0%,
+            transparent 38%,
+            rgba(2, 7, 19, 0.15) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+.hero-edge-vignette {
+    position: absolute;
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle at 56% 46%,
+            transparent 38%,
+            rgba(1, 5, 15, 0.27) 76%,
+            rgba(1, 5, 15, 0.72) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   HERO CONTENT
+   ========================================================= */
+
+.hero-content {
+    position: absolute;
+    z-index: 4;
+
+    left: clamp(28px, 4vw, 56px);
+    top: 50%;
+
+    width: min(620px, 58%);
+
+    transform:
+        translateY(-45%);
+
+    padding-right: 14px;
+}
+
+
+.hero-slide.is-active
+.hero-content {
+    animation:
+        heroContentIn 0.72s
+        cubic-bezier(.22, .8, .25, 1)
+        both;
+}
+
+
+@keyframes heroContentIn {
+
+    from {
+        opacity: 0;
+        transform:
+            translateY(-41%)
+            translateX(22px);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translateY(-45%)
+            translateX(0);
+    }
+
+}
+
+
+.hero-eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    margin-bottom: 13px;
+}
+
+
+.hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 7px 11px;
+
+    border: 1px solid rgba(92, 211, 219, 0.23);
+    border-radius: 999px;
+
+    color: #9eece5;
+
+    background:
+        rgba(9, 32, 46, 0.62);
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.9px;
+    text-transform: uppercase;
+
+    box-shadow:
+        0 0 20px rgba(50, 196, 199, 0.05);
+}
+
+
+.hero-popularity-dot {
+    width: 5px;
+    height: 5px;
+
+    border-radius: 50%;
+
+    background: #69e8d8;
+
+    box-shadow:
+        0 0 10px rgba(105, 232, 216, 0.75);
+
+    animation:
+        heroLiveDot 1.9s ease-in-out infinite;
+}
+
+
+@keyframes heroLiveDot {
+
+    0%,
+    100% {
+        opacity: 0.45;
+        transform: scale(.80);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.18);
+    }
+
+}
+
+
+.hero-rank-label {
+    color: rgba(226, 242, 247, 0.58);
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+
+.hero-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-bottom: 14px;
+}
+
+
+.hero-genre-pill {
+    padding: 5px 10px;
+
+    border: 1px solid rgba(110, 211, 220, 0.18);
+    border-radius: 999px;
+
+    color: #d9fffb;
+    background: rgba(8, 30, 46, 0.58);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.hero-meta-item,
+.hero-rating {
+    color: rgba(228, 241, 246, 0.72);
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+.hero-rating {
+    color: #eefcff;
+}
+
+
+.hero-star {
+    color: #7de8d9;
+    margin-right: 3px;
+}
+
+
+.hero-meta-separator {
+    color: rgba(201, 227, 233, 0.25);
+}
+
+
+.hero-title {
+    max-width: 620px;
+
+    color: #ffffff;
+
+    font-size: clamp(35px, 4.15vw, 66px);
+    line-height: 0.98;
+    font-weight: 850;
+    letter-spacing: -2.8px;
+    text-wrap: balance;
+
+    text-shadow:
+        0 8px 34px rgba(0, 0, 0, 0.35);
+}
+
+
+.hero-overview {
+    max-width: 590px;
+
+    margin-top: 17px;
+
+    color:
+        rgba(228, 239, 244, 0.72);
+
+    font-size: 13px;
+    line-height: 1.72;
+}
+
+
+/* =========================================================
+   HERO ACTION BUTTONS
+   ========================================================= */
+
+.hero-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    margin-top: 23px;
+}
+
+
+.hero-action {
+    min-height: 43px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    padding: 0 15px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    font-size: 12px;
+    font-weight: 750;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition:
+        transform 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        color 0.25s ease;
+}
+
+
+.hero-action svg {
+    width: 17px;
+    height: 17px;
+
+    flex-shrink: 0;
+}
+
+
+.hero-trailer-button {
+    color: #03101d;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e5fdfa,
+            #80e5da
+        );
+
+    box-shadow:
+        0 10px 24px rgba(63, 197, 186, 0.15);
+}
+
+
+.hero-trailer-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 13px 29px rgba(63, 197, 186, 0.23);
+}
+
+
+.hero-watchlist-button,
+.hero-details-button {
+    color: #eaf7fa;
+
+    border-color:
+        rgba(160, 218, 226, 0.16);
+
+    background:
+        rgba(5, 19, 34, 0.62);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+
+.hero-watchlist-button:hover,
+.hero-details-button:hover {
+    transform: translateY(-2px);
+
+    border-color:
+        rgba(100, 221, 214, 0.35);
+
+    background:
+        rgba(18, 46, 58, 0.76);
+
+    box-shadow:
+        0 12px 26px rgba(0, 0, 0, 0.18),
+        0 0 22px rgba(49, 184, 184, 0.08);
+}
+
+
+.hero-watchlist-button.is-added {
+    color: #9ff2e4;
+
+    border-color:
+        rgba(100, 221, 214, 0.35);
+
+    background:
+        rgba(21, 74, 74, 0.42);
+}
+
+
+.hero-trailer-button.is-disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* =========================================================
+   FLOATING POSTER ART
+   ========================================================= */
+
+.hero-poster-shell {
+    position: absolute;
+    z-index: 3;
+
+    right: clamp(48px, 7vw, 104px);
+    bottom: 34px;
+
+    width: 178px;
+    aspect-ratio: 2 / 3;
+
+    padding: 5px;
+
+    border: 1px solid rgba(182, 231, 236, 0.18);
+    border-radius: 17px;
+
+    background:
+        rgba(7, 24, 40, 0.36);
+
+    box-shadow:
+        0 25px 45px rgba(0, 0, 0, 0.43),
+        0 0 35px rgba(39, 170, 181, 0.10);
+
+    transform:
+        perspective(900px)
+        rotateY(-7deg)
+        rotateZ(1.8deg);
+
+    transition:
+        transform 0.65s
+        cubic-bezier(.22, .8, .25, 1),
+        box-shadow 0.35s ease;
+
+    overflow: visible;
+}
+
+
+.hero-slide.is-active
+.hero-poster-shell {
+    animation:
+        heroPosterIn 0.9s
+        cubic-bezier(.22, .8, .25, 1)
+        both;
+}
+
+
+@keyframes heroPosterIn {
+
+    from {
+        opacity: 0;
+        transform:
+            perspective(900px)
+            translateX(30px)
+            rotateY(-12deg)
+            rotateZ(2.5deg)
+            scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            perspective(900px)
+            rotateY(-7deg)
+            rotateZ(1.8deg)
+            scale(1);
+    }
+
+}
+
+
+.hero-poster-glow {
+    position: absolute;
+    inset: 11px;
+
+    border-radius: 15px;
+
+    background:
+        rgba(52, 206, 203, 0.12);
+
+    filter: blur(24px);
+
+    transform: translateY(5px) scale(1.06);
+
+    opacity: 0.48;
+
+    pointer-events: none;
+}
+
+
+.hero-poster {
+    position: relative;
+    z-index: 2;
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    border-radius: 13px;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+
+/* =========================================================
+   CAROUSEL ARROWS
+   ========================================================= */
+
+.hero-arrow {
+    position: absolute;
+    z-index: 8;
+
+    top: 50%;
+
+    width: 42px;
+    height: 42px;
+
+    display: grid;
+    place-items: center;
+
+    margin-top: -21px;
+
+    border: 1px solid rgba(164, 224, 229, 0.16);
+    border-radius: 50%;
+
+    color: rgba(237, 253, 253, 0.76);
+
+    background:
+        rgba(4, 16, 29, 0.54);
+
+    backdrop-filter: blur(13px);
+    -webkit-backdrop-filter: blur(13px);
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 22px rgba(0, 0, 0, 0.17);
+
+    transition:
+        transform 0.28s ease,
+        color 0.28s ease,
+        border-color 0.28s ease,
+        background 0.28s ease,
+        box-shadow 0.28s ease;
+}
+
+
+.hero-arrow svg {
+    width: 19px;
+    height: 19px;
+}
+
+
+.hero-arrow-prev {
+    left: 16px;
+}
+
+
+.hero-arrow-next {
+    right: 16px;
+}
+
+
+.hero-arrow:hover {
+    color: #e5fdfa;
+
+    border-color:
+        rgba(101, 223, 215, 0.42);
+
+    background:
+        rgba(12, 43, 55, 0.78);
+
+    box-shadow:
+        0 11px 27px rgba(0, 0, 0, 0.22),
+        0 0 20px rgba(54, 189, 188, 0.08);
+}
+
+
+.hero-arrow-prev:hover {
+    transform: translateX(-2px);
+}
+
+
+.hero-arrow-next:hover {
+    transform: translateX(2px);
+}
+
+
+/* =========================================================
+   HERO BOTTOM PROGRESS
+   ========================================================= */
+
+.hero-bottom-bar {
+    position: absolute;
+    z-index: 7;
+
+    left: clamp(28px, 4vw, 56px);
+    right: 24px;
+    bottom: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+
+.hero-dots {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+
+.hero-dot {
+    width: 17px;
+    height: 3px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 999px;
+
+    background:
+        rgba(231, 249, 250, 0.24);
+
+    cursor: pointer;
+
+    transition:
+        width 0.35s ease,
+        background 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+
+.hero-dot:hover {
+    background:
+        rgba(225, 249, 249, 0.54);
+}
+
+
+.hero-dot.is-active {
+    width: 33px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #62b8ff,
+            #6fe4d5
+        );
+
+    box-shadow:
+        0 0 12px rgba(92, 212, 209, 0.24);
+}
+
+
+.hero-counter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    color:
+        rgba(232, 248, 251, 0.62);
+
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1px;
+}
+
+
+#heroCurrentNumber {
+    color: #f2ffff;
+}
+
+
+.hero-counter-divider {
+    color: rgba(232, 248, 251, 0.28);
+}
+
+
+/* =========================================================
+   RESERVED RIGHT RAIL
+   ========================================================= */
+
+.dashboard-right-rail {
+    min-width: 0;
+}
+
+
+.dashboard-rail-frame {
+    min-height: 520px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+
+    padding: 18px;
+
+    border: 1px solid rgba(105, 193, 207, 0.075);
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(7, 22, 39, 0.22),
+            rgba(3, 13, 27, 0.46)
+        );
+
+    box-shadow:
+        inset 0 0 30px rgba(46, 137, 154, 0.025);
+}
+
+
+.dashboard-rail-kicker {
+    color: rgba(139, 217, 218, 0.48);
+
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+}
+
+
+.dashboard-rail-line {
+    width: 42px;
+    height: 1px;
+
+    margin-top: 9px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(98, 207, 215, 0.42),
+            transparent
+        );
+}
+
+
+.dashboard-rail-note {
+    max-width: 180px;
+
+    margin-top: 10px;
+
+    color: rgba(205, 225, 231, 0.28);
+
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   HERO EMPTY STATE
+   ========================================================= */
+
+.hero-empty-slide {
+    display: flex;
+    align-items: center;
+    padding: 40px;
+
+    background:
+        radial-gradient(
+            circle at 65% 35%,
+            rgba(55, 145, 176, 0.12),
+            transparent 34%
+        );
+}
+
+
+.hero-empty-state {
+    max-width: 560px;
+}
+
+
+.hero-empty-state h1 {
+    margin-top: 16px;
+
+    color: #f1fbff;
+    font-size: clamp(30px, 4vw, 48px);
+    line-height: 1.02;
+    letter-spacing: -1.9px;
+}
+
+
+.hero-empty-state p {
+    margin-top: 15px;
+
+    color: rgba(223, 240, 244, 0.58);
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   TABLET HERO
+   ========================================================= */
+
+@media (max-width: 1180px) {
+
+    .dashboard-home-layout {
+        grid-template-columns:
+            minmax(0, 1fr)
+            205px;
+    }
+
+
+    .hero-poster-shell {
+        width: 145px;
+        right: 56px;
+    }
+
+
+    .hero-content {
+        width: min(600px, 66%);
+    }
+
+}
+
+
+@media (max-width: 1000px) {
+
+    .dashboard-home-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+
+    .dashboard-right-rail {
+        display: none;
+    }
+
+
+    .hero-poster-shell {
+        right: 55px;
+        width: 155px;
+    }
+
+
+    .hero-content {
+        width: min(670px, 72%);
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE HERO
+   ========================================================= */
+
+@media (max-width: 720px) {
+
+    .dashboard-home-layout {
+        display: block;
+    }
+
+
+    .dashboard-hero {
+        height: 600px;
+        min-height: 600px;
+        border-radius: 20px;
+    }
+
+
+    .hero-content {
+        left: 22px;
+        right: 22px;
+        top: auto;
+        bottom: 57px;
+
+        width: auto;
+
+        transform: none;
+        padding-right: 0;
+    }
+
+
+    .hero-slide.is-active
+    .hero-content {
+        animation:
+            heroMobileContentIn 0.7s
+            cubic-bezier(.22, .8, .25, 1)
+            both;
+    }
+
+
+    @keyframes heroMobileContentIn {
+
+        from {
+            opacity: 0;
+            transform: translateY(18px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    }
+
+
+    .hero-backdrop-shade {
+        background:
+            linear-gradient(
+                180deg,
+                rgba(2, 7, 19, 0.14) 0%,
+                rgba(2, 7, 19, 0.30) 33%,
+                rgba(2, 7, 19, 0.88) 60%,
+                rgba(2, 7, 19, 0.98) 100%
+            );
+    }
+
+
+    .hero-title {
+        max-width: 100%;
+
+        font-size: clamp(33px, 10vw, 47px);
+        letter-spacing: -2.1px;
+    }
+
+
+    .hero-overview {
+        max-width: 100%;
+        margin-top: 13px;
+        font-size: 12px;
+        line-height: 1.62;
+
+        -webkit-line-clamp: 4;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+
+    .hero-actions {
+        margin-top: 17px;
+        gap: 7px;
+    }
+
+
+    .hero-action {
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 11px;
+        font-size: 11px;
+    }
+
+
+    .hero-action svg {
+        width: 16px;
+        height: 16px;
+    }
+
+
+    .hero-poster-shell {
+        display: none;
+    }
+
+
+    .hero-arrow {
+        width: 37px;
+        height: 37px;
+        margin-top: -18.5px;
+    }
+
+
+    .hero-arrow svg {
+        width: 17px;
+        height: 17px;
+    }
+
+
+    .hero-arrow-prev {
+        left: 11px;
+    }
+
+
+    .hero-arrow-next {
+        right: 11px;
+    }
+
+
+    .hero-bottom-bar {
+        left: 22px;
+        right: 22px;
+        bottom: 20px;
+    }
+
+}
+
+
+@media (max-width: 430px) {
+
+    .dashboard-hero {
+        height: 585px;
+        min-height: 585px;
+    }
+
+
+    .hero-eyebrow-row {
+        margin-bottom: 10px;
+    }
+
+
+    .hero-meta {
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+
+    .hero-meta-item,
+    .hero-rating {
+        font-size: 11px;
+    }
+
+
+    .hero-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+
+    .hero-action {
+        width: 100%;
+        padding: 0 8px;
+    }
+
+
+    .hero-trailer-button {
+        grid-column: 1 / -1;
+    }
+
+}
+
+
+/* =========================================================
+   HERO ACCESSIBILITY / REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hero-track,
+    .hero-backdrop,
+    .hero-content,
+    .hero-poster-shell,
+    .hero-live-dot {
+        transition: none !important;
+        animation: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   HERO YOUTUBE TRAILER MODE
+   ---------------------------------------------------------
+   The trailer replaces the normal movie hero visually.
+   ========================================================= */
+
+.hero-trailer-view {
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 20;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        #000;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transform:
+        scale(1.035);
+
+    transition:
+        opacity 0.45s ease,
+        visibility 0.45s ease,
+        transform 0.55s
+        cubic-bezier(.22, .8, .25, 1);
+
+}
+
+
+/* =========================================================
+   ACTIVE TRAILER MODE
+   ========================================================= */
+
+.hero-slide.is-trailer-playing
+.hero-trailer-view {
+
+    opacity: 1;
+
+    visibility: visible;
+
+    pointer-events: auto;
+
+    transform:
+        scale(1);
+
+}
+
+
+/* =========================================================
+   HIDE NORMAL HERO CONTENT WHILE TRAILER PLAYS
+   ========================================================= */
+
+.hero-slide.is-trailer-playing
+.hero-content,
+
+.hero-slide.is-trailer-playing
+.hero-poster-shell {
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    pointer-events: none;
+
+    transform:
+        translateY(10px);
+
+}
+
+
+/* Hide progress controls while trailer is open */
+
+.hero-trailer-view ~ .hero-content {
+    transition:
+        opacity 0.35s ease;
+}
+
+
+/* =========================================================
+   YOUTUBE PLAYER
+   ========================================================= */
+
+.hero-trailer-player {
+
+    width: 100%;
+
+    height: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        #000;
+
+}
+
+
+/*
+   The iframe is created dynamically
+   by JavaScript.
+*/
+
+.hero-trailer-player iframe {
+
+    width: 100%;
+
+    height: 100%;
+
+    border: 0;
+
+    display: block;
+
+    background:
+        #000;
+}
+
+
+/* =========================================================
+   TRAILER CLOSE BUTTON
+   ========================================================= */
+
+.hero-trailer-close {
+
+    position: absolute;
+
+    z-index: 25;
+
+    top: 18px;
+    left: 18px;
+
+    min-height: 38px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding:
+        0 13px;
+
+    border:
+        1px solid
+        rgba(170, 224, 232, 0.18);
+
+    border-radius: 11px;
+
+    color:
+        rgba(240, 253, 253, 0.84);
+
+    background:
+        rgba(4, 14, 25, 0.74);
+
+    backdrop-filter:
+        blur(14px);
+
+    -webkit-backdrop-filter:
+        blur(14px);
+
+    box-shadow:
+        0 10px 25px
+        rgba(0, 0, 0, 0.30);
+
+    cursor: pointer;
+
+    opacity: 0;
+
+    transform:
+        translateY(-7px);
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease,
+        color 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+
+}
+
+
+.hero-slide.is-trailer-playing
+.hero-trailer-close {
+
+    opacity: 1;
+
+    transform:
+        translateY(0);
+
+    transition-delay:
+        0.15s;
+
+}
+
+
+.hero-trailer-close svg {
+
+    width: 15px;
+    height: 15px;
+
+    flex-shrink: 0;
+
+}
+
+
+.hero-trailer-close span {
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+
+}
+
+
+.hero-trailer-close:hover {
+
+    color:
+        #e5fdfa;
+
+    background:
+        rgba(13, 43, 55, 0.88);
+
+    border-color:
+        rgba(101, 223, 215, 0.40);
+
+    box-shadow:
+        0 12px 28px
+        rgba(0, 0, 0, 0.34),
+
+        0 0 20px
+        rgba(60, 194, 190, 0.10);
+
+}
+
+
+/* =========================================================
+   TRAILER BUTTON
+   ========================================================= */
+
+.hero-trailer-button {
+
+    position: relative;
+
+}
+
+
+/*
+   Small play indicator glow when
+   the button is hovered.
+*/
+
+.hero-trailer-button::after {
+
+    content: "";
+
+    position: absolute;
+
+    inset: -3px;
+
+    border-radius: 14px;
+
+    border:
+        1px solid
+        rgba(117, 230, 220, 0);
+
+    opacity: 0;
+
+    transform:
+        scale(.95);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        border-color 0.3s ease;
+
+}
+
+
+.hero-trailer-button:hover::after {
+
+    opacity: 1;
+
+    transform:
+        scale(1);
+
+    border-color:
+        rgba(117, 230, 220, 0.22);
+
+}
+
+
+/* =========================================================
+   MOBILE TRAILER
+   ========================================================= */
+
+@media (max-width: 720px) {
+
+    .hero-trailer-close {
+
+        top: 13px;
+        left: 13px;
+
+        min-height: 36px;
+
+        padding:
+            0 11px;
+
+    }
+
+
+    .hero-trailer-close span {
+
+        font-size: 10px;
+
+    }
+
+
+    .hero-trailer-player iframe {
+
+        width: 100%;
+        height: 100%;
+
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hero-trailer-view {
+
+        transition:
+            opacity 0.2s ease;
+
+        transform:
+            none;
+
+    }
+
+}

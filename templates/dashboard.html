@@ -1317,7 +1317,38 @@
 
         </section>
 
-        <!-- =========================================================
+    </section>
+
+
+
+    <!-- =====================================================
+         RESERVED RIGHT-SIDE RAIL
+         Leave this area available for future widgets.
+         ===================================================== -->
+
+    <aside
+        class="dashboard-right-rail"
+        aria-label="Dashboard discovery rail"
+    >
+
+        <div class="dashboard-rail-frame">
+
+            <span class="dashboard-rail-kicker">
+                DISCOVERY SPACE
+            </span>
+
+            <div class="dashboard-rail-line"></div>
+
+            <span class="dashboard-rail-note">
+                Reserved for upcoming MoviPilot features.
+            </span>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =========================================================
      MOVIPILOT DASHBOARD CONTENT
      MOVIES YOU MAY LIKE
      ========================================================= -->
@@ -1420,7 +1451,7 @@
         <div class="mp-section-controls">
 
             <span class="mp-section-count">
-                24 PICKS
+               {{ len .MayLikeMovies }} PICKS
             </span>
 
 
@@ -1760,7 +1791,7 @@
         <div class="mp-section-controls">
 
             <span class="mp-section-count">
-                24 PICKS
+                   {{ len .TopRatedMovies }} PICKS
             </span>
 
 
@@ -2057,7 +2088,7 @@
         <div class="mp-section-controls">
 
             <span class="mp-section-count">
-                12 TRAILERS
+                    {{ len .PopularTrailerMovies }} TRAILERS
             </span>
 
 
@@ -2318,36 +2349,6 @@
     </div>
 
 </section>
-
-    </section>
-
-
-
-    <!-- =====================================================
-         RESERVED RIGHT-SIDE RAIL
-         Leave this area available for future widgets.
-         ===================================================== -->
-
-    <aside
-        class="dashboard-right-rail"
-        aria-label="Dashboard discovery rail"
-    >
-
-        <div class="dashboard-rail-frame">
-
-            <span class="dashboard-rail-kicker">
-                DISCOVERY SPACE
-            </span>
-
-            <div class="dashboard-rail-line"></div>
-
-            <span class="dashboard-rail-note">
-                Reserved for upcoming MoviPilot features.
-            </span>
-
-        </div>
-
-    </aside>
 
 </div>
         </main>

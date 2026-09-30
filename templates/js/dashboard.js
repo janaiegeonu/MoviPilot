@@ -1998,24 +1998,48 @@ heroReducedMotion.addEventListener(
    - Movies You May Like
    - Top Rated Movies
    - Popular Movie Trailers
-   - Automatic sliding
+   - Automatic movement
    - Arrow controls
-   - Pause on hover
-   - Touch / trackpad scrolling
+   - Image loading
+   - Inline YouTube trailers
    ========================================================= */
 
 
 /* =========================================================
-   CAROUSEL INITIALIZER
+   GLOBAL TRAILER STATE
    ========================================================= */
 
-const movieRowCarousels =
+let activeMovieTrailerMedia =
+    null;
+
+let activeMovieTrailerCard =
+    null;
+
+let activeMovieTrailerSection =
+    null;
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+const movieRowsReducedMotion =
+    window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    );
+
+
+/* =========================================================
+   CAROUSEL SECTIONS
+   ========================================================= */
+
+const movieRowSections =
     document.querySelectorAll(
         "[data-section-carousel]"
     );
 
 
-movieRowCarousels.forEach(
+movieRowSections.forEach(
     (section) => {
 
         const carouselName =
@@ -2048,7 +2072,7 @@ movieRowCarousels.forEach(
             null;
 
 
-        let userIsInteracting =
+        let pointerInside =
             false;
 
 
@@ -2056,32 +2080,161 @@ movieRowCarousels.forEach(
             5500;
 
 
+        const isTrailerSection =
+            carouselName ===
+            "popular-trailers";
+
+
         /* =====================================================
-           CALCULATE SLIDE DISTANCE
+           IS VIDEO LOCKED?
            ===================================================== */
 
-        function getSlideDistance() {
+        function isVideoLocked() {
 
-            /*
-                Move approximately one visible
-                viewport at a time.
-
-                This gives the feeling of a
-                page-based movie carousel.
-            */
-
-            return viewport.clientWidth * 0.88;
+            return (
+                isTrailerSection &&
+                section.classList.contains(
+                    "is-video-active"
+                )
+            );
 
         }
 
 
         /* =====================================================
-           MOVE CAROUSEL
+           STOP AUTOPLAY
            ===================================================== */
 
-        function moveCarousel(
+        function stopAutoPlay() {
+
+            if (
+                autoTimer
+            ) {
+
+                clearInterval(
+                    autoTimer
+                );
+
+                autoTimer =
+                    null;
+
+            }
+
+        }
+
+
+        /* =====================================================
+           START AUTOPLAY
+           ===================================================== */
+
+        function startAutoPlay() {
+
+            stopAutoPlay();
+
+
+            if (
+                movieRowsReducedMotion.matches
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+                NEVER restart the trailer
+                carousel while a video is open.
+            */
+
+            if (
+                isVideoLocked()
+            ) {
+
+                return;
+
+            }
+
+
+            if (
+                pointerInside
+            ) {
+
+                return;
+
+            }
+
+
+            autoTimer =
+                setInterval(
+                    () => {
+
+                        if (
+                            isVideoLocked()
+                        ) {
+
+                            stopAutoPlay();
+
+                            return;
+
+                        }
+
+
+                        moveMovieRow(
+                            1
+                        );
+
+                    },
+                    AUTO_DELAY
+                );
+
+        }
+
+
+        /* =====================================================
+           CALCULATE MOVEMENT
+           ===================================================== */
+
+        function getMoveDistance() {
+
+            /*
+                Move most of the visible viewport
+                rather than just one card.
+
+                This makes the carousel feel
+                like a curated shelf.
+            */
+
+            return Math.max(
+                viewport.clientWidth * 0.84,
+                180
+            );
+
+        }
+
+
+        /* =====================================================
+           MOVE MOVIE ROW
+           ===================================================== */
+
+        function moveMovieRow(
             direction
         ) {
+
+            /*
+                Most important protection.
+
+                When a trailer is active, the
+                row is completely locked.
+            */
+
+            if (
+                isVideoLocked()
+            ) {
+
+                return;
+
+            }
+
 
             const maxScroll =
                 viewport.scrollWidth -
@@ -2093,31 +2246,26 @@ movieRowCarousels.forEach(
 
 
             const distance =
-                getSlideDistance();
+                getMoveDistance();
 
-
-            /*
-                Moving forward.
-            */
 
             if (
                 direction > 0
             ) {
+
+                /*
+                    Reached the end.
+                    Return smoothly to the beginning.
+                */
 
                 if (
                     currentScroll >=
                     maxScroll - 8
                 ) {
 
-                    /*
-                        We've reached the end.
-
-                        Reset to the beginning.
-                    */
-
                     viewport.scrollTo({
                         left: 0,
-                        behavior: "auto"
+                        behavior: "smooth"
                     });
 
                     return;
@@ -2126,8 +2274,13 @@ movieRowCarousels.forEach(
 
 
                 viewport.scrollBy({
-                    left: distance,
-                    behavior: "smooth"
+
+                    left:
+                        distance,
+
+                    behavior:
+                        "smooth"
+
                 });
 
 
@@ -2144,13 +2297,14 @@ movieRowCarousels.forEach(
                 currentScroll <= 8
             ) {
 
-                /*
-                    Reset to the end.
-                */
-
                 viewport.scrollTo({
-                    left: maxScroll,
-                    behavior: "auto"
+
+                    left:
+                        maxScroll,
+
+                    behavior:
+                        "smooth"
+
                 });
 
                 return;
@@ -2159,8 +2313,13 @@ movieRowCarousels.forEach(
 
 
             viewport.scrollBy({
-                left: -distance,
-                behavior: "smooth"
+
+                left:
+                    -distance,
+
+                behavior:
+                    "smooth"
+
             });
 
         }
@@ -2170,18 +2329,35 @@ movieRowCarousels.forEach(
            ARROW BUTTONS
            ===================================================== */
 
-        const arrows =
+        const carouselArrows =
             section.querySelectorAll(
                 ".mp-carousel-arrow"
             );
 
 
-        arrows.forEach(
+        carouselArrows.forEach(
             (arrow) => {
 
                 arrow.addEventListener(
                     "click",
-                    () => {
+                    (event) => {
+
+                        event.preventDefault();
+
+
+                        /*
+                            Don't allow arrow movement
+                            while a trailer is playing.
+                        */
+
+                        if (
+                            isVideoLocked()
+                        ) {
+
+                            return;
+
+                        }
+
 
                         const direction =
                             arrow.dataset.carouselDirection ===
@@ -2190,17 +2366,23 @@ movieRowCarousels.forEach(
                                 : -1;
 
 
-                        moveCarousel(
+                        moveMovieRow(
                             direction
                         );
 
 
                         /*
-                            Restart autoplay from
-                            the current position.
+                            The arrow interaction means
+                            the user is controlling the shelf.
                         */
 
-                        startAutoPlay();
+                        stopAutoPlay();
+
+
+                        setTimeout(
+                            startAutoPlay,
+                            650
+                        );
 
                     }
                 );
@@ -2210,77 +2392,14 @@ movieRowCarousels.forEach(
 
 
         /* =====================================================
-           AUTOPLAY
-           ===================================================== */
-
-        function stopAutoPlay() {
-
-            if (
-                autoTimer
-            ) {
-
-                clearInterval(
-                    autoTimer
-                );
-
-
-                autoTimer =
-                    null;
-
-            }
-
-        }
-
-
-        function startAutoPlay() {
-
-            stopAutoPlay();
-
-
-            if (
-                window.matchMedia(
-                    "(prefers-reduced-motion: reduce)"
-                ).matches
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                userIsInteracting
-            ) {
-
-                return;
-
-            }
-
-
-            autoTimer =
-                setInterval(
-                    () => {
-
-                        moveCarousel(
-                            1
-                        );
-
-                    },
-                    AUTO_DELAY
-                );
-
-        }
-
-
-        /* =====================================================
-           PAUSE WHILE HOVERING
+           HOVER PAUSE
            ===================================================== */
 
         section.addEventListener(
             "mouseenter",
             () => {
 
-                userIsInteracting =
+                pointerInside =
                     true;
 
 
@@ -2294,7 +2413,7 @@ movieRowCarousels.forEach(
             "mouseleave",
             () => {
 
-                userIsInteracting =
+                pointerInside =
                     false;
 
 
@@ -2303,16 +2422,38 @@ movieRowCarousels.forEach(
             }
         );
 
+        section.addEventListener(
+    "movipilotTrailerOpened",
+    () => {
+
+        stopAutoPlay();
+
+    }
+);
+
+
+section.addEventListener(
+    "movipilotTrailerClosed",
+    () => {
+
+        pointerInside =
+            false;
+
+        startAutoPlay();
+
+    }
+);
+
 
         /* =====================================================
-           FOCUS SUPPORT
+           FOCUS PAUSE
            ===================================================== */
 
         section.addEventListener(
             "focusin",
             () => {
 
-                userIsInteracting =
+                pointerInside =
                     true;
 
 
@@ -2332,7 +2473,7 @@ movieRowCarousels.forEach(
                     )
                 ) {
 
-                    userIsInteracting =
+                    pointerInside =
                         false;
 
 
@@ -2345,7 +2486,7 @@ movieRowCarousels.forEach(
 
 
         /* =====================================================
-           START CAROUSEL
+           START THIS ROW
            ===================================================== */
 
         startAutoPlay();
@@ -2356,18 +2497,16 @@ movieRowCarousels.forEach(
 
 
 /* =========================================================
-   MOVIE POSTER LOADERS
-   ---------------------------------------------------------
-   The loader remains visible while TMDB artwork is loading.
+   MOVIE POSTER / BACKDROP LOADERS
    ========================================================= */
 
-const dashboardMovieImages =
+const movieRowImages =
     document.querySelectorAll(
         ".mp-card-image, .mp-trailer-image"
     );
 
 
-dashboardMovieImages.forEach(
+movieRowImages.forEach(
     (image) => {
 
         const media =
@@ -2376,18 +2515,21 @@ dashboardMovieImages.forEach(
             );
 
 
-        if (!media) {
+        if (
+            !media
+        ) {
 
             return;
 
         }
 
 
-        function markImageLoaded() {
+        function markLoaded() {
 
             media.classList.add(
                 "is-loaded"
             );
+
 
             media.classList.remove(
                 "is-error"
@@ -2396,11 +2538,12 @@ dashboardMovieImages.forEach(
         }
 
 
-        function markImageError() {
+        function markError() {
 
             media.classList.remove(
                 "is-loaded"
             );
+
 
             media.classList.add(
                 "is-error"
@@ -2410,8 +2553,7 @@ dashboardMovieImages.forEach(
 
 
         /*
-            Cached images may already be complete
-            before the event listener executes.
+            Cached image.
         */
 
         if (
@@ -2422,11 +2564,11 @@ dashboardMovieImages.forEach(
                 image.naturalWidth > 0
             ) {
 
-                markImageLoaded();
+                markLoaded();
 
             } else {
 
-                markImageError();
+                markError();
 
             }
 
@@ -2435,13 +2577,13 @@ dashboardMovieImages.forEach(
 
         image.addEventListener(
             "load",
-            markImageLoaded
+            markLoaded
         );
 
 
         image.addEventListener(
             "error",
-            markImageError
+            markError
         );
 
     }
@@ -2450,23 +2592,23 @@ dashboardMovieImages.forEach(
 
 
 /* =========================================================
-   EXPLORE MOVIE BUTTONS
-   ---------------------------------------------------------
-   The route will be connected later.
+   MOVIE DETAIL BUTTONS
    ========================================================= */
 
-const exploreMovieButtons =
+const movieExploreButtons =
     document.querySelectorAll(
         ".mp-explore-button"
     );
 
 
-exploreMovieButtons.forEach(
+movieExploreButtons.forEach(
     (button) => {
 
         button.addEventListener(
             "click",
             (event) => {
+
+                event.preventDefault();
 
                 event.stopPropagation();
 
@@ -2500,14 +2642,16 @@ exploreMovieButtons.forEach(
 
 
 /* =========================================================
-   YOUTUBE TRAILER HELPERS
+   YOUTUBE VIDEO ID
    ========================================================= */
 
 function getMovieRowYouTubeID(
     url
 ) {
 
-    if (!url) {
+    if (
+        !url
+    ) {
 
         return null;
 
@@ -2521,29 +2665,25 @@ function getMovieRowYouTubeID(
 
 
         /*
-            Standard:
-
             youtube.com/watch?v=VIDEO_ID
         */
 
-        const standardID =
+        const watchID =
             parsedURL.searchParams.get(
                 "v"
             );
 
 
         if (
-            standardID
+            watchID
         ) {
 
-            return standardID;
+            return watchID;
 
         }
 
 
         /*
-            Short:
-
             youtu.be/VIDEO_ID
         */
 
@@ -2562,8 +2702,6 @@ function getMovieRowYouTubeID(
 
 
         /*
-            Existing embed:
-
             youtube.com/embed/VIDEO_ID
         */
 
@@ -2586,7 +2724,7 @@ function getMovieRowYouTubeID(
     } catch (error) {
 
         console.warn(
-            "Invalid trailer URL:",
+            "Invalid YouTube trailer URL:",
             url
         );
 
@@ -2600,20 +2738,11 @@ function getMovieRowYouTubeID(
 
 
 /* =========================================================
-   ACTIVE INLINE TRAILER
-   ========================================================= */
-
-let activeMovieTrailerMedia =
-    null;
-
-
-
-/* =========================================================
-   CLOSE INLINE TRAILER
+   CLOSE MOVIE TRAILER
    ========================================================= */
 
 function closeMovieTrailer(
-    restartCard
+    restoreAutoPlay
 ) {
 
     if (
@@ -2629,22 +2758,30 @@ function closeMovieTrailer(
         activeMovieTrailerMedia;
 
 
+    const card =
+        activeMovieTrailerCard;
+
+
+    const section =
+        activeMovieTrailerSection;
+
+
     const player =
         media.querySelector(
             ".mp-trailer-player"
         );
 
 
+    /*
+        Completely remove iframe.
+
+        This stops the YouTube player and
+        its audio immediately.
+    */
+
     if (
         player
     ) {
-
-        /*
-            Completely remove the iframe.
-
-            This immediately stops
-            video playback/audio.
-        */
 
         player.innerHTML =
             "";
@@ -2657,27 +2794,58 @@ function closeMovieTrailer(
     );
 
 
+    if (
+        card
+    ) {
+
+        card.classList.remove(
+            "is-video-active"
+        );
+
+    }
+
+
+    if (
+        section
+    ) {
+
+        section.classList.remove(
+            "is-video-active"
+        );
+
+    }
+
+
     activeMovieTrailerMedia =
         null;
 
 
+    activeMovieTrailerCard =
+        null;
+
+
+    activeMovieTrailerSection =
+        null;
+
+
+    /*
+        Resume automatic movement only
+        after the trailer has been closed.
+    */
+
     if (
-        restartCard
+        restoreAutoPlay
     ) {
 
-        const button =
-            media.querySelector(
-                ".mp-watch-now-button"
+        const event =
+            new Event(
+                "movipilotTrailerClosed"
             );
 
 
-        if (
-            button
-        ) {
-
-            button.focus();
-
-        }
+        document.dispatchEvent(
+            event
+        );
 
     }
 
@@ -2686,7 +2854,7 @@ function closeMovieTrailer(
 
 
 /* =========================================================
-   OPEN INLINE TRAILER
+   OPEN MOVIE TRAILER
    ========================================================= */
 
 function openMovieTrailer(
@@ -2699,8 +2867,22 @@ function openMovieTrailer(
         );
 
 
+    const card =
+        button.closest(
+            ".mp-trailer-card"
+        );
+
+
+    const section =
+        button.closest(
+            ".mp-trailer-section"
+        );
+
+
     if (
-        !media
+        !media ||
+        !card ||
+        !section
     ) {
 
         return;
@@ -2723,7 +2905,7 @@ function openMovieTrailer(
     ) {
 
         console.warn(
-            "Trailer video ID could not be found.",
+            "Could not find YouTube trailer ID.",
             trailerURL
         );
 
@@ -2733,7 +2915,7 @@ function openMovieTrailer(
 
 
     /*
-        Close any other trailer first.
+        Close another active trailer first.
     */
 
     closeMovieTrailer(
@@ -2754,6 +2936,25 @@ function openMovieTrailer(
         return;
 
     }
+
+
+    /*
+        Put the section into VIDEO LOCK mode.
+
+        This stops:
+        - autoplay
+        - arrow movement
+        - automatic scrolling
+    */
+
+    section.classList.add(
+        "is-video-active"
+    );
+
+
+    card.classList.add(
+        "is-video-active"
+    );
 
 
     const origin =
@@ -2818,6 +3019,26 @@ function openMovieTrailer(
     activeMovieTrailerMedia =
         media;
 
+
+    activeMovieTrailerCard =
+        card;
+
+
+    activeMovieTrailerSection =
+        section;
+
+
+    /*
+        Stop all timers belonging to
+        the trailer section.
+    */
+
+    section.dispatchEvent(
+        new Event(
+            "movipilotTrailerOpened"
+        )
+    );
+
 }
 
 
@@ -2826,18 +3047,20 @@ function openMovieTrailer(
    WATCH NOW BUTTONS
    ========================================================= */
 
-const movieTrailerButtons =
+const movieWatchNowButtons =
     document.querySelectorAll(
         ".mp-watch-now-button:not(.is-disabled)"
     );
 
 
-movieTrailerButtons.forEach(
+movieWatchNowButtons.forEach(
     (button) => {
 
         button.addEventListener(
             "click",
             (event) => {
+
+                event.preventDefault();
 
                 event.stopPropagation();
 
@@ -2871,31 +3094,21 @@ movieTrailerCloseButtons.forEach(
             "click",
             (event) => {
 
+                event.preventDefault();
+
                 event.stopPropagation();
 
 
-                const media =
-                    button.closest(
-                        ".mp-trailer-media"
-                    );
-
-
-                if (
-                    media ===
-                    activeMovieTrailerMedia
-                ) {
-
-                    closeMovieTrailer(
-                        true
-                    );
-
-                }
+                closeMovieTrailer(
+                    true
+                );
 
             }
         );
 
     }
 );
+
 
 
 
@@ -2913,7 +3126,7 @@ document.addEventListener(
         ) {
 
             closeMovieTrailer(
-                false
+                true
             );
 
         }

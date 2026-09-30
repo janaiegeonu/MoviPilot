@@ -2405,41 +2405,32 @@ func DashBoardHandler(
 		enrichDashboardMovieCards(
 			tmdbClient,
 			mayLikeSeeds,
-			24,
+			44,
 		)
-
-	/* =====================================================
-	   3. TOP RATED MOVIES
-	   ===================================================== */
 
 	topRatedSeeds :=
 		getDashboardTopRatedSeeds(
 			tmdbClient,
-			24,
+			44,
 		)
 
 	topRatedMovies :=
 		enrichDashboardMovieCards(
 			tmdbClient,
 			topRatedSeeds,
-			24,
+			44,
 		)
-
-	/* =====================================================
-	   4. POPULAR MOVIE TRAILERS
-	   ===================================================== */
 
 	popularTrailerSeeds :=
 		getDashboardPopularTrailerSeeds(
 			tmdbClient,
-			12,
 		)
 
 	popularTrailerMovies :=
 		enrichDashboardTrailerCards(
 			tmdbClient,
 			popularTrailerSeeds,
-			12,
+			30,
 		)
 
 	/* =====================================================
@@ -2689,8 +2680,7 @@ func getDashboardMayLikeSeeds(
 	tmdbClient *tmdb.Client,
 ) []dashboardMovieSeed {
 
-	const limit = 24
-
+	const limit = 44
 	var weeklySeeds []dashboardMovieSeed
 
 	var actionSeeds []dashboardMovieSeed
@@ -3046,22 +3036,22 @@ func getDashboardMayLikeSeeds(
 
 	appendFromPool(
 		weeklySeeds,
-		12,
+		20,
 	)
 
 	appendFromPool(
 		actionSeeds,
-		6,
+		12,
 	)
 
 	appendFromPool(
 		romanceSeeds,
-		4,
+		8,
 	)
 
 	appendFromPool(
 		animeSeeds,
-		2,
+		4,
 	)
 
 	/* =====================================================
@@ -3142,9 +3132,8 @@ func getDashboardTopRatedSeeds(
 	   reliably build the first 24 cards.
 	*/
 
-	for page := 1; page <= 2 &&
+	for page := 1; page <= 4 &&
 		len(result) < limit; page++ {
-
 		topRated,
 			err :=
 			tmdbClient.GetMovieTopRated(
@@ -3235,14 +3224,15 @@ func getDashboardTopRatedSeeds(
 
 func getDashboardPopularTrailerSeeds(
 	tmdbClient *tmdb.Client,
-	limit int,
 ) []dashboardMovieSeed {
+
+	const candidateLimit = 60
 
 	result :=
 		make(
 			[]dashboardMovieSeed,
 			0,
-			limit,
+			candidateLimit,
 		)
 
 	seen :=
@@ -3250,78 +3240,200 @@ func getDashboardPopularTrailerSeeds(
 			map[int64]bool,
 		)
 
-	popular,
-		err :=
-		tmdbClient.GetMoviePopular(
-			map[string]string{
+	/*
+	   Three pages gives us up to 60 popular
+	   movie candidates.
 
-				"language": "en-US",
+	   We also prefer TMDB entries marked as
+	   containing video content.
+	*/
 
-				"page": "1",
-			},
-		)
+	for page := 1; page <= 3 &&
+		len(result) < candidateLimit; page++ {
 
-	if err != nil {
+		popular,
+			err :=
+			tmdbClient.GetMoviePopular(
+				map[string]string{
 
-		fmt.Println(
-			"POPULAR MOVIES ERROR:",
-			err,
-		)
+					"language": "en-US",
 
-		return result
-
-	}
-
-	if popular == nil ||
-		popular.MoviePopularResults == nil {
-
-		return result
-
-	}
-
-	for _, movie := range popular.Results {
-
-		if len(result) >= limit {
-
-			break
-
-		}
-
-		if movie == nil ||
-			movie.ID == 0 ||
-			seen[movie.ID] {
-
-			continue
-
-		}
-
-		if movie.BackdropPath == "" {
-
-			continue
-
-		}
-
-		seen[movie.ID] =
-			true
-
-		result =
-			append(
-				result,
-				dashboardMovieSeed{
-
-					ID: movie.ID,
-
-					Title: movie.Title,
-
-					ReleaseDate: movie.ReleaseDate,
-
-					PosterPath: movie.PosterPath,
-
-					BackdropPath: movie.BackdropPath,
-
-					Rating: movie.VoteAverage,
+					"page": fmt.Sprintf(
+						"%d",
+						page,
+					),
 				},
 			)
+
+		if err != nil {
+
+			fmt.Println(
+				"POPULAR MOVIES ERROR:",
+				err,
+			)
+
+			continue
+
+		}
+
+		if popular == nil ||
+			popular.MoviePopularResults == nil {
+
+			continue
+
+		}
+
+		for _, movie := range popular.Results {
+
+			if len(result) >= candidateLimit {
+
+				break
+
+			}
+
+			if movie == nil ||
+				movie.ID == 0 ||
+				seen[movie.ID] {
+
+				continue
+
+			}
+
+			/*
+			   We need landscape artwork.
+			*/
+
+			if movie.BackdropPath == "" {
+
+				continue
+
+			}
+
+			/*
+			   TMDB's movie-list response exposes
+			   a Video flag. Prefer those entries
+			   because they're more likely to have
+			   usable video data.
+			*/
+
+			if !movie.Video {
+
+				continue
+
+			}
+
+			seen[movie.ID] =
+				true
+
+			result =
+				append(
+					result,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						GenreIDs: nil,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	}
+
+	/*
+	   If the Video flag leaves us with too few
+	   candidates, do a second pass without it.
+	*/
+
+	if len(result) < 30 {
+
+		for page := 1; page <= 3 &&
+			len(result) < candidateLimit; page++ {
+
+			popular,
+				err :=
+				tmdbClient.GetMoviePopular(
+					map[string]string{
+
+						"language": "en-US",
+
+						"page": fmt.Sprintf(
+							"%d",
+							page,
+						),
+					},
+				)
+
+			if err != nil {
+
+				continue
+
+			}
+
+			if popular == nil ||
+				popular.MoviePopularResults == nil {
+
+				continue
+
+			}
+
+			for _, movie := range popular.Results {
+
+				if len(result) >= candidateLimit {
+
+					break
+
+				}
+
+				if movie == nil ||
+					movie.ID == 0 ||
+					seen[movie.ID] {
+
+					continue
+
+				}
+
+				if movie.BackdropPath == "" {
+
+					continue
+
+				}
+
+				seen[movie.ID] =
+					true
+
+				result =
+					append(
+						result,
+						dashboardMovieSeed{
+
+							ID: movie.ID,
+
+							Title: movie.Title,
+
+							ReleaseDate: movie.ReleaseDate,
+
+							PosterPath: movie.PosterPath,
+
+							BackdropPath: movie.BackdropPath,
+
+							Rating: movie.VoteAverage,
+						},
+					)
+
+			}
+
+		}
 
 	}
 
@@ -3553,16 +3665,22 @@ func enrichDashboardTrailerCards(
 	limit int,
 ) []DashboardTrailerCard {
 
-	if len(seeds) > limit {
+	if len(seeds) == 0 {
 
-		seeds =
-			seeds[:limit]
+		return nil
 
 	}
 
+	/*
+	   One indexed slot per candidate.
+
+	   This lets workers run concurrently while
+	   preserving the original TMDB ordering.
+	*/
+
 	results :=
 		make(
-			[]DashboardTrailerCard,
+			[]*DashboardTrailerCard,
 			len(seeds),
 		)
 
@@ -3588,23 +3706,6 @@ func enrichDashboardTrailerCards(
 				seed :=
 					seeds[index]
 
-				card :=
-					DashboardTrailerCard{
-
-						ID: seed.ID,
-
-						Title: seed.Title,
-
-						Year: formatDashboardYear(
-							seed.ReleaseDate,
-						),
-
-						BackdropURL: tmdb.GetImageURL(
-							seed.BackdropPath,
-							tmdb.W1280,
-						),
-					}
-
 				details,
 					err :=
 					tmdbClient.GetMovieDetails(
@@ -3617,45 +3718,38 @@ func enrichDashboardTrailerCards(
 						},
 					)
 
-				if err == nil &&
-					details != nil {
+				if err != nil ||
+					details == nil {
 
-					if details.Title != "" {
-
-						card.Title =
-							details.Title
-
-					}
-
-					if details.ReleaseDate != "" {
-
-						card.Year =
-							formatDashboardYear(
-								details.ReleaseDate,
-							)
-
-					}
-
-					card.Genre =
-						firstDashboardGenre(
-							details.Genres,
-						)
-
-					card.Runtime =
-						formatDashboardRuntime(
-							details.Runtime,
-						)
-
-					card.TrailerURL =
-						findDashboardTrailer(
-							details,
-						)
+					continue
 
 				}
 
-				if card.Genre == "" {
+				trailerURL :=
+					findDashboardTrailer(
+						details,
+					)
 
-					card.Genre =
+				/*
+				   This is the critical filter.
+
+				   No trailer = no trailer card.
+				*/
+
+				if trailerURL == "" {
+
+					continue
+
+				}
+
+				genre :=
+					firstDashboardGenre(
+						details.Genres,
+					)
+
+				if genre == "" {
+
+					genre =
 						genreNameFromID(
 							firstGenreID(
 								seed.GenreIDs,
@@ -3664,15 +3758,40 @@ func enrichDashboardTrailerCards(
 
 				}
 
-				if card.Genre == "" {
+				if genre == "" {
 
-					card.Genre =
+					genre =
 						"Movie"
 
 				}
 
+				card :=
+					DashboardTrailerCard{
+
+						ID: seed.ID,
+
+						Title: details.Title,
+
+						Genre: genre,
+
+						Year: formatDashboardYear(
+							details.ReleaseDate,
+						),
+
+						Runtime: formatDashboardRuntime(
+							details.Runtime,
+						),
+
+						BackdropURL: tmdb.GetImageURL(
+							seed.BackdropPath,
+							tmdb.W1280,
+						),
+
+						TrailerURL: trailerURL,
+					}
+
 				results[index] =
-					card
+					&card
 
 			}
 
@@ -3690,27 +3809,45 @@ func enrichDashboardTrailerCards(
 
 	wg.Wait()
 
+	/*
+	   Preserve TMDB ordering and stop once
+	   we have the requested 30 usable trailers.
+	*/
+
 	finalResults :=
 		make(
 			[]DashboardTrailerCard,
 			0,
-			len(results),
+			limit,
 		)
 
 	for _, card := range results {
 
-		if card.ID == 0 ||
-			card.Title == "" ||
-			card.BackdropURL == "" {
+		if card == nil {
 
 			continue
+
+		}
+
+		if card.ID == 0 ||
+			card.Title == "" ||
+			card.BackdropURL == "" ||
+			card.TrailerURL == "" {
+
+			continue
+
+		}
+
+		if len(finalResults) >= limit {
+
+			break
 
 		}
 
 		finalResults =
 			append(
 				finalResults,
-				card,
+				*card,
 			)
 
 	}

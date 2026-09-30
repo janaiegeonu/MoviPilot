@@ -5903,3 +5903,350 @@ input:focus-visible {
     }
 
 }
+
+/* =========================================================
+   MOVIPILOT FULL-WIDTH MOVIE SECTIONS
+   ---------------------------------------------------------
+   The hero remains inside the primary column.
+   The movie rows move underneath the hero + right rail
+   and use the entire available dashboard width.
+   ========================================================= */
+
+
+.dashboard-home-layout {
+
+    /*
+        Stretch the hero and right rail to the
+        same height.
+    */
+
+    align-items:
+        stretch;
+
+}
+
+
+/* =========================================================
+   HERO RIGHT RAIL
+   ---------------------------------------------------------
+   The rail should end exactly where the hero ends.
+   ========================================================= */
+
+.dashboard-right-rail {
+
+    height:
+        100%;
+
+}
+
+
+.dashboard-rail-frame {
+
+    /*
+        Remove the old 520px minimum.
+
+        The grid row is now controlled by
+        the hero height.
+    */
+
+    height:
+        100%;
+
+    min-height:
+        0;
+
+}
+
+
+/* =========================================================
+   FULL-WIDTH LOWER SECTIONS
+   ========================================================= */
+
+.mp-content-section {
+
+    /*
+        Escape the two-column hero layout.
+
+        This makes the movie sections span:
+        ┌────────────────────────────────────────────┐
+        │ FULL DASHBOARD WIDTH                       │
+        └────────────────────────────────────────────┘
+    */
+
+    grid-column:
+        1 / -1;
+
+    width:
+        100%;
+
+    min-width:
+        0;
+
+}
+
+
+/* =========================================================
+   KEEP CAROUSELS FROM OVERFLOWING THE PAGE
+   ========================================================= */
+
+.mp-carousel-window {
+
+    width:
+        100%;
+
+    min-width:
+        0;
+
+    max-width:
+        100%;
+
+}
+
+
+/* =========================================================
+   44 MOVIE CARDS
+   ---------------------------------------------------------
+   22 cards on row 1
+   22 cards on row 2
+   ========================================================= */
+
+.mp-movie-grid {
+
+    grid-template-rows:
+        repeat(
+            2,
+            minmax(0, auto)
+        );
+
+    grid-auto-flow:
+        column;
+
+    width:
+        max-content;
+
+    min-width:
+        100%;
+
+}
+
+
+/* =========================================================
+   30 POPULAR TRAILER CARDS
+   ---------------------------------------------------------
+   One horizontal row.
+   ========================================================= */
+
+.mp-trailer-grid {
+
+    grid-auto-flow:
+        column;
+
+    width:
+        max-content;
+
+    min-width:
+        100%;
+
+}
+
+
+/* =========================================================
+   ACTIVE TRAILER LOCK
+   ---------------------------------------------------------
+   When a trailer is playing, don't allow the trailer
+   row itself to scroll away underneath the player.
+   ========================================================= */
+
+.mp-trailer-section.is-video-active
+.mp-trailer-window {
+
+    overflow-x:
+        hidden;
+
+    scroll-behavior:
+        auto;
+
+}
+
+
+/* =========================================================
+   TRAILER CARD PLAYING STATE
+   ========================================================= */
+
+.mp-trailer-card.is-video-active {
+
+    z-index:
+        30;
+
+}
+
+
+.mp-trailer-card.is-video-active
+.mp-trailer-media {
+
+    border-color:
+        rgba(105, 224, 216, 0.34);
+
+    box-shadow:
+        0 18px 45px
+        rgba(0,0,0,0.36),
+
+        0 0 24px
+        rgba(64, 207, 198, 0.08);
+
+}
+
+
+/* =========================================================
+   IMAGE ERROR STATE
+   ========================================================= */
+
+.mp-card-media.is-error
+.mp-card-loader,
+
+.mp-trailer-media.is-error
+.mp-card-loader {
+
+    opacity:
+        0;
+
+    visibility:
+        hidden;
+
+}
+
+
+.mp-card-media.is-error::after,
+.mp-trailer-media.is-error::after {
+
+    content:
+        "Artwork unavailable";
+
+    position:
+        absolute;
+
+    inset:
+        0;
+
+    z-index:
+        4;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        15px;
+
+    text-align:
+        center;
+
+    color:
+        rgba(210,232,236,0.30);
+
+    background:
+        linear-gradient(
+            145deg,
+            #071827,
+            #020a14
+        );
+
+    font-size:
+        9px;
+
+    letter-spacing:
+        .5px;
+
+}
+
+
+/* =========================================================
+   RESPONSIVE FULL-WIDTH SECTIONS
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+    /*
+        At this breakpoint your existing CSS
+        already removes the right rail.
+
+        The movie rows therefore become the
+        entire available dashboard width.
+    */
+
+    .mp-content-section {
+
+        grid-column:
+            1 / -1;
+
+    }
+
+}
+
+
+@media (max-width: 720px) {
+
+    .mp-content-section {
+
+        grid-column:
+            auto;
+
+        width:
+            100%;
+
+    }
+
+
+    /*
+        Keep the two-row structure.
+        44 cards still means 22 columns
+        distributed across two rows.
+    */
+
+    .mp-movie-grid {
+
+        grid-template-rows:
+            repeat(
+                2,
+                minmax(0, auto)
+            );
+
+    }
+
+
+    /*
+        When a trailer is playing,
+        prevent accidental horizontal
+        movement on mobile as well.
+    */
+
+    .mp-trailer-section.is-video-active
+    .mp-trailer-window {
+
+        overflow-x:
+            hidden;
+
+    }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .mp-trailer-card.is-video-active {
+
+        transition:
+            none;
+
+    }
+
+}

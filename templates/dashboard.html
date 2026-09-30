@@ -1170,7 +1170,7 @@
                                                 />
                                             </svg>
 
-                                            <span>Know More</span>
+                                            <span>Explore Movie</span>
 
                                         </button>
 
@@ -1317,7 +1317,1010 @@
 
         </section>
 
+        <!-- =========================================================
+     MOVIPILOT DASHBOARD CONTENT
+     MOVIES YOU MAY LIKE
+     ========================================================= -->
+
+<section
+    class="mp-content-section mp-movie-section"
+    data-section-carousel="may-like"
+>
+
+    <!-- =====================================================
+         SECTION HEADER
+         ===================================================== -->
+
+    <div class="mp-section-header">
+
+        <div class="mp-section-heading">
+
+            <!-- Animated recommendation artwork -->
+
+            <span
+                class="mp-section-icon mp-recommend-icon"
+                aria-hidden="true"
+            >
+
+                <svg
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <!-- Outer orbit -->
+
+                    <path
+                        class="mp-orbit-line"
+                        d="M9 24C9 15.72 15.72 9 24 9C32.28 9 39 15.72 39 24C39 32.28 32.28 39 24 39C15.72 39 9 32.28 9 24Z"
+                    />
+
+                    <!-- Orbit particle -->
+
+                    <circle
+                        class="mp-orbit-dot"
+                        cx="24"
+                        cy="9"
+                        r="2.5"
+                        fill="currentColor"
+                    />
+
+                    <!-- Central compass -->
+
+                    <path
+                        class="mp-recommend-core"
+                        d="M30.6 17.4L27 27L17.4 30.6L21 21L30.6 17.4Z"
+                        fill="currentColor"
+                    />
+
+                    <circle
+                        class="mp-recommend-center"
+                        cx="24"
+                        cy="24"
+                        r="2.7"
+                        fill="currentColor"
+                    />
+
+                    <!-- Spark -->
+
+                    <path
+                        class="mp-recommend-spark"
+                        d="M36 7V12"
+                    />
+
+                    <path
+                        class="mp-recommend-spark"
+                        d="M33.5 9.5H38.5"
+                    />
+
+                </svg>
+
+            </span>
+
+
+            <div>
+
+                <span class="mp-section-eyebrow">
+                    CURATED FOR YOU
+                </span>
+
+                <h2 class="mp-section-title">
+                    Movies you may like
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             CAROUSEL CONTROLS
+             ================================================= -->
+
+        <div class="mp-section-controls">
+
+            <span class="mp-section-count">
+                24 PICKS
+            </span>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="may-like"
+                data-carousel-direction="prev"
+                aria-label="Previous recommended movies"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M14.5 6L8.5 12L14.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="may-like"
+                data-carousel-direction="next"
+                aria-label="Next recommended movies"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M9.5 6L15.5 12L9.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TWO-ROW CAROUSEL
+         24 TOTAL MOVIES
+         12 MOVIES PER ROW
+         ===================================================== -->
+
+    <div
+        class="mp-carousel-window"
+        data-carousel-window="may-like"
+    >
+
+        <div
+            class="mp-movie-grid"
+            data-carousel-track="may-like"
+        >
+
+            {{ if .MayLikeMovies }}
+
+                {{ range .MayLikeMovies }}
+
+                    <article
+                        class="mp-movie-card"
+                        data-movie-id="{{ .ID }}"
+                    >
+
+                        <!-- =====================================
+                             POSTER
+                             ===================================== -->
+
+                        <div class="mp-card-media">
+
+                            <!-- Loading animation -->
+
+                            <div
+                                class="mp-card-loader"
+                                aria-hidden="true"
+                            >
+
+                                <span></span>
+                                <span></span>
+                                <span></span>
+
+                            </div>
+
+
+                            <img
+                                class="mp-card-image"
+                                src="{{ .PosterURL }}"
+                                alt="{{ .Title }} poster"
+                                loading="lazy"
+                                decoding="async"
+                            >
+
+
+                            <!-- Cinematic shine -->
+
+                            <div class="mp-card-shine"></div>
+
+
+                            <!-- =================================
+                                 HOVER INFORMATION
+                                 ================================= -->
+
+                            <div class="mp-card-overlay">
+
+                                {{ if .Rating }}
+
+                                    <span class="mp-card-rating">
+                                        <span>★</span>
+                                        {{ printf "%.1f" .Rating }}
+                                    </span>
+
+                                {{ end }}
+
+
+                                <button
+                                    class="mp-explore-button"
+                                    type="button"
+                                    data-movie-id="{{ .ID }}"
+                                >
+
+                                    <span>
+                                        Explore Movie
+                                    </span>
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+
+                                        <path
+                                            d="M5 12H19"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                        />
+
+                                        <path
+                                            d="M13 6L19 12L13 18"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+
+                                    </svg>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- =====================================
+                             MOVIE INFORMATION
+                             ===================================== -->
+
+                        <div class="mp-card-info">
+
+                            <h3
+                                class="mp-card-title"
+                                title="{{ .Title }}"
+                            >
+                                {{ .Title }}
+                            </h3>
+
+
+                            <div class="mp-card-meta">
+
+                                <span>
+                                    {{ .Genre }}
+                                </span>
+
+                                <i></i>
+
+                                <span>
+                                    {{ .Year }}
+                                </span>
+
+                                <i></i>
+
+                                <span>
+                                    {{ .Runtime }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {{ end }}
+
+            {{ else }}
+
+                <div class="mp-section-empty">
+                    Recommendations are taking a little longer to arrive.
+                </div>
+
+            {{ end }}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     TOP RATED MOVIES
+     ========================================================= -->
+
+<section
+    class="mp-content-section mp-movie-section"
+    data-section-carousel="top-rated"
+>
+
+    <!-- =====================================================
+         SECTION HEADER
+         ===================================================== -->
+
+    <div class="mp-section-header">
+
+        <div class="mp-section-heading">
+
+            <!-- Animated top-rated artwork -->
+
+            <span
+                class="mp-section-icon mp-top-rated-icon"
+                aria-hidden="true"
+            >
+
+                <svg
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <!-- Orbit -->
+
+                    <circle
+                        class="mp-rating-orbit"
+                        cx="24"
+                        cy="24"
+                        r="15"
+                    />
+
+
+                    <!-- Trophy -->
+
+                    <path
+                        class="mp-rating-trophy"
+                        d="M17 11H31V19.5C31 25.2 27.9 28.5 24 28.5C20.1 28.5 17 25.2 17 19.5V11Z"
+                        fill="currentColor"
+                    />
+
+
+                    <!-- Trophy stem -->
+
+                    <path
+                        class="mp-rating-stem"
+                        d="M21 28.5H27V34H21V28.5Z"
+                        fill="currentColor"
+                    />
+
+
+                    <path
+                        class="mp-rating-base"
+                        d="M17 34H31V38H17V34Z"
+                        fill="currentColor"
+                    />
+
+
+                    <!-- Small stars -->
+
+                    <path
+                        class="mp-rating-star mp-rating-star-one"
+                        d="M8.2 15.3L9.2 17.2L11.3 17.5L9.8 19L10.2 21.1L8.2 20.1L6.3 21.1L6.7 19L5.2 17.5L7.3 17.2L8.2 15.3Z"
+                        fill="currentColor"
+                    />
+
+                    <path
+                        class="mp-rating-star mp-rating-star-two"
+                        d="M39.8 15.3L40.7 17.2L42.8 17.5L41.3 19L41.7 21.1L39.8 20.1L37.8 21.1L38.2 19L36.7 17.5L38.8 17.2L39.8 15.3Z"
+                        fill="currentColor"
+                    />
+
+                </svg>
+
+            </span>
+
+
+            <div>
+
+                <span class="mp-section-eyebrow">
+                    ALL-TIME FAVOURITES
+                </span>
+
+                <h2 class="mp-section-title">
+                    Top Rated Movies
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <!-- CAROUSEL CONTROLS -->
+
+        <div class="mp-section-controls">
+
+            <span class="mp-section-count">
+                24 PICKS
+            </span>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="top-rated"
+                data-carousel-direction="prev"
+                aria-label="Previous top rated movies"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M14.5 6L8.5 12L14.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="top-rated"
+                data-carousel-direction="next"
+                aria-label="Next top rated movies"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M9.5 6L15.5 12L9.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TWO-ROW CAROUSEL
+         ===================================================== -->
+
+    <div
+        class="mp-carousel-window"
+        data-carousel-window="top-rated"
+    >
+
+        <div
+            class="mp-movie-grid"
+            data-carousel-track="top-rated"
+        >
+
+            {{ if .TopRatedMovies }}
+
+                {{ range .TopRatedMovies }}
+
+                    <article
+                        class="mp-movie-card"
+                        data-movie-id="{{ .ID }}"
+                    >
+
+                        <div class="mp-card-media">
+
+                            <div
+                                class="mp-card-loader"
+                                aria-hidden="true"
+                            >
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+
+
+                            <img
+                                class="mp-card-image"
+                                src="{{ .PosterURL }}"
+                                alt="{{ .Title }} poster"
+                                loading="lazy"
+                                decoding="async"
+                            >
+
+
+                            <div class="mp-card-shine"></div>
+
+
+                            <div class="mp-card-overlay">
+
+                                {{ if .Rating }}
+
+                                    <span class="mp-card-rating">
+                                        <span>★</span>
+                                        {{ printf "%.1f" .Rating }}
+                                    </span>
+
+                                {{ end }}
+
+
+                                <button
+                                    class="mp-explore-button"
+                                    type="button"
+                                    data-movie-id="{{ .ID }}"
+                                >
+
+                                    <span>
+                                        Explore Movie
+                                    </span>
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+
+                                        <path
+                                            d="M5 12H19"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                        />
+
+                                        <path
+                                            d="M13 6L19 12L13 18"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+
+                                    </svg>
+
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mp-card-info">
+
+                            <h3
+                                class="mp-card-title"
+                                title="{{ .Title }}"
+                            >
+                                {{ .Title }}
+                            </h3>
+
+
+                            <div class="mp-card-meta">
+
+                                <span>
+                                    {{ .Genre }}
+                                </span>
+
+                                <i></i>
+
+                                <span>
+                                    {{ .Year }}
+                                </span>
+
+                                <i></i>
+
+                                <span>
+                                    {{ .Runtime }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {{ end }}
+
+            {{ else }}
+
+                <div class="mp-section-empty">
+                    Top rated movies are taking a little longer to arrive.
+                </div>
+
+            {{ end }}
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     POPULAR MOVIES TRAILERS
+     ONE ROW
+     ========================================================= -->
+
+<section
+    class="mp-content-section mp-trailer-section"
+    data-section-carousel="popular-trailers"
+>
+
+    <!-- =====================================================
+         SECTION HEADER
+         ===================================================== -->
+
+    <div class="mp-section-header">
+
+        <div class="mp-section-heading">
+
+            <span
+                class="mp-section-icon mp-trailer-section-icon"
+                aria-hidden="true"
+            >
+
+                <svg
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <!-- Film body -->
+
+                    <rect
+                        x="8"
+                        y="12"
+                        width="32"
+                        height="24"
+                        rx="4"
+                        class="mp-film-body"
+                        fill="currentColor"
+                    />
+
+
+                    <!-- Film holes -->
+
+                    <path
+                        class="mp-film-holes"
+                        d="M13 12V16M20 12V16M28 12V16M35 12V16M13 32V36M20 32V36M28 32V36M35 32V36"
+                    />
+
+
+                    <!-- Play shape -->
+
+                    <path
+                        class="mp-film-play"
+                        d="M21 19L31 24L21 29V19Z"
+                        fill="currentColor"
+                    />
+
+                </svg>
+
+            </span>
+
+
+            <div>
+
+                <span class="mp-section-eyebrow">
+                    WATCH SOMETHING NOW
+                </span>
+
+                <h2 class="mp-section-title">
+                    Popular Movies Trailers
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="mp-section-controls">
+
+            <span class="mp-section-count">
+                12 TRAILERS
+            </span>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="popular-trailers"
+                data-carousel-direction="prev"
+                aria-label="Previous popular trailers"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M14.5 6L8.5 12L14.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+
+            <button
+                class="mp-carousel-arrow"
+                type="button"
+                data-carousel-target="popular-trailers"
+                data-carousel-direction="next"
+                aria-label="Next popular trailers"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M9.5 6L15.5 12L9.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.7"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ONE-ROW LANDSCAPE CAROUSEL
+         ===================================================== -->
+
+    <div
+        class="mp-carousel-window mp-trailer-window"
+        data-carousel-window="popular-trailers"
+    >
+
+        <div
+            class="mp-trailer-grid"
+            data-carousel-track="popular-trailers"
+        >
+
+            {{ if .PopularTrailerMovies }}
+
+                {{ range .PopularTrailerMovies }}
+
+                    <article
+                        class="mp-trailer-card"
+                        data-movie-id="{{ .ID }}"
+                    >
+
+                        <div class="mp-trailer-media">
+
+                            <!-- Loader -->
+
+                            <div
+                                class="mp-card-loader"
+                                aria-hidden="true"
+                            >
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+
+
+                            <img
+                                class="mp-trailer-image"
+                                src="{{ .BackdropURL }}"
+                                alt="{{ .Title }} backdrop"
+                                loading="lazy"
+                                decoding="async"
+                            >
+
+
+                            <div class="mp-trailer-shade"></div>
+
+
+                            <!-- =================================================
+                                 YOUTUBE PLAYER
+                                 ================================================= -->
+
+                            <div class="mp-trailer-player"></div>
+
+
+                            <!-- =================================================
+                                 WATCH NOW
+                                 ================================================= -->
+
+                            {{ if .TrailerURL }}
+
+                                <button
+                                    class="mp-watch-now-button"
+                                    type="button"
+                                    data-trailer-url="{{ .TrailerURL }}"
+                                    data-movie-id="{{ .ID }}"
+                                >
+
+                                    <span class="mp-play-icon">
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            aria-hidden="true"
+                                        >
+
+                                            <path
+                                                d="M8 5.5L18.5 12L8 18.5V5.5Z"
+                                                fill="currentColor"
+                                            />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <span>
+                                        Watch Now
+                                    </span>
+
+                                </button>
+
+                            {{ else }}
+
+                                <button
+                                    class="mp-watch-now-button is-disabled"
+                                    type="button"
+                                    disabled
+                                >
+
+                                    Trailer Unavailable
+
+                                </button>
+
+                            {{ end }}
+
+
+                            <!-- Close trailer -->
+
+                            <button
+                                class="mp-trailer-close"
+                                type="button"
+                                aria-label="Close trailer"
+                            >
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    aria-hidden="true"
+                                >
+
+                                    <path
+                                        d="M6 6L18 18"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        stroke-linecap="round"
+                                    />
+
+                                    <path
+                                        d="M18 6L6 18"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="mp-trailer-info">
+
+                            <h3
+                                class="mp-trailer-title"
+                                title="{{ .Title }}"
+                            >
+                                {{ .Title }}
+                            </h3>
+
+
+                            <div class="mp-trailer-meta">
+
+                                <span>
+                                    {{ .Genre }}
+                                </span>
+
+                                <i></i>
+
+                                <span>
+                                    {{ .Year }}
+                                </span>
+
+                                {{ if .Runtime }}
+
+                                    <i></i>
+
+                                    <span>
+                                        {{ .Runtime }}
+                                    </span>
+
+                                {{ end }}
+
+                            </div>
+
+                        </div>
+
+                    </article>
+
+                {{ end }}
+
+            {{ else }}
+
+                <div class="mp-section-empty">
+                    Popular trailers are taking a little longer to arrive.
+                </div>
+
+            {{ end }}
+
+        </div>
+
+    </div>
+
+</section>
+
     </section>
+
 
 
     <!-- =====================================================

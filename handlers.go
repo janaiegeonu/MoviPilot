@@ -19,6 +19,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/benlei/go-tmdb/v2"
@@ -2158,11 +2159,36 @@ type ResetPasswordPageData struct {
 	Email string
 }
 
-//DASHBOARD HANDLER
+/* =========================================================
+   MOVIPILOT DASHBOARD DATA
+   ---------------------------------------------------------
+   Dashboard homepage backend:
+
+   1. Trending Today Hero
+   2. Movies You May Like
+   3. Top Rated Movies
+   4. Popular Movie Trailers
+   ========================================================= */
+
+/* =========================================================
+   DASHBOARD TEMPLATE DATA
+   ========================================================= */
 
 type DashboardPageData struct {
 	TrendingMovies []DashboardHeroMovie
+
+	MayLikeMovies []DashboardMovieCard
+
+	TopRatedMovies []DashboardMovieCard
+
+	PopularTrailerMovies []DashboardTrailerCard
 }
+
+/* =========================================================
+   HERO MOVIE
+   ---------------------------------------------------------
+   Used by the existing Trending Today hero.
+   ========================================================= */
 
 type DashboardHeroMovie struct {
 	ID int64
@@ -2189,10 +2215,85 @@ type DashboardHeroMovie struct {
 }
 
 /* =========================================================
+   STANDARD MOVIE CARD
+   ---------------------------------------------------------
+   Used by:
+
+   - Movies You May Like
+   - Top Rated Movies
+   ========================================================= */
+
+type DashboardMovieCard struct {
+	ID int64
+
+	Title string
+
+	Genre string
+
+	Year string
+
+	Runtime string
+
+	Rating float32
+
+	PosterURL string
+}
+
+/* =========================================================
+   TRAILER CARD
+   ---------------------------------------------------------
+   Used by Popular Movies Trailers.
+   ========================================================= */
+
+type DashboardTrailerCard struct {
+	ID int64
+
+	Title string
+
+	Genre string
+
+	Year string
+
+	Runtime string
+
+	BackdropURL string
+
+	TrailerURL string
+}
+
+/* =========================================================
+   INTERNAL MOVIE SEED
+   ---------------------------------------------------------
+   A lightweight representation used before
+   movie details are fetched.
+   ========================================================= */
+
+type dashboardMovieSeed struct {
+	ID int64
+
+	Title string
+
+	GenreIDs []int64
+
+	GenreOverride string
+
+	ReleaseDate string
+
+	PosterPath string
+
+	BackdropPath string
+
+	Rating float32
+}
+
+/* =========================================================
    DASHBOARD HANDLER
    ========================================================= */
 
-func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
+func DashBoardHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 
 	if r.Method != http.MethodGet {
 
@@ -2203,14 +2304,11 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		return
-
 	}
 
-	/*
-	   Keep the TMDB API key on the server.
-	   Never place TMDB_API_KEY directly in
-	   the HTML or browser JavaScript.
-	*/
+	/* =====================================================
+	   TMDB API KEY
+	   ===================================================== */
 
 	apiKey :=
 		strings.TrimSpace(
@@ -2226,18 +2324,21 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		return
-
 	}
 
-	/*
-	   Create the TMDB client using the v2
-	   wrapper already used by MoviPilot.
-	*/
+	/* =====================================================
+	   INITIALIZE TMDB CLIENT
+	   ===================================================== */
 
 	tmdbClient, err :=
 		tmdb.Init(apiKey)
 
 	if err != nil {
+
+		fmt.Println(
+			"TMDB CLIENT ERROR:",
+			err,
+		)
 
 		http.Error(
 			w,
@@ -2246,20 +2347,17 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		return
-
 	}
 
 	/*
-	   TMDB can return 429 responses when an application
-	   sends too many requests. The wrapper supports
-	   automatic retry behavior for that case.
+	   Let the wrapper retry 429 responses.
 	*/
 
 	tmdbClient.SetClientAutoRetry()
 
 	/*
-	   Keep each dashboard request from hanging forever
-	   if TMDB becomes slow or unreachable.
+	   Don't allow a single slow TMDB request
+	   to hang the dashboard forever.
 	*/
 
 	tmdbClient.SetClientConfig(
@@ -2267,6 +2365,10 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 			Timeout: 12 * time.Second,
 		},
 	)
+
+	/* =====================================================
+	   1. TRENDING TODAY HERO
+	   ===================================================== */
 
 	trendingMovies, err :=
 		getDashboardTrendingMovies(
@@ -2276,6 +2378,11 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 
+		fmt.Println(
+			"TRENDING HERO ERROR:",
+			err,
+		)
+
 		http.Error(
 			w,
 			"Failed to load trending movies",
@@ -2283,21 +2390,91 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 		)
 
 		return
-
 	}
+
+	/* =====================================================
+	   2. MOVIES YOU MAY LIKE
+	   ===================================================== */
+
+	mayLikeSeeds :=
+		getDashboardMayLikeSeeds(
+			tmdbClient,
+		)
+
+	mayLikeMovies :=
+		enrichDashboardMovieCards(
+			tmdbClient,
+			mayLikeSeeds,
+			24,
+		)
+
+	/* =====================================================
+	   3. TOP RATED MOVIES
+	   ===================================================== */
+
+	topRatedSeeds :=
+		getDashboardTopRatedSeeds(
+			tmdbClient,
+			24,
+		)
+
+	topRatedMovies :=
+		enrichDashboardMovieCards(
+			tmdbClient,
+			topRatedSeeds,
+			24,
+		)
+
+	/* =====================================================
+	   4. POPULAR MOVIE TRAILERS
+	   ===================================================== */
+
+	popularTrailerSeeds :=
+		getDashboardPopularTrailerSeeds(
+			tmdbClient,
+			12,
+		)
+
+	popularTrailerMovies :=
+		enrichDashboardTrailerCards(
+			tmdbClient,
+			popularTrailerSeeds,
+			12,
+		)
+
+	/* =====================================================
+	   FINAL TEMPLATE DATA
+	   ===================================================== */
 
 	pageData :=
 		DashboardPageData{
+
 			TrendingMovies: trendingMovies,
+
+			MayLikeMovies: mayLikeMovies,
+
+			TopRatedMovies: topRatedMovies,
+
+			PopularTrailerMovies: popularTrailerMovies,
 		}
 
-	err = renderTemplate(
-		w,
-		"dashboard.html",
-		pageData,
-	)
+	/* =====================================================
+	   RENDER DASHBOARD
+	   ===================================================== */
+
+	err =
+		renderTemplate(
+			w,
+			"dashboard.html",
+			pageData,
+		)
 
 	if err != nil {
+
+		fmt.Println(
+			"DASHBOARD RENDER ERROR:",
+			err,
+		)
 
 		http.Error(
 			w,
@@ -2305,11 +2482,13 @@ func DashBoardHandler(w http.ResponseWriter, r *http.Request) {
 			http.StatusInternalServerError,
 		)
 
+		return
 	}
+
 }
 
 /* =========================================================
-   LOAD TRENDING TODAY
+   TRENDING TODAY
    ========================================================= */
 
 func getDashboardTrendingMovies(
@@ -2334,7 +2513,7 @@ func getDashboardTrendingMovies(
 
 		return nil,
 			fmt.Errorf(
-				"TMDB returned no trending movie results",
+				"TMDB returned no trending movies",
 			)
 
 	}
@@ -2346,14 +2525,6 @@ func getDashboardTrendingMovies(
 			limit,
 		)
 
-	/*
-	   Trending results contain the poster/backdrop,
-	   title, overview, release date and rating.
-
-	   Runtime, full genre names and trailers come from
-	   the individual movie-details request below.
-	*/
-
 	for _, item := range trending.Results {
 
 		if item == nil {
@@ -2361,11 +2532,6 @@ func getDashboardTrendingMovies(
 			continue
 
 		}
-
-		/*
-		   We need both image types for the hero.
-		   Skip movies whose required artwork is missing.
-		*/
 
 		if item.BackdropPath == "" ||
 			item.PosterPath == "" {
@@ -2376,9 +2542,13 @@ func getDashboardTrendingMovies(
 
 		movie :=
 			DashboardHeroMovie{
+
 				ID: item.ID,
 
-				TrendingRank: fmt.Sprintf("%02d", len(movies)+1),
+				TrendingRank: fmt.Sprintf(
+					"%02d",
+					len(movies)+1,
+				),
 
 				Title: item.Title,
 
@@ -2390,21 +2560,11 @@ func getDashboardTrendingMovies(
 
 				Rating: item.VoteAverage,
 
-				/*
-				   w1280 keeps the wide hero sharp
-				   without forcing original-size
-				   files into every browser.
-				*/
 				BackdropURL: tmdb.GetImageURL(
 					item.BackdropPath,
 					tmdb.W1280,
 				),
 
-				/*
-				   w780 gives the portrait artwork
-				   plenty of detail for the floating
-				   poster card.
-				*/
 				PosterURL: tmdb.GetImageURL(
 					item.PosterPath,
 					tmdb.W780,
@@ -2412,19 +2572,16 @@ func getDashboardTrendingMovies(
 			}
 
 		/*
-		   Fetch the extra information required by
-		   the hero: runtime, proper genre name and trailer.
-
-		   Failure here does NOT throw away the movie.
-		   The trending data is still useful even if
-		   one movie-details request fails.
+		   Runtime, full genre name and trailer
+		   come from movie details.
 		*/
 
 		details, detailErr :=
 			tmdbClient.GetMovieDetails(
 				item.ID,
 				map[string]string{
-					"language":           "en-US",
+					"language": "en-US",
+
 					"append_to_response": "videos",
 				},
 			)
@@ -2474,7 +2631,19 @@ func getDashboardTrendingMovies(
 
 		if movie.Genre == "" {
 
-			movie.Genre = "Movie"
+			movie.Genre =
+				genreNameFromID(
+					firstGenreID(
+						item.GenreIDs,
+					),
+				)
+
+		}
+
+		if movie.Genre == "" {
+
+			movie.Genre =
+				"Movie"
 
 		}
 
@@ -2502,10 +2671,1056 @@ func getDashboardTrendingMovies(
 	}
 
 	return movies, nil
+
 }
 
 /* =========================================================
-   FORMAT RELEASE DATE
+   MOVIES YOU MAY LIKE
+   ---------------------------------------------------------
+   Mix:
+
+   - Weekly trending
+   - Action
+   - Romance
+   - A small amount of anime
+   ========================================================= */
+
+func getDashboardMayLikeSeeds(
+	tmdbClient *tmdb.Client,
+) []dashboardMovieSeed {
+
+	const limit = 24
+
+	var weeklySeeds []dashboardMovieSeed
+
+	var actionSeeds []dashboardMovieSeed
+
+	var romanceSeeds []dashboardMovieSeed
+
+	var animeSeeds []dashboardMovieSeed
+
+	/* =====================================================
+	   WEEKLY TRENDING
+	   ===================================================== */
+
+	weekly,
+		err :=
+		tmdbClient.GetTrending(
+			"movie",
+			"week",
+		)
+
+	if err == nil &&
+		weekly != nil &&
+		weekly.TrendingResults != nil {
+
+		for _, movie := range weekly.Results {
+
+			if movie == nil {
+
+				continue
+
+			}
+
+			weeklySeeds =
+				append(
+					weeklySeeds,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						GenreIDs: movie.GenreIDs,
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	} else {
+
+		fmt.Println(
+			"WEEKLY TRENDING ERROR:",
+			err,
+		)
+
+	}
+
+	/* =====================================================
+	   ACTION
+	   ===================================================== */
+
+	action,
+		err :=
+		tmdbClient.GetDiscoverMovie(
+			map[string]string{
+
+				"language": "en-US",
+
+				"page": "1",
+
+				"sort_by": "popularity.desc",
+
+				"include_adult": "false",
+
+				"include_video": "false",
+
+				"with_genres": "28",
+
+				"vote_average.gte": "6.3",
+
+				"vote_count.gte": "300",
+			},
+		)
+
+	if err == nil &&
+		action != nil {
+
+		for _, movie := range action.Results {
+
+			if movie == nil {
+
+				continue
+
+			}
+
+			actionSeeds =
+				append(
+					actionSeeds,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						GenreIDs: movie.GenreIDs,
+
+						GenreOverride: "Action",
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	} else {
+
+		fmt.Println(
+			"ACTION DISCOVER ERROR:",
+			err,
+		)
+
+	}
+
+	/* =====================================================
+	   ROMANCE
+	   ===================================================== */
+
+	romance,
+		err :=
+		tmdbClient.GetDiscoverMovie(
+			map[string]string{
+
+				"language": "en-US",
+
+				"page": "1",
+
+				"sort_by": "popularity.desc",
+
+				"include_adult": "false",
+
+				"include_video": "false",
+
+				"with_genres": "10749",
+
+				"vote_average.gte": "6.2",
+
+				"vote_count.gte": "200",
+			},
+		)
+
+	if err == nil &&
+		romance != nil {
+
+		for _, movie := range romance.Results {
+
+			if movie == nil {
+
+				continue
+
+			}
+
+			romanceSeeds =
+				append(
+					romanceSeeds,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						GenreIDs: movie.GenreIDs,
+
+						GenreOverride: "Romance",
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	} else {
+
+		fmt.Println(
+			"ROMANCE DISCOVER ERROR:",
+			err,
+		)
+
+	}
+
+	/* =====================================================
+	   ANIME
+	   -----------------------------------------------------
+	   TMDB classifies anime primarily through
+	   Animation + original Japanese language.
+	   ===================================================== */
+
+	anime,
+		err :=
+		tmdbClient.GetDiscoverMovie(
+			map[string]string{
+
+				"language": "en-US",
+
+				"page": "1",
+
+				"sort_by": "popularity.desc",
+
+				"include_adult": "false",
+
+				"include_video": "false",
+
+				"with_genres": "16",
+
+				"with_original_language": "ja",
+
+				"vote_average.gte": "6.2",
+
+				"vote_count.gte": "100",
+			},
+		)
+
+	if err == nil &&
+		anime != nil {
+
+		for _, movie := range anime.Results {
+
+			if movie == nil {
+
+				continue
+
+			}
+
+			animeSeeds =
+				append(
+					animeSeeds,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						GenreIDs: movie.GenreIDs,
+
+						GenreOverride: "Anime",
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	} else {
+
+		fmt.Println(
+			"ANIME DISCOVER ERROR:",
+			err,
+		)
+
+	}
+
+	/* =====================================================
+	   MIX THE SOURCES
+	   -----------------------------------------------------
+	   Target distribution:
+
+	   12 weekly
+	    6 action
+	    4 romance
+	    2 anime
+	   ===================================================== */
+
+	result :=
+		make(
+			[]dashboardMovieSeed,
+			0,
+			limit,
+		)
+
+	seen :=
+		make(
+			map[int64]bool,
+		)
+
+	appendFromPool :=
+		func(
+			pool []dashboardMovieSeed,
+			count int,
+		) {
+
+			added :=
+				0
+
+			for _, movie := range pool {
+
+				if added >= count ||
+					len(result) >= limit {
+
+					break
+
+				}
+
+				if movie.ID == 0 ||
+					seen[movie.ID] {
+
+					continue
+
+				}
+
+				if movie.PosterPath == "" {
+
+					continue
+
+				}
+
+				seen[movie.ID] =
+					true
+
+				result =
+					append(
+						result,
+						movie,
+					)
+
+				added++
+
+			}
+
+		}
+
+	appendFromPool(
+		weeklySeeds,
+		12,
+	)
+
+	appendFromPool(
+		actionSeeds,
+		6,
+	)
+
+	appendFromPool(
+		romanceSeeds,
+		4,
+	)
+
+	appendFromPool(
+		animeSeeds,
+		2,
+	)
+
+	/* =====================================================
+	   FILL ANY REMAINING SPACES
+	   ===================================================== */
+
+	fillPools :=
+		[][]dashboardMovieSeed{
+			weeklySeeds,
+			actionSeeds,
+			romanceSeeds,
+			animeSeeds,
+		}
+
+	for _, pool := range fillPools {
+
+		for _, movie := range pool {
+
+			if len(result) >= limit {
+
+				break
+
+			}
+
+			if movie.ID == 0 ||
+				seen[movie.ID] {
+
+				continue
+
+			}
+
+			if movie.PosterPath == "" {
+
+				continue
+
+			}
+
+			seen[movie.ID] =
+				true
+
+			result =
+				append(
+					result,
+					movie,
+				)
+
+		}
+
+	}
+
+	return result
+
+}
+
+/* =========================================================
+   TOP RATED SEEDS
+   ========================================================= */
+
+func getDashboardTopRatedSeeds(
+	tmdbClient *tmdb.Client,
+	limit int,
+) []dashboardMovieSeed {
+
+	result :=
+		make(
+			[]dashboardMovieSeed,
+			0,
+			limit,
+		)
+
+	seen :=
+		make(
+			map[int64]bool,
+		)
+
+	/*
+	   Two pages give us enough material to
+	   reliably build the first 24 cards.
+	*/
+
+	for page := 1; page <= 2 &&
+		len(result) < limit; page++ {
+
+		topRated,
+			err :=
+			tmdbClient.GetMovieTopRated(
+				map[string]string{
+
+					"language": "en-US",
+
+					"page": fmt.Sprintf(
+						"%d",
+						page,
+					),
+				},
+			)
+
+		if err != nil {
+
+			fmt.Println(
+				"TOP RATED ERROR:",
+				err,
+			)
+
+			continue
+
+		}
+
+		if topRated == nil ||
+			topRated.MoviePopularResults == nil {
+
+			continue
+
+		}
+
+		for _, movie := range topRated.Results {
+
+			if len(result) >= limit {
+
+				break
+
+			}
+
+			if movie == nil ||
+				movie.ID == 0 ||
+				seen[movie.ID] {
+
+				continue
+
+			}
+
+			if movie.PosterPath == "" {
+
+				continue
+
+			}
+
+			seen[movie.ID] =
+				true
+
+			result =
+				append(
+					result,
+					dashboardMovieSeed{
+
+						ID: movie.ID,
+
+						Title: movie.Title,
+
+						ReleaseDate: movie.ReleaseDate,
+
+						PosterPath: movie.PosterPath,
+
+						BackdropPath: movie.BackdropPath,
+
+						Rating: movie.VoteAverage,
+					},
+				)
+
+		}
+
+	}
+
+	return result
+
+}
+
+/* =========================================================
+   POPULAR TRAILER SEEDS
+   ========================================================= */
+
+func getDashboardPopularTrailerSeeds(
+	tmdbClient *tmdb.Client,
+	limit int,
+) []dashboardMovieSeed {
+
+	result :=
+		make(
+			[]dashboardMovieSeed,
+			0,
+			limit,
+		)
+
+	seen :=
+		make(
+			map[int64]bool,
+		)
+
+	popular,
+		err :=
+		tmdbClient.GetMoviePopular(
+			map[string]string{
+
+				"language": "en-US",
+
+				"page": "1",
+			},
+		)
+
+	if err != nil {
+
+		fmt.Println(
+			"POPULAR MOVIES ERROR:",
+			err,
+		)
+
+		return result
+
+	}
+
+	if popular == nil ||
+		popular.MoviePopularResults == nil {
+
+		return result
+
+	}
+
+	for _, movie := range popular.Results {
+
+		if len(result) >= limit {
+
+			break
+
+		}
+
+		if movie == nil ||
+			movie.ID == 0 ||
+			seen[movie.ID] {
+
+			continue
+
+		}
+
+		if movie.BackdropPath == "" {
+
+			continue
+
+		}
+
+		seen[movie.ID] =
+			true
+
+		result =
+			append(
+				result,
+				dashboardMovieSeed{
+
+					ID: movie.ID,
+
+					Title: movie.Title,
+
+					ReleaseDate: movie.ReleaseDate,
+
+					PosterPath: movie.PosterPath,
+
+					BackdropPath: movie.BackdropPath,
+
+					Rating: movie.VoteAverage,
+				},
+			)
+
+	}
+
+	return result
+
+}
+
+/* =========================================================
+   ENRICH STANDARD MOVIE CARDS
+   ---------------------------------------------------------
+   Uses a small worker pool so 24 movie detail requests
+   don't all fire at once.
+   ========================================================= */
+
+func enrichDashboardMovieCards(
+	tmdbClient *tmdb.Client,
+	seeds []dashboardMovieSeed,
+	limit int,
+) []DashboardMovieCard {
+
+	if len(seeds) > limit {
+
+		seeds =
+			seeds[:limit]
+
+	}
+
+	results :=
+		make(
+			[]DashboardMovieCard,
+			len(seeds),
+		)
+
+	const workerCount = 6
+
+	jobs :=
+		make(
+			chan int,
+		)
+
+	var wg sync.WaitGroup
+
+	for worker := 0; worker < workerCount; worker++ {
+
+		wg.Add(1)
+
+		go func() {
+
+			defer wg.Done()
+
+			for index := range jobs {
+
+				seed :=
+					seeds[index]
+
+				card :=
+					DashboardMovieCard{
+
+						ID: seed.ID,
+
+						Title: seed.Title,
+
+						Year: formatDashboardYear(
+							seed.ReleaseDate,
+						),
+
+						Rating: seed.Rating,
+
+						PosterURL: tmdb.GetImageURL(
+							seed.PosterPath,
+							tmdb.W780,
+						),
+					}
+
+				/*
+				   Start with the known seed genre
+				   before movie details arrive.
+				*/
+
+				if seed.GenreOverride != "" {
+
+					card.Genre =
+						seed.GenreOverride
+
+				} else {
+
+					card.Genre =
+						genreNameFromID(
+							firstGenreID(
+								seed.GenreIDs,
+							),
+						)
+
+				}
+
+				details,
+					err :=
+					tmdbClient.GetMovieDetails(
+						seed.ID,
+						map[string]string{
+							"language": "en-US",
+						},
+					)
+
+				if err == nil &&
+					details != nil {
+
+					if details.Title != "" {
+
+						card.Title =
+							details.Title
+
+					}
+
+					if details.ReleaseDate != "" {
+
+						card.Year =
+							formatDashboardYear(
+								details.ReleaseDate,
+							)
+
+					}
+
+					if details.VoteAverage > 0 {
+
+						card.Rating =
+							details.VoteAverage
+
+					}
+
+					card.Runtime =
+						formatDashboardRuntime(
+							details.Runtime,
+						)
+
+					/*
+					   Prefer the proper TMDB genre name
+					   when we don't have an explicit
+					   recommendation category.
+					*/
+
+					if seed.GenreOverride == "" {
+
+						card.Genre =
+							firstDashboardGenre(
+								details.Genres,
+							)
+
+					}
+
+				}
+
+				if card.Genre == "" {
+
+					card.Genre =
+						"Movie"
+
+				}
+
+				if card.Runtime == "" {
+
+					card.Runtime =
+						"—"
+
+				}
+
+				results[index] =
+					card
+
+			}
+
+		}()
+
+	}
+
+	for index := range seeds {
+
+		jobs <- index
+
+	}
+
+	close(jobs)
+
+	wg.Wait()
+
+	/*
+	   Remove completely unusable entries while
+	   preserving the API response order.
+	*/
+
+	finalResults :=
+		make(
+			[]DashboardMovieCard,
+			0,
+			len(results),
+		)
+
+	for _, card := range results {
+
+		if card.ID == 0 ||
+			card.Title == "" ||
+			card.PosterURL == "" {
+
+			continue
+
+		}
+
+		finalResults =
+			append(
+				finalResults,
+				card,
+			)
+
+	}
+
+	return finalResults
+
+}
+
+/* =========================================================
+   ENRICH TRAILER CARDS
+   ---------------------------------------------------------
+   Movie details + videos are loaded together.
+   ========================================================= */
+
+func enrichDashboardTrailerCards(
+	tmdbClient *tmdb.Client,
+	seeds []dashboardMovieSeed,
+	limit int,
+) []DashboardTrailerCard {
+
+	if len(seeds) > limit {
+
+		seeds =
+			seeds[:limit]
+
+	}
+
+	results :=
+		make(
+			[]DashboardTrailerCard,
+			len(seeds),
+		)
+
+	const workerCount = 6
+
+	jobs :=
+		make(
+			chan int,
+		)
+
+	var wg sync.WaitGroup
+
+	for worker := 0; worker < workerCount; worker++ {
+
+		wg.Add(1)
+
+		go func() {
+
+			defer wg.Done()
+
+			for index := range jobs {
+
+				seed :=
+					seeds[index]
+
+				card :=
+					DashboardTrailerCard{
+
+						ID: seed.ID,
+
+						Title: seed.Title,
+
+						Year: formatDashboardYear(
+							seed.ReleaseDate,
+						),
+
+						BackdropURL: tmdb.GetImageURL(
+							seed.BackdropPath,
+							tmdb.W1280,
+						),
+					}
+
+				details,
+					err :=
+					tmdbClient.GetMovieDetails(
+						seed.ID,
+						map[string]string{
+
+							"language": "en-US",
+
+							"append_to_response": "videos",
+						},
+					)
+
+				if err == nil &&
+					details != nil {
+
+					if details.Title != "" {
+
+						card.Title =
+							details.Title
+
+					}
+
+					if details.ReleaseDate != "" {
+
+						card.Year =
+							formatDashboardYear(
+								details.ReleaseDate,
+							)
+
+					}
+
+					card.Genre =
+						firstDashboardGenre(
+							details.Genres,
+						)
+
+					card.Runtime =
+						formatDashboardRuntime(
+							details.Runtime,
+						)
+
+					card.TrailerURL =
+						findDashboardTrailer(
+							details,
+						)
+
+				}
+
+				if card.Genre == "" {
+
+					card.Genre =
+						genreNameFromID(
+							firstGenreID(
+								seed.GenreIDs,
+							),
+						)
+
+				}
+
+				if card.Genre == "" {
+
+					card.Genre =
+						"Movie"
+
+				}
+
+				results[index] =
+					card
+
+			}
+
+		}()
+
+	}
+
+	for index := range seeds {
+
+		jobs <- index
+
+	}
+
+	close(jobs)
+
+	wg.Wait()
+
+	finalResults :=
+		make(
+			[]DashboardTrailerCard,
+			0,
+			len(results),
+		)
+
+	for _, card := range results {
+
+		if card.ID == 0 ||
+			card.Title == "" ||
+			card.BackdropURL == "" {
+
+			continue
+
+		}
+
+		finalResults =
+			append(
+				finalResults,
+				card,
+			)
+
+	}
+
+	return finalResults
+
+}
+
+/* =========================================================
+   DATE FORMATTERS
    ========================================================= */
 
 func formatDashboardDate(
@@ -2518,18 +3733,14 @@ func formatDashboardDate(
 
 	}
 
-	parsed, err :=
+	parsed,
+		err :=
 		time.Parse(
 			"2006-01-02",
 			value,
 		)
 
 	if err != nil {
-
-		/*
-		   Keep the original TMDB value instead of
-		   displaying nothing if the format changes.
-		*/
 
 		return value
 
@@ -2538,10 +3749,46 @@ func formatDashboardDate(
 	return parsed.Format(
 		"Jan 2, 2006",
 	)
+
+}
+
+func formatDashboardYear(
+	value string,
+) string {
+
+	if value == "" {
+
+		return "—"
+
+	}
+
+	parsed,
+		err :=
+		time.Parse(
+			"2006-01-02",
+			value,
+		)
+
+	if err != nil {
+
+		if len(value) >= 4 {
+
+			return value[:4]
+
+		}
+
+		return value
+
+	}
+
+	return parsed.Format(
+		"2006",
+	)
+
 }
 
 /* =========================================================
-   FORMAT RUNTIME
+   RUNTIME FORMATTER
    ========================================================= */
 
 func formatDashboardRuntime(
@@ -2583,10 +3830,11 @@ func formatDashboardRuntime(
 		hours,
 		remainingMinutes,
 	)
+
 }
 
 /* =========================================================
-   PRIMARY GENRE
+   FIRST GENRE
    ========================================================= */
 
 func firstDashboardGenre(
@@ -2595,22 +3843,118 @@ func firstDashboardGenre(
 
 	for _, genre := range genres {
 
-		if genre == nil ||
-			genre.Name == "" {
+		if genre == nil {
 
 			continue
 
 		}
 
-		return genre.Name
+		if genre.Name != "" {
+
+			return genre.Name
+
+		}
 
 	}
 
 	return ""
+
 }
 
 /* =========================================================
-   FIND A USABLE TRAILER
+   FIRST GENRE ID
+   ========================================================= */
+
+func firstGenreID(
+	ids []int64,
+) int64 {
+
+	if len(ids) == 0 {
+
+		return 0
+
+	}
+
+	return ids[0]
+
+}
+
+/* =========================================================
+   GENRE ID → DISPLAY NAME
+   ========================================================= */
+
+func genreNameFromID(
+	id int64,
+) string {
+
+	switch id {
+
+	case 28:
+		return "Action"
+
+	case 12:
+		return "Adventure"
+
+	case 16:
+		return "Animation"
+
+	case 35:
+		return "Comedy"
+
+	case 80:
+		return "Crime"
+
+	case 99:
+		return "Documentary"
+
+	case 18:
+		return "Drama"
+
+	case 10751:
+		return "Family"
+
+	case 14:
+		return "Fantasy"
+
+	case 36:
+		return "History"
+
+	case 27:
+		return "Horror"
+
+	case 10402:
+		return "Music"
+
+	case 9648:
+		return "Mystery"
+
+	case 10749:
+		return "Romance"
+
+	case 878:
+		return "Science Fiction"
+
+	case 10770:
+		return "TV Movie"
+
+	case 53:
+		return "Thriller"
+
+	case 10752:
+		return "War"
+
+	case 37:
+		return "Western"
+
+	default:
+		return ""
+
+	}
+
+}
+
+/* =========================================================
+   FIND YOUTUBE TRAILER
    ========================================================= */
 
 func findDashboardTrailer(
@@ -2619,68 +3963,83 @@ func findDashboardTrailer(
 
 	if details == nil ||
 		details.MovieVideosAppend == nil ||
-		details.MovieVideosAppend.Videos == nil ||
-		details.MovieVideosAppend.Videos.MovieVideosResults == nil {
+		details.Videos == nil ||
+		details.Videos.MovieVideosResults == nil {
 
 		return ""
 
 	}
 
-	videos :=
-		details.
-			MovieVideosAppend.
-			Videos.
-			MovieVideosResults.
-			Results
+	/*
+	   Prefer official YouTube trailers.
+	*/
 
-	var fallbackTrailer string
+	for _, video := range details.Videos.Results {
 
-	for _, video := range videos {
-
-		if video == nil ||
-			video.Key == "" {
+		if video == nil {
 
 			continue
 
 		}
 
-		if !strings.EqualFold(
-			video.Site,
-			"YouTube",
-		) {
+		if video.Site != "YouTube" {
 
 			continue
 
 		}
 
-		if !strings.EqualFold(
-			video.Type,
-			"Trailer",
-		) {
+		if video.Key == "" {
 
 			continue
 
 		}
 
-		trailerURL :=
-			tmdb.GetVideoURL(
+		if video.Type == "Trailer" &&
+			video.Official {
+
+			return tmdb.GetVideoURL(
 				video.Key,
 			)
-
-		if video.Official {
-
-			return trailerURL
-
-		}
-
-		if fallbackTrailer == "" {
-
-			fallbackTrailer =
-				trailerURL
 
 		}
 
 	}
 
-	return fallbackTrailer
+	/*
+	   Fallback to a non-official YouTube
+	   trailer when no official one exists.
+	*/
+
+	for _, video := range details.Videos.Results {
+
+		if video == nil {
+
+			continue
+
+		}
+
+		if video.Site != "YouTube" {
+
+			continue
+
+		}
+
+		if video.Key == "" {
+
+			continue
+
+		}
+
+		if video.Type == "Trailer" {
+
+			return tmdb.GetVideoURL(
+				video.Key,
+			)
+
+		}
+
+	}
+
+	return ""
+
 }

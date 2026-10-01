@@ -1,0 +1,467 @@
+{{ define "series_page" }}
+
+<!-- =========================================================
+     MOVIPILOT SERIES PAGE
+     ========================================================= -->
+
+<section
+    class="series-page-shell"
+    id="seriesPage"
+    aria-label="MoviPilot TV Series"
+>
+
+
+    <!-- =====================================================
+         HERO ARTWORK
+         ===================================================== -->
+
+    <div
+        class="series-hero-media"
+        id="seriesHeroMedia"
+    >
+
+        <img
+            class="series-hero-image"
+            src="/img/series hero.png"
+            alt="MoviPilot Series"
+        >
+
+        <div class="series-hero-overlay"></div>
+
+
+        <!-- Small cinematic glow -->
+        <div
+            class="series-hero-glow"
+            aria-hidden="true"
+        ></div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         SERIES INTRODUCTION
+         ===================================================== -->
+
+    <div class="series-introduction">
+
+        <span class="series-intro-eyebrow">
+            MOVIPILOT SERIES
+        </span>
+
+
+        <h1 class="series-page-title">
+            Explore stories worth getting lost in.
+        </h1>
+
+
+        <p class="series-page-description">
+            Explore an expanding collection of series across different
+            genres, from brand-new releases and upcoming stories to
+            highly rated favourites, carefully gathered to help you
+            discover what fits your taste.
+        </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         SERIES FILTER PANEL
+
+         IMPORTANT:
+         This area NEVER gets replaced when a filter is clicked.
+         Only #seriesResults changes.
+         ===================================================== -->
+
+    <div
+        class="series-filter-panel"
+        aria-label="Series categories"
+    >
+
+
+        <!-- =================================================
+             DISCOVER FILTERS
+             ================================================= -->
+
+        <div class="series-filter-group">
+
+            <span class="series-filter-group-label">
+                DISCOVER
+            </span>
+
+
+            <div class="series-filter-buttons">
+
+                <button
+                    class="series-filter-button is-active"
+                    type="button"
+                    data-series-filter="all"
+                >
+                    <span>All Series</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="new"
+                >
+                    <span>New Series</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="upcoming"
+                >
+                    <span>Upcoming Series</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="top-rated"
+                >
+                    <span>Top Rated Series</span>
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="series-filter-divider"></div>
+
+
+
+        <!-- =================================================
+             GENRE FILTERS
+             ================================================= -->
+
+        <div class="series-filter-group">
+
+            <span class="series-filter-group-label">
+                GENRES
+            </span>
+
+
+            <div class="series-filter-buttons">
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="horror"
+                >
+                    <span>Horror</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="anime"
+                >
+                    <span>Anime</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="romance"
+                >
+                    <span>Romance</span>
+                </button>
+
+
+                <button
+                    class="series-filter-button"
+                    type="button"
+                    data-series-filter="action"
+                >
+                    <span>Action</span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS HEADER
+         ===================================================== -->
+
+    <div class="series-results-header">
+
+        <div class="series-results-heading">
+
+            <span class="series-results-eyebrow">
+                SERIES CATALOG
+            </span>
+
+
+            <h2
+                class="series-results-title"
+                id="seriesResultsTitle"
+            >
+                Series for You
+            </h2>
+
+        </div>
+
+
+        <span
+            class="series-results-count"
+            id="seriesResultsCount"
+        >
+            66 SERIES
+        </span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS AREA
+
+         THIS IS THE ONLY AREA REPLACED WHEN FILTER CHANGES.
+         ===================================================== -->
+
+    <div
+        class="series-results"
+        id="seriesResults"
+        aria-live="polite"
+        aria-busy="true"
+    >
+
+        <!-- Initial loader -->
+        <div class="series-loading-state">
+
+            <div class="series-loading-spinner"></div>
+
+            <span>
+                Preparing your series collection...
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+{{ end }}
+
+
+
+{{ define "series_cards" }}
+
+{{ if .Shows }}
+
+    <div class="series-card-grid">
+
+        {{ range .Shows }}
+
+            <article
+                class="series-card"
+                data-series-id="{{ .ID }}"
+            >
+
+
+                <!-- =========================================
+                     POSTER
+                     ========================================= -->
+
+                <div class="series-card-media">
+
+                    <div
+                        class="series-card-loader"
+                        aria-hidden="true"
+                    >
+
+                        <span></span>
+                        <span></span>
+                        <span></span>
+
+                    </div>
+
+
+                    <img
+                        class="series-card-poster"
+                        src="{{ .PosterURL }}"
+                        alt="{{ .Title }} poster"
+                        loading="lazy"
+                        decoding="async"
+                    >
+
+
+                    <div class="series-card-shine"></div>
+
+
+                    {{ if gt .Rating 0 }}
+
+                        <span class="series-card-rating">
+
+                            <span class="series-card-rating-star">
+                                ★
+                            </span>
+
+                            {{ printf "%.1f" .Rating }}
+
+                        </span>
+
+                    {{ end }}
+
+                </div>
+
+
+
+                <!-- =========================================
+                     SERIES INFORMATION
+                     ========================================= -->
+
+                <div class="series-card-content">
+
+                    <h3
+                        class="series-card-title"
+                        title="{{ .Title }}"
+                    >
+                        {{ .Title }}
+                    </h3>
+
+
+                    <!-- GENRE + YEAR -->
+
+                    <div class="series-card-meta">
+
+                        <span class="series-card-genre">
+                            {{ .Genre }}
+                        </span>
+
+                        <i></i>
+
+                        <span>
+                            {{ .ReleaseDate }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- SEASONS + EPISODES -->
+
+                    <div class="series-card-stats">
+
+                        <span>
+
+                            {{ .Seasons }}
+
+                            {{ if eq .Seasons 1 }}
+                                season
+                            {{ else }}
+                                seasons
+                            {{ end }}
+
+                        </span>
+
+
+                        <i></i>
+
+
+                        <span>
+
+                            {{ .Episodes }}
+
+                            {{ if eq .Episodes 1 }}
+                                episode
+                            {{ else }}
+                                episodes
+                            {{ end }}
+
+                        </span>
+
+                    </div>
+
+
+                    <!-- =====================================
+                         EXPLORE BUTTON
+                         ===================================== -->
+
+                    <button
+                        class="series-explore-button"
+                        type="button"
+                        data-series-id="{{ .ID }}"
+                    >
+
+                        <span>
+                            Explore
+                        </span>
+
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M5 12H18"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M13 7L18 12L13 17"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+        {{ end }}
+
+    </div>
+
+{{ else }}
+
+    <!-- =====================================================
+         EMPTY STATE
+         ===================================================== -->
+
+    <div class="series-empty-state">
+
+        <span class="series-empty-kicker">
+            NOTHING HERE YET
+        </span>
+
+
+        <h3>
+            We couldn't find enough series for this collection.
+        </h3>
+
+
+        <p>
+            Try another category and let MoviPilot discover
+            something different for you.
+        </p>
+
+    </div>
+
+{{ end }}
+
+{{ end }}

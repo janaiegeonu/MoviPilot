@@ -846,6 +846,10 @@
             results.innerHTML =
                 html;
 
+                console.log(
+                "[SERIES JS] Cards received:",
+                results.querySelectorAll(".series-card").length
+            );
 
             results.classList.remove(
                 "is-switching"

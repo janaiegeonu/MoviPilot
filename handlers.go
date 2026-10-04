@@ -1430,7 +1430,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Password is correct.
 	// Session creation will come next.
 
-	http.Redirect(w, r, "/home", http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 type VerificationPageData struct {
@@ -4182,39 +4182,57 @@ func findDashboardTrailer(
 
 }
 
-/* =========================================================
-   SERIES CONSTANTS
-   ========================================================= */
+/*
+=========================================================
 
+	SERIES CONSTANTS
+	=========================================================
+*/
 const (
 
-	// Default Series page.
+	// --------------------------------------------------------
+	// Final number of cards displayed.
+	// --------------------------------------------------------
+
 	seriesDefaultLimit = 66
+	seriesFilterLimit  = 48
 
-	// Filtered collections.
-	seriesFilterLimit = 48
+	// --------------------------------------------------------
+	// Number of TMDB pages we are willing to inspect.
+	//
+	// TMDB Discover returns multiple results per page.
+	// We deliberately create a larger candidate pool than
+	// the final display count.
+	// --------------------------------------------------------
 
-	// Candidate pages.
-
-	// 8 pages x 20 results can provide up to 160 candidates.
 	seriesDefaultCandidatePages = 8
+	seriesFilterCandidatePages  = 8
 
-	// 7 pages x 20 results can provide up to 140 candidates.
-	seriesFilterCandidatePages = 7
+	// --------------------------------------------------------
+	// Maximum candidate pool.
+	// --------------------------------------------------------
 
-	// Controlled concurrent detail requests.
-	seriesDetailWorkers = 5
+	seriesDefaultMaxCandidates = 160
+	seriesFilterMaxCandidates  = 160
 
+	// --------------------------------------------------------
+	// Concurrent TMDB detail requests.
+	// --------------------------------------------------------
+
+	seriesDetailWorkers = 1
+
+	// --------------------------------------------------------
 	// Cache durations.
-	seriesListCacheTTL   = 5 * time.Minute
+	// --------------------------------------------------------
+
+	seriesListCacheTTL   = 1 * time.Minute
 	seriesDetailCacheTTL = 15 * time.Minute
 
-	// Progressive enrichment batch.
-	seriesEnrichmentBatchSize = 24
+	// --------------------------------------------------------
+	// Number of candidates processed at once.
+	// --------------------------------------------------------
 
-	// Candidate ceiling.
-	seriesDefaultMaxCandidates = 160
-	seriesFilterMaxCandidates  = 140
+	seriesEnrichmentBatchSize = 10
 )
 
 /* =========================================================
@@ -4455,10 +4473,11 @@ func SeriesCardsHandler(
 		return
 	}
 
-	w.Header().Set(
-		"Content-Type",
-		"text/html; charset=utf-8",
-	)
+	/*
+		=========================================================
+		PARSE SERIES TEMPLATE
+		=========================================================
+	*/
 
 	tmpl, err :=
 		template.ParseFiles(
@@ -4466,6 +4485,11 @@ func SeriesCardsHandler(
 		)
 
 	if err != nil {
+
+		fmt.Printf(
+			"[SERIES TEMPLATE PARSE ERROR] %v\n",
+			err,
+		)
 
 		http.Error(
 			w,
@@ -4476,26 +4500,62 @@ func SeriesCardsHandler(
 		return
 	}
 
+	/*
+		=========================================================
+		PREPARE TEMPLATE DATA
+		=========================================================
+	*/
+
+	data :=
+		SeriesPageData{
+			Shows: shows,
+		}
+
+	/*
+		=========================================================
+		RENDER INTO BUFFER FIRST
+		=========================================================
+
+		We do NOT render directly into http.ResponseWriter.
+
+		This allows us to catch a template error before
+		anything has been sent to the browser.
+	*/
+
+	var buffer bytes.Buffer
+
 	err =
 		tmpl.ExecuteTemplate(
-			w,
+			&buffer,
 			"series_cards",
-			SeriesPageData{
-				Shows: shows,
-			},
+			data,
+		)
+
+	/*
+		=========================================================
+		SEND SUCCESSFUL RESPONSE
+		=========================================================
+	*/
+
+	w.Header().Set(
+		"Content-Type",
+		"text/html; charset=utf-8",
+	)
+
+	_, err =
+		w.Write(
+			buffer.Bytes(),
 		)
 
 	if err != nil {
 
-		http.Error(
-			w,
-			"Could not render Series cards",
-			http.StatusInternalServerError,
+		fmt.Printf(
+			"[SERIES RESPONSE ERROR] %v\n",
+			err,
 		)
 
 		return
 	}
-
 }
 
 /* =========================================================
@@ -4537,57 +4597,58 @@ func newSeriesTMDBClient() (
 	error,
 ) {
 
-	/*
-		Support both variable names so the Series page
-		works with your existing project configuration.
-	*/
+	// --------------------------------------------------------
+	// First use the same API key variable used by MoviPilot.
+	// --------------------------------------------------------
 
-	apiKey :=
-		strings.TrimSpace(
-			os.Getenv("TMDB_TOKEN"),
-		)
+	apiKey := strings.TrimSpace(
+		os.Getenv("TMDB_API_KEY"),
+	)
+
+	// --------------------------------------------------------
+	// Keep TMDB_TOKEN as a fallback so the Series page can
+	// still work if the project currently uses that variable.
+	// --------------------------------------------------------
 
 	if apiKey == "" {
-
-		apiKey =
-			strings.TrimSpace(
-				os.Getenv("TMDB_TOKEN"),
-			)
-
+		apiKey = strings.TrimSpace(
+			os.Getenv("TMDB_TOKEN"),
+		)
 	}
 
 	if apiKey == "" {
-
 		return nil, errors.New(
 			"TMDB API key is missing",
 		)
-
 	}
 
-	client, err :=
-		tmdb.Init(apiKey)
+	// --------------------------------------------------------
+	// Create TMDB client.
+	// --------------------------------------------------------
+
+	client, err := tmdb.Init(apiKey)
 
 	if err != nil {
-
 		return nil, err
-
 	}
 
-	/*
-		Your chosen go-tmdb wrapper supports automatic retry
-		for TMDB 429 responses.
-	*/
+	// --------------------------------------------------------
+	// Automatically retry rate-limit responses.
+	// --------------------------------------------------------
 
 	client.SetClientAutoRetry()
 
+	// --------------------------------------------------------
+	// Give each HTTP request a reasonable timeout.
+	// --------------------------------------------------------
+
 	client.SetClientConfig(
 		&http.Client{
-			Timeout: 12 * time.Second,
+			Timeout: 15 * time.Second,
 		},
 	)
 
 	return client, nil
-
 }
 
 /* =========================================================
@@ -4660,10 +4721,6 @@ func getSeriesCards(
 			finalLimit,
 		)
 
-	/*
-		Cache the finished collection.
-	*/
-
 	saveCachedSeriesList(
 		filter,
 		shows,
@@ -4684,404 +4741,224 @@ func getSeriesSeedsForFilter(
 
 	switch filter {
 
-	/* =====================================================
-	   ALL SERIES
-	   ===================================================== */
+	// ========================================================
+	// ALL SERIES
+	// ========================================================
 
 	case "all":
 
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"sort_by": "popularity.desc",
-			}
-
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":                     "en-US",
+				"sort_by":                      "popularity.desc",
+				"include_adult":                "false",
+				"include_null_first_air_dates": "false",
+			},
 			seriesDefaultCandidatePages,
 			seriesDefaultMaxCandidates,
 		)
 
-	/* =====================================================
-	   NEW SERIES
-
-	   Last 12 months.
-	   ===================================================== */
+	// ========================================================
+	// NEW SERIES
+	//
+	// Shows released during the last 12 months.
+	// ========================================================
 
 	case "new":
 
-		now :=
-			time.Now().UTC()
+		now := time.Now().UTC()
 
-		startDate :=
-			now.AddDate(
-				0,
-				-12,
-				0,
-			).Format(
-				"2006-01-02",
-			)
+		startDate := now.AddDate(
+			0,
+			-12,
+			0,
+		).Format("2006-01-02")
 
-		endDate :=
-			now.Format(
-				"2006-01-02",
-			)
-
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"first_air_date.gte": startDate,
-
-				"first_air_date.lte": endDate,
-
-				"sort_by": "first_air_date.desc",
-			}
+		endDate := now.Format(
+			"2006-01-02",
+		)
 
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":                     "en-US",
+				"first_air_date.gte":           startDate,
+				"first_air_date.lte":           endDate,
+				"sort_by":                      "first_air_date.desc",
+				"include_adult":                "false",
+				"include_null_first_air_dates": "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   UPCOMING SERIES
-
-	   Next 18 months.
-	   ===================================================== */
+	// ========================================================
+	// UPCOMING SERIES
+	// ========================================================
 
 	case "upcoming":
 
-		now :=
-			time.Now().UTC()
+		now := time.Now().UTC()
 
-		startDate :=
-			now.Format(
-				"2006-01-02",
-			)
+		startDate := now.Format(
+			"2006-01-02",
+		)
 
-		endDate :=
-			now.AddDate(
-				1,
-				6,
-				0,
-			).Format(
-				"2006-01-02",
-			)
-
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"first_air_date.gte": startDate,
-
-				"first_air_date.lte": endDate,
-
-				"sort_by": "first_air_date.asc",
-			}
+		endDate := now.AddDate(
+			1,
+			6,
+			0,
+		).Format(
+			"2006-01-02",
+		)
 
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":                     "en-US",
+				"first_air_date.gte":           startDate,
+				"first_air_date.lte":           endDate,
+				"sort_by":                      "first_air_date.asc",
+				"include_adult":                "false",
+				"include_null_first_air_dates": "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   TOP RATED
-	   ===================================================== */
+	// ========================================================
+	// TOP RATED
+	// ========================================================
 
 	case "top-rated":
 
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"sort_by": "vote_average.desc",
-
-				"vote_count.gte": "100",
-			}
-
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":       "en-US",
+				"sort_by":        "vote_average.desc",
+				"vote_count.gte": "100",
+				"include_adult":  "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   ACTION
-	   ===================================================== */
+	// ========================================================
+	// ACTION
+	//
+	// TMDB TV Action & Adventure genre = 10759
+	// ========================================================
 
 	case "action":
 
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"with_genres": "10759",
-
-				"sort_by": "popularity.desc",
-			}
-
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":      "en-US",
+				"with_genres":   "10759",
+				"sort_by":       "popularity.desc",
+				"include_adult": "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   ANIME
-	   ===================================================== */
+	// ========================================================
+	// ANIME
+	//
+	// Animation + Japanese original language.
+	// ========================================================
 
 	case "anime":
 
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"with_genres": "16",
-
-				"with_original_language": "ja",
-
-				"sort_by": "popularity.desc",
-			}
-
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language":               "en-US",
+				"with_genres":            "16",
+				"with_original_language": "ja",
+				"sort_by":                "popularity.desc",
+				"include_adult":          "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   HORROR
-
-	   Uses TMDB keyword filtering first.
-
-	   TMDB Discover supports with_keywords.
-	   ===================================================== */
+	// ========================================================
+	// HORROR
+	//
+	// TMDB's TV genre list does not provide Horror as a normal
+	// TV genre in the same way it does Action & Adventure,
+	// Animation, Drama, etc.
+	//
+	// Therefore use the TMDB "horror" keyword.
+	// ========================================================
 
 	case "horror":
 
-		keywordID :=
-			getSeriesKeywordID(
-				client,
-				"horror",
-			)
+		keywordID := getSeriesKeywordID(
+			client,
+			"horror",
+		)
 
-		if keywordID > 0 {
-
-			options :=
-				map[string]string{
-
-					"language": "en-US",
-
-					"with_keywords": strconv.FormatInt(
-						keywordID,
-						10,
-					),
-
-					"sort_by": "popularity.desc",
-				}
-
-			seeds, err :=
-				getDiscoverSeriesSeeds(
-					client,
-					options,
-					seriesFilterCandidatePages,
-					seriesFilterMaxCandidates,
-				)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			/*
-				If keyword results are too small, add a broader
-				supernatural / mystery fallback.
-			*/
-
-			if len(seeds) >= 48 {
-
-				return seeds, nil
-
-			}
-
-			fallback :=
-				map[string]string{
-
-					"language": "en-US",
-
-					"with_genres": "9648|10765",
-
-					"sort_by": "popularity.desc",
-				}
-
-			fallbackSeeds, fallbackErr :=
-				getDiscoverSeriesSeeds(
-					client,
-					fallback,
-					seriesFilterCandidatePages,
-					seriesFilterMaxCandidates,
-				)
-
-			if fallbackErr != nil {
-
-				return nil, fallbackErr
-
-			}
-
-			return mergeSeriesSeeds(
-				seeds,
-				fallbackSeeds,
-				seriesFilterMaxCandidates,
-			), nil
-
+		if keywordID == 0 {
+			return []seriesSeed{}, nil
 		}
-
-		/*
-			Keyword search unavailable:
-			use Mystery + Sci-Fi/Fantasy as a broad fallback.
-		*/
-
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"with_genres": "9648|10765",
-
-				"sort_by": "popularity.desc",
-			}
 
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language": "en-US",
+				"with_keywords": strconv.FormatInt(
+					keywordID,
+					10,
+				),
+				"sort_by":       "popularity.desc",
+				"include_adult": "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
 
-	/* =====================================================
-	   ROMANCE
-	   ===================================================== */
+	// ========================================================
+	// ROMANCE
+	//
+	// Romance is also better handled through a TMDB keyword
+	// instead of pretending it is a normal TV genre.
+	// ========================================================
 
 	case "romance":
 
-		keywordID :=
-			getSeriesKeywordID(
-				client,
-				"romance",
-			)
+		keywordID := getSeriesKeywordID(
+			client,
+			"romance",
+		)
 
-		if keywordID > 0 {
-
-			options :=
-				map[string]string{
-
-					"language": "en-US",
-
-					"with_keywords": strconv.FormatInt(
-						keywordID,
-						10,
-					),
-
-					"sort_by": "popularity.desc",
-				}
-
-			seeds, err :=
-				getDiscoverSeriesSeeds(
-					client,
-					options,
-					seriesFilterCandidatePages,
-					seriesFilterMaxCandidates,
-				)
-
-			if err != nil {
-
-				return nil, err
-
-			}
-
-			if len(seeds) >= 48 {
-
-				return seeds, nil
-
-			}
-
-			/*
-				Fallback:
-				Drama + Comedy + other common relationship-driven
-				TV categories.
-			*/
-
-			fallback :=
-				map[string]string{
-
-					"language": "en-US",
-
-					"with_genres": "18|35",
-
-					"sort_by": "popularity.desc",
-				}
-
-			fallbackSeeds, fallbackErr :=
-				getDiscoverSeriesSeeds(
-					client,
-					fallback,
-					seriesFilterCandidatePages,
-					seriesFilterMaxCandidates,
-				)
-
-			if fallbackErr != nil {
-
-				return nil, fallbackErr
-
-			}
-
-			return mergeSeriesSeeds(
-				seeds,
-				fallbackSeeds,
-				seriesFilterMaxCandidates,
-			), nil
-
+		if keywordID == 0 {
+			return []seriesSeed{}, nil
 		}
-
-		options :=
-			map[string]string{
-
-				"language": "en-US",
-
-				"with_genres": "18|35",
-
-				"sort_by": "popularity.desc",
-			}
 
 		return getDiscoverSeriesSeeds(
 			client,
-			options,
+			map[string]string{
+				"language": "en-US",
+				"with_keywords": strconv.FormatInt(
+					keywordID,
+					10,
+				),
+				"sort_by":       "popularity.desc",
+				"include_adult": "false",
+			},
 			seriesFilterCandidatePages,
 			seriesFilterMaxCandidates,
 		)
-
 	}
 
 	return nil, errors.New(
 		"unsupported Series filter",
 	)
-
 }
 
 /* =========================================================
@@ -5095,95 +4972,113 @@ func getDiscoverSeriesSeeds(
 	maxCandidates int,
 ) ([]seriesSeed, error) {
 
-	results :=
-		make([]seriesSeed, 0, maxCandidates)
+	results := make(
+		[]seriesSeed,
+		0,
+		maxCandidates,
+	)
 
-	seen :=
-		make(map[int64]bool)
+	// --------------------------------------------------------
+	// Prevent duplicate shows when combining pages.
+	// --------------------------------------------------------
+
+	seen := make(
+		map[int64]struct{},
+	)
 
 	for page := 1; page <= pages; page++ {
 
-		options :=
-			make(map[string]string)
+		// ----------------------------------------------------
+		// Copy the supplied options.
+		// ----------------------------------------------------
+
+		options := make(
+			map[string]string,
+			len(baseOptions)+1,
+		)
 
 		for key, value := range baseOptions {
-
-			options[key] =
-				value
-
+			options[key] = value
 		}
 
-		options["page"] =
-			strconv.Itoa(page)
+		options["page"] = strconv.Itoa(page)
 
-		response, err :=
-			client.GetDiscoverTV(
-				options,
-			)
+		// ----------------------------------------------------
+		// Ask TMDB for one page of TV shows.
+		// ----------------------------------------------------
+
+		response, err := client.GetDiscoverTV(
+			options,
+		)
 
 		if err != nil {
-
 			return nil, err
-
 		}
 
 		if response == nil ||
 			response.Results == nil {
-
 			continue
-
 		}
+
+		// ----------------------------------------------------
+		// Process every result returned by TMDB.
+		// ----------------------------------------------------
 
 		for _, show := range response.Results {
 
 			if show == nil ||
 				show.ID == 0 {
-
 				continue
-
 			}
 
-			if seen[show.ID] {
+			// ------------------------------------------------
+			// Skip duplicate shows.
+			// ------------------------------------------------
 
+			if _, exists := seen[show.ID]; exists {
 				continue
-
 			}
 
-			seen[show.ID] =
-				true
+			seen[show.ID] = struct{}{}
 
-			results =
-				append(
-					results,
-					seriesSeed{
+			// ------------------------------------------------
+			// Add this show to our candidate collection.
+			// ------------------------------------------------
 
-						ID: show.ID,
+			results = append(
+				results,
+				seriesSeed{
+					ID: show.ID,
 
-						Name: show.Name,
+					Name: strings.TrimSpace(
+						show.Name,
+					),
 
-						FirstAirDate: show.FirstAirDate,
+					FirstAirDate: strings.TrimSpace(
+						show.FirstAirDate,
+					),
 
-						PosterPath: show.PosterPath,
+					PosterPath: strings.TrimSpace(
+						show.PosterPath,
+					),
 
-						GenreIDs: show.GenreIDs,
+					GenreIDs: show.GenreIDs,
 
-						VoteAverage: show.VoteAverage,
-					},
-				)
+					VoteAverage: show.VoteAverage,
+				},
+			)
 
-			if len(results) >=
-				maxCandidates {
+			// ------------------------------------------------
+			// Stop once we have enough candidates.
+			// ------------------------------------------------
 
+			if len(results) >= maxCandidates {
 				return results, nil
-
 			}
-
 		}
-
 	}
 
 	return results, nil
-
 }
 
 /* =========================================================
@@ -5192,68 +5087,63 @@ func getDiscoverSeriesSeeds(
    This is the main fix for the "only one card" problem.
    ========================================================= */
 
+/* =========================================================
+   PROGRESSIVE DETAIL ENRICHMENT
+   ========================================================= */
+
 func enrichSeriesCandidatesUntilEnough(
 	client *tmdb.Client,
 	seeds []seriesSeed,
 	limit int,
 ) []SeriesCard {
 
-	if len(seeds) == 0 ||
-		limit <= 0 {
-
+	if limit <= 0 ||
+		len(seeds) == 0 {
 		return []SeriesCard{}
-
 	}
 
-	finalCards :=
-		make([]SeriesCard, 0, limit)
+	cards := make(
+		[]SeriesCard,
+		0,
+		limit,
+	)
+
+	// --------------------------------------------------------
+	// Process candidates in batches.
+	// --------------------------------------------------------
 
 	for start := 0; start < len(seeds) &&
-		len(finalCards) < limit; start += seriesEnrichmentBatchSize {
+		len(cards) < limit; start += seriesEnrichmentBatchSize {
 
-		end :=
-			start + seriesEnrichmentBatchSize
+		end := start +
+			seriesEnrichmentBatchSize
 
 		if end > len(seeds) {
-
-			end =
-				len(seeds)
-
+			end = len(seeds)
 		}
 
-		batch :=
-			seeds[start:end]
+		batch := seeds[start:end]
 
-		batchCards :=
-			enrichSeriesBatch(
-				client,
-				batch,
-			)
+		enriched := enrichSeriesBatch(
+			client,
+			batch,
+		)
 
-		finalCards =
-			append(
-				finalCards,
-				batchCards...,
-			)
-
-		if len(finalCards) >= limit {
-
-			break
-
-		}
-
+		cards = append(
+			cards,
+			enriched...,
+		)
 	}
 
-	if len(finalCards) >
-		limit {
+	// --------------------------------------------------------
+	// Never return more than requested.
+	// --------------------------------------------------------
 
-		finalCards =
-			finalCards[:limit]
-
+	if len(cards) > limit {
+		cards = cards[:limit]
 	}
 
-	return finalCards
-
+	return cards
 }
 
 /* =========================================================
@@ -5266,67 +5156,59 @@ func enrichSeriesBatch(
 ) []SeriesCard {
 
 	if len(seeds) == 0 {
-
 		return []SeriesCard{}
-
 	}
 
-	workerCount :=
-		seriesDetailWorkers
+	workerCount := seriesDetailWorkers
 
-	if len(seeds) <
-		workerCount {
-
-		workerCount =
-			len(seeds)
-
+	if len(seeds) < workerCount {
+		workerCount = len(seeds)
 	}
 
 	type batchResult struct {
 		Index int
-
-		Card SeriesCard
-
+		Card  SeriesCard
 		Valid bool
 	}
 
-	jobs :=
-		make(chan int)
+	jobs := make(chan int)
 
-	results :=
-		make(chan batchResult,
-			len(seeds),
-		)
-
-	var waitGroup sync.WaitGroup
-
-	waitGroup.Add(
-		workerCount,
+	results := make(
+		chan batchResult,
+		len(seeds),
 	)
 
-	/* =====================================================
-	   WORKERS
-	   ===================================================== */
+	var wg sync.WaitGroup
 
-	for i := 0; i < workerCount; i++ {
+	wg.Add(workerCount)
+
+	// ========================================================
+	// WORKERS
+	// ========================================================
+
+	for worker := 0; worker < workerCount; worker++ {
 
 		go func() {
 
-			defer waitGroup.Done()
+			defer wg.Done()
 
 			for index := range jobs {
 
-				seed :=
-					seeds[index]
+				seed := seeds[index]
 
-				details, err :=
-					getSeriesDetails(
-						client,
+				details, err := getSeriesDetails(
+					client,
+					seed.ID,
+				)
+
+				if err != nil {
+
+					fmt.Printf(
+						"[SERIES DETAIL ERROR] ID=%d TITLE=%q ERROR=%v\n",
 						seed.ID,
+						seed.Name,
+						err,
 					)
-
-				if err != nil ||
-					details == nil {
 
 					results <- batchResult{
 						Index: index,
@@ -5334,36 +5216,54 @@ func enrichSeriesBatch(
 					}
 
 					continue
-
 				}
 
-				title :=
-					strings.TrimSpace(
-						details.Name,
+				if details == nil {
+
+					fmt.Printf(
+						"[SERIES DETAIL ERROR] ID=%d TITLE=%q returned nil details\n",
+						seed.ID,
+						seed.Name,
 					)
+
+					results <- batchResult{
+						Index: index,
+						Valid: false,
+					}
+
+					continue
+				}
+				// ------------------------------------------------
+				// Title
+				// ------------------------------------------------
+
+				title := strings.TrimSpace(
+					details.Name,
+				)
 
 				if title == "" {
-
-					title =
-						strings.TrimSpace(
-							seed.Name,
-						)
-
+					title = strings.TrimSpace(
+						seed.Name,
+					)
 				}
 
-				posterPath :=
-					strings.TrimSpace(
-						details.PosterPath,
-					)
+				// ------------------------------------------------
+				// Poster
+				// ------------------------------------------------
+
+				posterPath := strings.TrimSpace(
+					details.PosterPath,
+				)
 
 				if posterPath == "" {
-
-					posterPath =
-						strings.TrimSpace(
-							seed.PosterPath,
-						)
-
+					posterPath = strings.TrimSpace(
+						seed.PosterPath,
+					)
 				}
+
+				// ------------------------------------------------
+				// A card without a title or poster is not useful.
+				// ------------------------------------------------
 
 				if title == "" ||
 					posterPath == "" {
@@ -5374,131 +5274,128 @@ func enrichSeriesBatch(
 					}
 
 					continue
-
 				}
 
-				genre :=
-					firstSeriesGenre(
-						details.Genres,
+				// ------------------------------------------------
+				// Genre
+				// ------------------------------------------------
+
+				genre := firstSeriesGenre(
+					details.Genres,
+				)
+
+				if genre == "" {
+					genre = seriesGenreFromIDs(
+						seed.GenreIDs,
 					)
-
-				if genre == "" {
-
-					genre =
-						seriesGenreFromIDs(
-							seed.GenreIDs,
-						)
-
 				}
 
 				if genre == "" {
-
-					genre =
-						"Series"
-
+					genre = "Series"
 				}
 
-				rating :=
-					details.VoteAverage
+				// ------------------------------------------------
+				// Rating
+				// ------------------------------------------------
+
+				rating := details.VoteAverage
 
 				if rating <= 0 {
+					rating = seed.VoteAverage
+				}
 
-					rating =
-						seed.VoteAverage
+				// ------------------------------------------------
+				// Build final card.
+				// ------------------------------------------------
 
+				card := SeriesCard{
+
+					ID: details.ID,
+
+					Title: title,
+
+					ReleaseDate: formatSeriesDate(
+						details.FirstAirDate,
+					),
+
+					Genre: genre,
+
+					Seasons: details.NumberOfSeasons,
+
+					Episodes: details.NumberOfEpisodes,
+
+					Rating: rating,
+
+					PosterURL: tmdb.GetImageURL(
+						posterPath,
+						tmdb.W342,
+					),
 				}
 
 				results <- batchResult{
-
 					Index: index,
-
+					Card:  card,
 					Valid: true,
-
-					Card: SeriesCard{
-
-						ID: details.ID,
-
-						Title: title,
-
-						ReleaseDate: formatSeriesDate(
-							details.FirstAirDate,
-						),
-
-						Genre: genre,
-
-						Seasons: details.NumberOfSeasons,
-
-						Episodes: details.NumberOfEpisodes,
-
-						Rating: rating,
-
-						PosterURL: tmdb.GetImageURL(
-							posterPath,
-							tmdb.W342,
-						),
-					},
 				}
-
 			}
 
 		}()
-
 	}
 
-	/* =====================================================
-	   SEND JOBS
-	   ===================================================== */
+	// ========================================================
+	// SEND JOBS
+	// ========================================================
 
 	for index := range seeds {
-
 		jobs <- index
-
 	}
 
 	close(jobs)
 
-	waitGroup.Wait()
+	// ========================================================
+	// WAIT FOR ALL WORKERS
+	// ========================================================
+
+	wg.Wait()
 
 	close(results)
 
-	/* =====================================================
-	   PRESERVE TMDB ORDER
+	// ========================================================
+	// RESTORE ORIGINAL TMDB ORDER
+	// ========================================================
 
-	   Workers finish in arbitrary order, so we put them
-	   back into their original candidate order.
-	   ===================================================== */
-
-	ordered :=
-		make([]batchResult, len(seeds))
+	ordered := make(
+		[]batchResult,
+		len(seeds),
+	)
 
 	for result := range results {
-
-		ordered[result.Index] =
-			result
-
+		ordered[result.Index] = result
 	}
 
-	final :=
-		make([]SeriesCard, 0, len(seeds))
+	// ========================================================
+	// BUILD FINAL COLLECTION
+	// ========================================================
+
+	cards := make(
+		[]SeriesCard,
+		0,
+		len(seeds),
+	)
 
 	for _, result := range ordered {
 
 		if !result.Valid {
-
 			continue
-
 		}
 
-		final =
-			append(
-				final,
-				result.Card,
-			)
-
+		cards = append(
+			cards,
+			result.Card,
+		)
 	}
 
-	return final
-
+	return cards
 }
 
 /* =========================================================

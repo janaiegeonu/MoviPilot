@@ -336,93 +336,460 @@ genreButton.addEventListener(
 
 
 /* =========================================================
-   NAVIGATION
+   MAIN NAVIGATION
    ========================================================= */
 
 const navigationButtons =
-    document.querySelectorAll(
-        ".nav-link"
+    document.querySelectorAll(".nav-link");
+
+const dashboardMain =
+    document.getElementById("dashboardMain");
+
+
+/* =========================================================
+   DASHBOARD PAGE ROUTES
+   ========================================================= */
+
+/*
+    These are the HTML shell routes.
+
+    IMPORTANT:
+    The Series route MUST match the route registered
+    by your Go backend.
+*/
+
+const dashboardPageRoutes = {
+
+    home:
+        "/dashboard",
+
+    tv:
+        "/series",
+
+    movies:
+        "/movies"
+
+};
+
+
+/* =========================================================
+   PAGE REQUEST STATE
+   ========================================================= */
+
+let currentPageRequest =
+    null;
+
+
+/* =========================================================
+   ACTIVE NAVIGATION
+   ========================================================= */
+
+function setActiveNavigation(
+    activePage
+) {
+
+    navigationButtons.forEach(
+        (button) => {
+
+            const isActive =
+                button.dataset.page ===
+                activePage;
+
+
+            button.classList.toggle(
+                "active",
+                isActive
+            );
+
+        }
     );
 
+}
+
+
+/* =========================================================
+   INITIALIZE DYNAMIC PAGE
+   ========================================================= */
+
+async function initializeDashboardPage(
+    page
+) {
+
+    /*
+        MOVIES
+    */
+
+    if (
+        page === "movies" &&
+        typeof window.initMoviePage ===
+        "function"
+    ) {
+
+        await window.initMoviePage();
+
+        return;
+
+    }
+
+
+    /*
+        SERIES
+    */
+
+    if (
+        page === "tv" &&
+        typeof window.initSeriesPage ===
+        "function"
+    ) {
+
+        await window.initSeriesPage();
+
+        return;
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD DASHBOARD HTML
+   ========================================================= */
+
+async function loadDashboardHTML(
+    page,
+    url,
+    controller
+) {
+
+    try {
+
+        /*
+            Show dashboard-level loading state.
+        */
+
+        dashboardMain.innerHTML = `
+
+            <div
+                class="dashboard-page-loading"
+            >
+
+                <div
+                    class="dashboard-page-loading-spinner"
+                ></div>
+
+                <span>
+                    Loading MoviPilot...
+                </span>
+
+            </div>
+
+        `;
+
+
+        /*
+            Request page shell.
+        */
+
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "GET",
+
+                    signal:
+                        controller.signal,
+
+                    headers: {
+                        "X-Requested-With":
+                            "XMLHttpRequest"
+                    }
+                }
+            );
+
+
+        /*
+            HTTP failure.
+        */
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Page request failed: ${response.status}`
+            );
+
+        }
+
+
+        /*
+            Read returned HTML.
+        */
+
+        const html =
+            await response.text();
+
+
+        /*
+            Make sure this is still
+            the latest navigation request.
+        */
+
+        if (
+            controller !==
+            currentPageRequest
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+            Inject page into dashboard shell.
+        */
+
+        dashboardMain.innerHTML =
+            html;
+
+
+        /*
+            Initialize page-specific
+            JavaScript AFTER injection.
+        */
+
+        await initializeDashboardPage(
+            page
+        );
+
+
+        console.log(
+            "[MOVIPILOT] Loaded page:",
+            page
+        );
+
+    } catch (error) {
+
+        /*
+            Aborted requests are normal when
+            the user quickly changes pages.
+        */
+
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+
+            return;
+
+        }
+
+
+        console.error(
+            "[MOVIPILOT DASHBOARD NAVIGATION]",
+            error
+        );
+
+
+        dashboardMain.innerHTML = `
+
+            <div
+                class="dashboard-page-loading"
+            >
+
+                <strong>
+                    We couldn't load this page.
+                </strong>
+
+                <span>
+                    Please try again.
+                </span>
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD DASHBOARD PAGE
+   ========================================================= */
+
+async function loadDashboardPage(
+    page
+) {
+
+    /*
+        Cancel previous request.
+    */
+
+    if (
+        currentPageRequest
+    ) {
+
+        currentPageRequest.abort();
+
+    }
+
+
+    /*
+        Create new request controller.
+    */
+
+    currentPageRequest =
+        new AbortController();
+
+
+    const controller =
+        currentPageRequest;
+
+
+    /*
+        -----------------------------------------------------
+        HOME
+        -----------------------------------------------------
+    */
+
+    if (
+        page === "home"
+    ) {
+
+        window.location.href =
+            dashboardPageRoutes.home;
+
+        return;
+
+    }
+
+
+    /*
+        -----------------------------------------------------
+        MOVIES
+        -----------------------------------------------------
+    */
+
+    if (
+        page === "movies"
+    ) {
+
+        await loadDashboardHTML(
+            page,
+            dashboardPageRoutes.movies,
+            controller
+        );
+
+        return;
+
+    }
+
+
+    /*
+        -----------------------------------------------------
+        TV SERIES
+        -----------------------------------------------------
+    */
+
+    if (
+        page === "tv"
+    ) {
+
+        await loadDashboardHTML(
+            page,
+            dashboardPageRoutes.tv,
+            controller
+        );
+
+        return;
+
+    }
+
+
+    /*
+        -----------------------------------------------------
+        ANIME
+        -----------------------------------------------------
+    */
+
+    if (
+        page === "anime"
+    ) {
+
+        dashboardMain.innerHTML = `
+
+            <div
+                class="dashboard-page-loading"
+            >
+
+                <strong>
+                    Anime is coming soon.
+                </strong>
+
+                <span>
+                    We're preparing this section for you.
+                </span>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+}
+
+
+/* =========================================================
+   NAVIGATION BUTTON EVENTS
+   ========================================================= */
 
 navigationButtons.forEach(
     (button) => {
 
         button.addEventListener(
             "click",
-            () => {
+            async () => {
 
-                navigationButtons.forEach(
-                    (item) => {
-
-                        item.classList.remove(
-                            "active"
-                        );
-
-                    }
-                );
+                const page =
+                    button.dataset.page;
 
 
-                button.classList.add(
-                    "active"
+                if (!page) {
+
+                    return;
+
+                }
+
+
+                /*
+                    Immediately update navbar state.
+                */
+
+                setActiveNavigation(
+                    page
                 );
 
 
                 console.log(
-                    "Selected page:",
-                    button.dataset.page
-                );
-
-            }
-        );
-
-    }
-);
-
-
-/* =========================================================
-   GENRE OPTIONS
-   ========================================================= */
-
-const genreOptions =
-    document.querySelectorAll(
-        ".genre-option"
-    );
-
-
-genreOptions.forEach(
-    (option) => {
-
-        option.addEventListener(
-            "click",
-            () => {
-
-                const selectedGenre =
-                    option.textContent.trim();
-
-
-                console.log(
-                    "Selected genre:",
-                    selectedGenre
+                    "[MOVIPILOT] Selected page:",
+                    page
                 );
 
 
                 /*
-                    Later:
-
-                    window.location.href =
-                        "/genre?q=" +
-                        encodeURIComponent(
-                            selectedGenre
-                        );
+                    Load selected page.
                 */
+
+                await loadDashboardPage(
+                    page
+                );
 
             }
         );
 
     }
 );
-
 
 /* =========================================================
    SEARCH

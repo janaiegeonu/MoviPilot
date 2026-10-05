@@ -7,688 +7,106 @@
     "use strict";
 
 
+    console.log(
+        "MOVIPILOT SERIES PAGE JS LOADED"
+    );
+
+
     /* =====================================================
-       DASHBOARD MAIN
+       GLOBAL CACHE
        ===================================================== */
 
-    const dashboardMain =
-        document.getElementById(
-            "dashboardMain"
-        );
+    /*
+        Keep Series card HTML alive even when the Series page
+        is removed from the dashboard.
+
+        Example:
+
+            Series
+              ↓
+            Movies
+              ↓
+            Series
+
+        The previous Series HTML can be shown immediately.
+    */
+
+    const seriesHTMLCache =
+        window.__movipilotSeriesHTMLCache ||
+        new Map();
 
 
-    if (!dashboardMain) {
-        return;
-    }
-
+    window.__movipilotSeriesHTMLCache =
+        seriesHTMLCache;
 
 
     /* =====================================================
-       IMPORTANT:
-
-       Save the ORIGINAL HOME markup before Series ever
-       replaces dashboardMain.
-
-       This is what fixes the Home -> Series -> Home problem.
+       GLOBAL REQUEST STATE
        ===================================================== */
 
-    const homeMarkup =
-        dashboardMain.innerHTML;
+    const seriesPageState =
+        window.__movipilotSeriesPageState ||
+        {
+            controller: null,
+            requestSerial: 0
+        };
 
 
-
-    /* =====================================================
-       STATE
-       ===================================================== */
-
-    let currentDashboardView =
-        "home";
-
-
-    let seriesRequestController =
-        null;
-
-
-    let navigationLocked =
-        false;
-
+    window.__movipilotSeriesPageState =
+        seriesPageState;
 
 
     /* =====================================================
-       PAGE LABELS
+       FILTER INFORMATION
        ===================================================== */
 
     const seriesFilterInfo = {
 
         all: {
-            title: "Series for You"
+            title:
+                "Series for You"
         },
 
         new: {
-            title: "New Series"
+            title:
+                "New Series"
         },
 
         upcoming: {
-            title: "Upcoming Series"
+            title:
+                "Upcoming Series"
         },
 
         "top-rated": {
-            title: "Top Rated Series"
+            title:
+                "Top Rated Series"
         },
 
         horror: {
-            title: "Horror Series"
+            title:
+                "Horror Series"
         },
 
         anime: {
-            title: "Anime Series"
+            title:
+                "Anime Series"
         },
 
         romance: {
-            title: "Romance Series"
+            title:
+                "Romance Series"
         },
 
         action: {
-            title: "Action Series"
+            title:
+                "Action Series"
         }
 
     };
 
 
-
     /* =====================================================
-       UTILITY
-       ===================================================== */
-
-    function sleep(
-        milliseconds
-    ) {
-
-        return new Promise(
-            resolve => {
-
-                window.setTimeout(
-                    resolve,
-                    milliseconds
-                );
-
-            }
-        );
-
-    }
-
-
-
-    /* =====================================================
-       ACTIVE NAVBAR BUTTON
-       ===================================================== */
-
-    function setActiveNavigation(
-        page
-    ) {
-
-        document
-            .querySelectorAll(
-                ".nav-link[data-page]"
-            )
-            .forEach(button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.page === page
-                );
-
-            });
-
-    }
-
-
-
-    /* =====================================================
-       ENTER ANIMATION
-       ===================================================== */
-
-    function playEnterAnimation() {
-
-        dashboardMain.classList.remove(
-            "series-nav-entering"
-        );
-
-
-        void dashboardMain.offsetWidth;
-
-
-        dashboardMain.classList.add(
-            "series-nav-entering"
-        );
-
-
-        window.setTimeout(() => {
-
-            dashboardMain.classList.remove(
-                "series-nav-entering"
-            );
-
-        }, 300);
-
-    }
-
-
-
-    /* =====================================================
-       PAGE SWITCH LOADER
-       ===================================================== */
-
-    function showPageLoader() {
-
-        dashboardMain.innerHTML = `
-
-            <div class="series-page-switch-loader">
-
-                <div
-                    class="series-page-switch-loader-spinner"
-                ></div>
-
-                <span>
-                    LOADING MOVIPILOT
-                </span>
-
-            </div>
-
-        `;
-
-    }
-
-
-
-    /* =====================================================
-       GO HOME
-
-       No network request.
-
-       We restore the original dashboard HTML that existed
-       when the page first loaded.
-       ===================================================== */
-
-    async function showHomePage() {
-
-        if (
-            currentDashboardView ===
-            "home"
-        ) {
-
-            return;
-
-        }
-
-
-        navigationLocked =
-            true;
-
-
-        /*
-            Stop any active Series request.
-        */
-
-        if (seriesRequestController) {
-
-            seriesRequestController.abort();
-
-            seriesRequestController =
-                null;
-
-        }
-
-
-        /*
-            Quick dissolve.
-        */
-
-        dashboardMain.classList.add(
-            "series-nav-leaving"
-        );
-
-
-        await sleep(140);
-
-
-        /*
-            Restore original Home dashboard.
-        */
-
-        dashboardMain.innerHTML =
-            homeMarkup;
-
-
-        /*
-            Reset scroll position.
-        */
-
-        dashboardMain.scrollTop =
-            0;
-
-
-        currentDashboardView =
-            "home";
-
-
-        setActiveNavigation(
-            "home"
-        );
-
-
-        dashboardMain.classList.remove(
-            "series-nav-leaving"
-        );
-
-
-        playEnterAnimation();
-
-
-        navigationLocked =
-            false;
-
-    }
-
-
-
-    /* =====================================================
-       SHOW SERIES PAGE
-       ===================================================== */
-
-    async function showSeriesPage() {
-
-        if (
-            currentDashboardView ===
-            "series"
-        ) {
-
-            /*
-                Already on Series.
-                Just return to the top.
-            */
-
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-
-            return;
-
-        }
-
-
-        navigationLocked =
-            true;
-
-
-        /*
-            Request Series shell immediately.
-
-            This request happens while the old dashboard
-            is dissolving.
-        */
-
-        if (seriesRequestController) {
-
-            seriesRequestController.abort();
-
-        }
-
-
-        seriesRequestController =
-            new AbortController();
-
-
-        const signal =
-            seriesRequestController.signal;
-
-
-        const seriesPagePromise =
-            fetch(
-                "/dashboard/series",
-                {
-                    method: "GET",
-
-                    headers: {
-                        "Accept": "text/html"
-                    },
-
-                    cache: "no-store",
-
-                    signal: signal
-                }
-            );
-
-
-
-        /* =================================================
-           QUICK DISSOLVE
-           ================================================= */
-
-        dashboardMain.classList.add(
-            "series-nav-leaving"
-        );
-
-
-        await sleep(140);
-
-
-
-        /*
-            While the shell is arriving, display a loader
-            rather than leaving a blank page.
-        */
-
-        showPageLoader();
-
-
-        try {
-
-            const response =
-                await seriesPagePromise;
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `Series page returned ${response.status}`
-                );
-
-            }
-
-
-            const html =
-                await response.text();
-
-
-            /*
-                Insert the Series shell.
-            */
-
-            dashboardMain.innerHTML =
-                html;
-
-
-            dashboardMain.scrollTop =
-                0;
-
-
-            currentDashboardView =
-                "series";
-
-
-            setActiveNavigation(
-                "tv"
-            );
-
-
-            /*
-                Finish the page transition.
-            */
-
-            dashboardMain.classList.remove(
-                "series-nav-leaving"
-            );
-
-
-            playEnterAnimation();
-
-
-
-            /*
-                Now fetch the actual cards.
-
-                This means the hero + filter UI becomes visible
-                immediately while the card collection loads.
-            */
-
-            await loadSeriesCards(
-                "all",
-                true
-            );
-
-
-        } catch (error) {
-
-            /*
-                Ignore a request deliberately cancelled
-                because the user clicked Home.
-            */
-
-            if (
-                error.name ===
-                "AbortError"
-            ) {
-
-                navigationLocked =
-                    false;
-
-                return;
-
-            }
-
-
-            console.error(
-                "MoviPilot Series page error:",
-                error
-            );
-
-
-            dashboardMain.innerHTML = `
-
-                <section class="series-empty-state">
-
-                    <span class="series-empty-kicker">
-                        SERIES PAGE ERROR
-                    </span>
-
-                    <h3>
-                        The Series library could not be loaded.
-                    </h3>
-
-                    <p>
-                        Please refresh the dashboard and try again.
-                    </p>
-
-                </section>
-
-            `;
-
-
-            dashboardMain.classList.remove(
-                "series-nav-leaving"
-            );
-
-
-            playEnterAnimation();
-
-        }
-
-
-        navigationLocked =
-            false;
-
-    }
-
-
-
-    /* =====================================================
-       NAVBAR HANDLERS
-
-       IMPORTANT:
-       We ONLY take control of Home + Series.
-
-       Movies / Anime remain owned by your existing
-       dashboard.js so this new file doesn't break them.
-       ===================================================== */
-
-    document
-        .querySelectorAll(
-            ".nav-link[data-page]"
-        )
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                event => {
-
-                    const page =
-                        button.dataset.page;
-
-
-                    if (page === "tv") {
-
-                        event.preventDefault();
-
-                        event.stopImmediatePropagation();
-
-
-                        if (
-                            navigationLocked
-                        ) {
-
-                            return;
-
-                        }
-
-
-                        showSeriesPage();
-
-
-                        return;
-
-                    }
-
-
-                    if (page === "home") {
-
-                        event.preventDefault();
-
-                        event.stopImmediatePropagation();
-
-
-                        if (
-                            navigationLocked
-                        ) {
-
-                            return;
-
-                        }
-
-
-                        showHomePage();
-
-                    }
-
-                    /*
-                        Nothing happens for Movies / Anime
-                        here. Their existing dashboard.js code
-                        remains untouched.
-                    */
-
-                }
-            );
-
-        });
-
-
-
-    /* =====================================================
-       FILTER BUTTON CLICK
-       ===================================================== */
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const filterButton =
-                event.target.closest(
-                    "[data-series-filter]"
-                );
-
-
-            if (!filterButton) {
-                return;
-            }
-
-
-            /*
-                Filter buttons only exist on Series.
-            */
-
-            if (
-                !dashboardMain.querySelector(
-                    "#seriesPage"
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            const filter =
-                filterButton.dataset.seriesFilter;
-
-
-            if (
-                !seriesFilterInfo[filter]
-            ) {
-
-                return;
-
-            }
-
-
-            /*
-                Active filter.
-            */
-
-            document
-                .querySelectorAll(
-                    ".series-filter-button"
-                )
-                .forEach(button => {
-
-                    button.classList.toggle(
-                        "is-active",
-                        button === filterButton
-                    );
-
-                });
-
-
-            /*
-                Update heading instantly.
-            */
-
-            const titleElement =
-                document.getElementById(
-                    "seriesResultsTitle"
-                );
-
-
-            if (titleElement) {
-
-                titleElement.textContent =
-                    seriesFilterInfo[filter].title;
-
-            }
-
-
-            loadSeriesCards(
-                filter,
-                false
-            );
-
-        }
-    );
-
-
-
-    /* =====================================================
-       CARD SKELETON GENERATOR
+       SKELETON GENERATOR
        ===================================================== */
 
     function createSkeletonCards(
@@ -706,7 +124,9 @@
 
             cards.push(`
 
-                <div class="series-skeleton-card">
+                <div
+                    class="series-skeleton-card"
+                >
 
                     <div
                         class="series-skeleton-poster"
@@ -729,7 +149,9 @@
 
         return `
 
-            <div class="series-skeleton-grid">
+            <div
+                class="series-skeleton-grid"
+            >
 
                 ${cards.join("")}
 
@@ -740,173 +162,45 @@
     }
 
 
-
     /* =====================================================
-       LOAD SERIES CARDS
+       INITIALIZE SERIES PAGE
        ===================================================== */
 
-    async function loadSeriesCards(
-        filter,
-        initialLoad
-    ) {
-
-        const results =
-            document.getElementById(
-                "seriesResults"
-            );
-
-
-        if (!results) {
-            return;
-        }
-
-
-        /*
-            Cancel previous filter request.
-        */
-
-        if (seriesRequestController) {
-
-            seriesRequestController.abort();
-
-        }
-
-
-        seriesRequestController =
-            new AbortController();
-
-
-        const signal =
-            seriesRequestController.signal;
-
-
-        /*
-            Show skeleton cards immediately.
-
-            This is important:
-            the user never sees an empty blank area while
-            switching filters.
-        */
-
-        results.innerHTML =
-            createSkeletonCards(
-                initialLoad
-                    ? 18
-                    : 18
-            );
-
-
-        results.classList.add(
-            "is-switching"
-        );
-
-
-        results.setAttribute(
-            "aria-busy",
-            "true"
-        );
-
-
-        try {
-
-            const response =
-                await fetch(
-                    `/dashboard/series/cards?filter=${encodeURIComponent(filter)}`,
-                    {
-                        method: "GET",
-
-                        headers: {
-                            "Accept": "text/html"
-                        },
-
-                        cache: "no-store",
-
-                        signal: signal
-                    }
-                );
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    `Series cards returned ${response.status}`
-                );
-
-            }
-
-
-            const html =
-                await response.text();
-
+    window.initSeriesPage =
+        async function () {
 
             /*
-                Only the result collection changes.
+                IMPORTANT:
+
+                The Series HTML has already been inserted
+                by dashboard.js before this function runs.
             */
 
-            results.innerHTML =
-                html;
-
-                console.log(
-                "[SERIES JS] Cards received:",
-                results.querySelectorAll(".series-card").length
-            );
-
-            results.classList.remove(
-                "is-switching"
-            );
-
-
-            results.setAttribute(
-                "aria-busy",
-                "false"
-            );
-
-
-            /*
-                Update count from the number of actual cards
-                that the server successfully produced.
-            */
-
-            const cardCount =
-                results.querySelectorAll(
-                    ".series-card"
-                ).length;
-
-
-            const countElement =
+            const seriesPage =
                 document.getElementById(
-                    "seriesResultsCount"
+                    "seriesPage"
                 );
 
 
-            if (countElement) {
+            if (!seriesPage) {
 
-                countElement.textContent =
-                    `${cardCount} SERIES`;
+                console.warn(
+                    "[MOVIPILOT SERIES] #seriesPage not found."
+                );
+
+                return;
 
             }
 
 
             /*
-                If there are cards, scroll the catalog to its
-                beginning without moving the whole dashboard
-                aggressively.
+                Prevent accidental double initialization
+                on the same DOM instance.
             */
-
-            if (!initialLoad) {
-
-                results.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-
-            }
-
-        } catch (error) {
 
             if (
-                error.name ===
-                "AbortError"
+                seriesPage.dataset.initialized ===
+                "true"
             ) {
 
                 return;
@@ -914,191 +208,687 @@
             }
 
 
-            console.error(
-                "MoviPilot Series cards error:",
-                error
-            );
+            seriesPage.dataset.initialized =
+                "true";
 
 
-            results.innerHTML = `
+            /* =================================================
+               ELEMENTS
+               ================================================= */
 
-                <div class="series-empty-state">
-
-                    <span class="series-empty-kicker">
-                        COLLECTION ERROR
-                    </span>
-
-                    <h3>
-                        This series collection couldn't be loaded.
-                    </h3>
-
-                    <p>
-                        Please try the category again.
-                    </p>
-
-                </div>
-
-            `;
-
-
-            results.classList.remove(
-                "is-switching"
-            );
-
-
-            results.setAttribute(
-                "aria-busy",
-                "false"
-            );
-
-        }
-
-    }
-
-
-
-    /* =====================================================
-       IMAGE LOADED
-       ===================================================== */
-
-    document.addEventListener(
-        "load",
-        event => {
-
-            const image =
-                event.target.closest(
-                    ".series-card-poster"
+            const results =
+                seriesPage.querySelector(
+                    "#seriesResults"
                 );
 
 
-            if (!image) {
-                return;
-            }
-
-
-            const media =
-                image.closest(
-                    ".series-card-media"
+            const resultsTitle =
+                seriesPage.querySelector(
+                    "#seriesResultsTitle"
                 );
 
 
-            if (!media) {
-                return;
-            }
-
-
-            media.classList.add(
-                "is-loaded"
-            );
-
-        },
-        true
-    );
-
-
-
-    /* =====================================================
-       IMAGE ERROR FALLBACK
-       ===================================================== */
-
-    document.addEventListener(
-        "error",
-        event => {
-
-            const image =
-                event.target.closest(
-                    ".series-card-poster"
+            const resultsCount =
+                seriesPage.querySelector(
+                    "#seriesResultsCount"
                 );
 
 
-            if (!image) {
-                return;
-            }
-
-
-            const media =
-                image.closest(
-                    ".series-card-media"
+            const filterButtons =
+                Array.from(
+                    seriesPage.querySelectorAll(
+                        ".series-filter-button"
+                    )
                 );
 
 
-            if (!media) {
-                return;
-            }
+            if (!results) {
 
-
-            image.style.display =
-                "none";
-
-
-            media.classList.add(
-                "is-loaded"
-            );
-
-        },
-        true
-    );
-
-
-
-    /* =====================================================
-       EXPLORE BUTTON PREPARATION
-
-       The card now has a real series ID attached to it.
-
-       We don't force a nonexistent details route yet.
-       This keeps the button ready for the Series Details
-       page we build next.
-       ===================================================== */
-
-    document.addEventListener(
-        "click",
-        event => {
-
-            const exploreButton =
-                event.target.closest(
-                    ".series-explore-button"
+                console.error(
+                    "[MOVIPILOT SERIES] #seriesResults not found."
                 );
 
-
-            if (!exploreButton) {
                 return;
+
             }
 
 
-            const seriesID =
-                exploreButton.dataset.seriesId;
+            /* =================================================
+               ACTIVE FILTER
+               ================================================= */
+
+            function setActiveFilter(
+                activeButton
+            ) {
+
+                filterButtons.forEach(
+                    (button) => {
+
+                        const isActive =
+                            button ===
+                            activeButton;
 
 
-            if (!seriesID) {
-                return;
-            }
+                        button.classList.toggle(
+                            "is-active",
+                            isActive
+                        );
 
 
-            /*
-                Future Series Details navigation can listen
-                for this event.
+                        button.setAttribute(
+                            "aria-pressed",
+                            String(isActive)
+                        );
 
-                Example future usage:
-
-                document.addEventListener(
-                    "movipilot:explore-series",
-                    ...
-                );
-            */
-
-            document.dispatchEvent(
-                new CustomEvent(
-                    "movipilot:explore-series",
-                    {
-                        detail: {
-                            id: seriesID
-                        }
                     }
-                )
+                );
+
+            }
+
+
+            /* =================================================
+               HEADER
+               ================================================= */
+
+            function updateHeader(
+                filter,
+                count
+            ) {
+
+                if (
+                    resultsTitle &&
+                    seriesFilterInfo[filter]
+                ) {
+
+                    resultsTitle.textContent =
+                        seriesFilterInfo[
+                            filter
+                        ].title;
+
+                }
+
+
+                if (
+                    resultsCount
+                ) {
+
+                    resultsCount.textContent =
+                        `${count} SERIES`;
+
+                }
+
+            }
+
+
+            /* =================================================
+               IMAGE INITIALIZATION
+               ================================================= */
+
+            function initializeImages() {
+
+                const images =
+                    results.querySelectorAll(
+                        ".series-card-poster"
+                    );
+
+
+                images.forEach(
+                    (image) => {
+
+                        const media =
+                            image.closest(
+                                ".series-card-media"
+                            );
+
+
+                        if (!media) {
+
+                            return;
+
+                        }
+
+
+                        function loaded() {
+
+                            media.classList.add(
+                                "is-loaded"
+                            );
+
+                            media.classList.remove(
+                                "is-error"
+                            );
+
+                        }
+
+
+                        function broken() {
+
+                            media.classList.add(
+                                "is-loaded"
+                            );
+
+                            media.classList.add(
+                                "is-error"
+                            );
+
+                        }
+
+
+                        if (
+                            image.complete
+                        ) {
+
+                            if (
+                                image.naturalWidth >
+                                0
+                            ) {
+
+                                loaded();
+
+                            } else {
+
+                                broken();
+
+                            }
+
+                        } else {
+
+                            image.addEventListener(
+                                "load",
+                                loaded,
+                                {
+                                    once: true
+                                }
+                            );
+
+
+                            image.addEventListener(
+                                "error",
+                                broken,
+                                {
+                                    once: true
+                                }
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* =================================================
+               RENDER RESULTS
+               ================================================= */
+
+            function renderResults(
+                html,
+                filter
+            ) {
+
+                results.innerHTML =
+                    html;
+
+
+                const cards =
+                    results.querySelectorAll(
+                        ".series-card"
+                    );
+
+
+                updateHeader(
+                    filter,
+                    cards.length
+                );
+
+
+                initializeImages();
+
+
+                results.setAttribute(
+                    "aria-busy",
+                    "false"
+                );
+
+
+                results.classList.remove(
+                    "is-switching"
+                );
+
+            }
+
+
+            /* =================================================
+               LOAD SERIES CARDS
+               ================================================= */
+
+            async function loadSeriesCards(
+                filter
+            ) {
+
+                const requestID =
+                    ++seriesPageState.requestSerial;
+
+
+                /*
+                    Cancel previous Series request.
+                */
+
+                if (
+                    seriesPageState.controller
+                ) {
+
+                    seriesPageState
+                        .controller
+                        .abort();
+
+                }
+
+
+                const controller =
+                    new AbortController();
+
+
+                seriesPageState.controller =
+                    controller;
+
+
+                /*
+                    =================================================
+                    BROWSER CACHE
+                    =================================================
+
+                    Returning to Series can now be immediate.
+                */
+
+                const cachedHTML =
+                    seriesHTMLCache.get(
+                        filter
+                    );
+
+
+                if (
+                    cachedHTML
+                ) {
+
+                    renderResults(
+                        cachedHTML,
+                        filter
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                    =================================================
+                    LOADING STATE
+                    =================================================
+                */
+
+                results.classList.add(
+                    "is-switching"
+                );
+
+
+                results.setAttribute(
+                    "aria-busy",
+                    "true"
+                );
+
+
+                results.innerHTML =
+                    createSkeletonCards(
+                        18
+                    );
+
+
+                try {
+
+                    const response =
+                        await fetch(
+
+                            `/dashboard/series/cards?filter=${
+                                encodeURIComponent(
+                                    filter
+                                )
+                            }`,
+
+                            {
+                                method:
+                                    "GET",
+
+                                signal:
+                                    controller.signal,
+
+                                headers: {
+                                    "Accept":
+                                        "text/html"
+                                },
+
+                                /*
+                                    DO NOT use no-store.
+
+                                    The server now provides a
+                                    short browser cache and also
+                                    keeps its own 5-minute data cache.
+                                */
+
+                                cache:
+                                    "default"
+                            }
+                        );
+
+
+                    /*
+                        Ignore stale request.
+                    */
+
+                    if (
+                        requestID !==
+                        seriesPageState
+                            .requestSerial
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !response.ok
+                    ) {
+
+                        throw new Error(
+                            `Series cards returned ${response.status}`
+                        );
+
+                    }
+
+
+                    const html =
+                        await response.text();
+
+
+                    /*
+                        Another filter may have been
+                        clicked while this response
+                        was downloading.
+                    */
+
+                    if (
+                        requestID !==
+                        seriesPageState
+                            .requestSerial
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    /*
+                        Save successful response.
+                    */
+
+                    seriesHTMLCache.set(
+                        filter,
+                        html
+                    );
+
+
+                    /*
+                        Render cards.
+                    */
+
+                    renderResults(
+                        html,
+                        filter
+                    );
+
+
+                    console.log(
+                        "[MOVIPILOT SERIES]",
+                        filter,
+                        "loaded:",
+                        results.querySelectorAll(
+                            ".series-card"
+                        ).length,
+                        "series"
+                    );
+
+                } catch (
+                    error
+                ) {
+
+                    /*
+                        Abort means another request replaced
+                        this one.
+                    */
+
+                    if (
+                        error.name ===
+                        "AbortError"
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    console.error(
+                        "[MOVIPILOT SERIES]",
+                        error
+                    );
+
+
+                    if (
+                        requestID !==
+                        seriesPageState
+                            .requestSerial
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    results.innerHTML = `
+
+                        <div
+                            class="series-empty-state"
+                        >
+
+                            <span
+                                class="series-empty-kicker"
+                            >
+                                COLLECTION ERROR
+                            </span>
+
+                            <h3>
+                                This series collection couldn't be loaded.
+                            </h3>
+
+                            <p>
+                                Please try the category again.
+                            </p>
+
+                        </div>
+
+                    `;
+
+
+                    results.setAttribute(
+                        "aria-busy",
+                        "false"
+                    );
+
+
+                    results.classList.remove(
+                        "is-switching"
+                    );
+
+
+                    updateHeader(
+                        filter,
+                        0
+                    );
+
+                }
+
+            }
+
+
+            /* =================================================
+               FILTER BUTTONS
+               ================================================= */
+
+            filterButtons.forEach(
+                (button) => {
+
+                    button.addEventListener(
+                        "click",
+                        async () => {
+
+                            const filter =
+                                button.dataset
+                                    .seriesFilter;
+
+
+                            if (
+                                !filter ||
+                                !seriesFilterInfo[
+                                    filter
+                                ]
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            /*
+                                Update button immediately.
+                            */
+
+                            setActiveFilter(
+                                button
+                            );
+
+
+                            /*
+                                Update heading immediately.
+                            */
+
+                            updateHeader(
+                                filter,
+                                0
+                            );
+
+
+                            /*
+                                Load actual cards.
+                            */
+
+                            await loadSeriesCards(
+                                filter
+                            );
+
+                        }
+                    );
+
+                }
             );
 
-        }
-    );
+
+            /* =================================================
+               EXPLORE BUTTON
+               ================================================= */
+
+            results.addEventListener(
+                "click",
+                (event) => {
+
+                    const button =
+                        event.target.closest(
+                            ".series-explore-button"
+                        );
+
+
+                    if (!button) {
+
+                        return;
+
+                    }
+
+
+                    const seriesID =
+                        button.dataset.seriesId;
+
+
+                    if (!seriesID) {
+
+                        return;
+
+                    }
+
+
+                    document.dispatchEvent(
+
+                        new CustomEvent(
+                            "movipilot:explore-series",
+                            {
+                                detail: {
+                                    id:
+                                        seriesID
+                                }
+                            }
+                        )
+
+                    );
+
+                }
+            );
+
+
+            /* =================================================
+               INITIAL FILTER
+               ================================================= */
+
+            const initialButton =
+                seriesPage.querySelector(
+                    ".series-filter-button.is-active"
+                );
+
+
+            const initialFilter =
+                initialButton
+                    ?.dataset
+                    .seriesFilter ||
+                "all";
+
+
+            if (
+                initialButton
+            ) {
+
+                setActiveFilter(
+                    initialButton
+                );
+
+            }
+
+
+            /* =================================================
+               FIRST LOAD
+               ================================================= */
+
+            await loadSeriesCards(
+                initialFilter
+            );
+
+        };
 
 })();

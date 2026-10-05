@@ -1,0 +1,501 @@
+{{ define "movie_page" }}
+
+<!-- =========================================================
+     MOVIPILOT MOVIES PAGE
+     Dedicated movie discovery page.
+     ========================================================= -->
+
+<section
+    class="movie-page-shell"
+    id="moviePage"
+    aria-label="MoviPilot Movies"
+>
+
+    <!-- =====================================================
+         HERO ARTWORK
+         ===================================================== -->
+
+    <div
+        class="movie-hero-media"
+        id="movieHeroMedia"
+    >
+
+        <img
+            class="movie-hero-image"
+            src="/img/Movie page.png"
+            alt="MoviPilot Movies"
+        >
+
+        <div class="movie-hero-overlay"></div>
+
+        <div
+            class="movie-hero-glow"
+            aria-hidden="true"
+        ></div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MOVIE INTRODUCTION
+         ===================================================== -->
+
+    <div class="movie-introduction">
+
+        <span class="movie-intro-eyebrow">
+            MOVIPILOT MOVIES
+        </span>
+
+
+
+        <h1 class="movie-page-title">
+            Find your next movie obsession.
+        </h1>
+
+
+
+        <p class="movie-page-description">
+            Discover a world of movies across action, romance,
+            science fiction, adventure, horror, animation and more.
+            Browse fresh releases, upcoming titles, popular favourites
+            and highly rated films gathered in one cinematic collection.
+        </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MOVIE FILTER PANEL
+
+         This panel NEVER gets replaced.
+         Only #movieResults changes.
+         ===================================================== -->
+
+    <div
+        class="movie-filter-panel"
+        aria-label="Movie discovery categories"
+    >
+
+
+        <!-- =================================================
+             DISCOVER
+             ================================================= -->
+
+        <div class="movie-filter-group">
+
+            <span class="movie-filter-group-label">
+                DISCOVER
+            </span>
+
+
+
+            <div class="movie-filter-buttons">
+
+                <button
+                    class="movie-filter-button is-active"
+                    type="button"
+                    data-movie-filter="all"
+                    aria-pressed="true"
+                >
+                    <span>All Movies</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="new"
+                    aria-pressed="false"
+                >
+                    <span>New Movies</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="upcoming"
+                    aria-pressed="false"
+                >
+                    <span>Upcoming</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="top-rated"
+                    aria-pressed="false"
+                >
+                    <span>Top Rated</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="popular"
+                    aria-pressed="false"
+                >
+                    <span>Popular</span>
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="movie-filter-divider"></div>
+
+
+
+        <!-- =================================================
+             GENRES
+             ================================================= -->
+
+        <div class="movie-filter-group">
+
+            <span class="movie-filter-group-label">
+                GENRES
+            </span>
+
+
+
+            <div class="movie-filter-buttons">
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="action"
+                    aria-pressed="false"
+                >
+                    <span>Action</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="anime"
+                    aria-pressed="false"
+                >
+                    <span>Anime</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="romance"
+                    aria-pressed="false"
+                >
+                    <span>Romance</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="sci-fi"
+                    aria-pressed="false"
+                >
+                    <span>Sci-Fi</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="adventure"
+                    aria-pressed="false"
+                >
+                    <span>Adventure</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="horror"
+                    aria-pressed="false"
+                >
+                    <span>Horror</span>
+                </button>
+
+
+
+                <button
+                    class="movie-filter-button"
+                    type="button"
+                    data-movie-filter="cartoon"
+                    aria-pressed="false"
+                >
+                    <span>Cartoon</span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS HEADER
+         ===================================================== -->
+
+    <div class="movie-results-header">
+
+        <div class="movie-results-heading">
+
+            <span class="movie-results-eyebrow">
+                MOVIE CATALOG
+            </span>
+
+
+
+            <h2
+                class="movie-results-title"
+                id="movieResultsTitle"
+            >
+                Movies for You
+            </h2>
+
+        </div>
+
+
+
+        <span
+            class="movie-results-count"
+            id="movieResultsCount"
+        >
+            60 MOVIES
+        </span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS AREA
+
+         ONLY THIS AREA IS REPLACED.
+         ===================================================== -->
+
+    <div
+        class="movie-results"
+        id="movieResults"
+        aria-live="polite"
+        aria-busy="true"
+    >
+
+        <div class="movie-loading-state">
+
+            <div class="movie-loading-spinner"></div>
+
+            <span>
+                Preparing your movie collection...
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+{{ end }}
+
+
+
+{{ define "movie_cards" }}
+
+{{ if .Movies }}
+
+<div class="movie-card-grid">
+
+    {{ range $index, $movie := .Movies }}
+
+        <article
+            class="movie-card"
+            data-movie-id="{{ $movie.ID }}"
+        >
+
+            <!-- =========================================
+                 MOVIE POSTER
+                 ========================================= -->
+
+            <div class="movie-card-media">
+
+                <div
+                    class="movie-card-loader"
+                    aria-hidden="true"
+                >
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+
+
+                <img
+                    class="movie-card-poster"
+                    src="{{ $movie.PosterURL }}"
+                    alt="{{ $movie.Title }} poster"
+                    decoding="async"
+
+                    {{ if lt $index 6 }}
+                        loading="eager"
+                        fetchpriority="high"
+                    {{ else }}
+                        loading="lazy"
+                        fetchpriority="low"
+                    {{ end }}
+                >
+
+
+
+                <div
+                    class="movie-card-shine"
+                    aria-hidden="true"
+                ></div>
+
+
+
+                {{ if gt $movie.Rating 0.0 }}
+
+                    <span class="movie-card-rating">
+
+                        <span class="movie-card-rating-star">
+                            ★
+                        </span>
+
+                        {{ printf "%.1f" $movie.Rating }}
+
+                    </span>
+
+                {{ end }}
+
+            </div>
+
+
+
+            <!-- =========================================
+                 MOVIE INFORMATION
+                 ========================================= -->
+
+            <div class="movie-card-content">
+
+                <h3
+                    class="movie-card-title"
+                    title="{{ $movie.Title }}"
+                >
+                    {{ $movie.Title }}
+                </h3>
+
+
+
+                <div class="movie-card-meta">
+
+                    <span class="movie-card-genre">
+                        {{ $movie.Genre }}
+                    </span>
+
+                    <i></i>
+
+                    <span>
+                        {{ $movie.ReleaseYear }}
+                    </span>
+
+                </div>
+
+
+
+                <!-- =====================================
+                     EXPLORE BUTTON
+                     ===================================== -->
+
+                <button
+                    class="movie-explore-button"
+                    type="button"
+                    data-movie-id="{{ $movie.ID }}"
+                >
+
+                    <span>
+                        Explore
+                    </span>
+
+
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+
+                        <path
+                            d="M5 12H18"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M13 7L18 12L13 17"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+        </article>
+
+    {{ end }}
+
+</div>
+
+{{ else }}
+
+<div class="movie-empty-state">
+
+    <span class="movie-empty-kicker">
+        NOTHING HERE YET
+    </span>
+
+
+
+    <h3>
+        We couldn't find enough movies for this collection.
+    </h3>
+
+
+
+    <p>
+        Try another category and let MoviPilot discover
+        something different for you.
+    </p>
+
+</div>
+
+{{ end }}
+
+{{ end }}

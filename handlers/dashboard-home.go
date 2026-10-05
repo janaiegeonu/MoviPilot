@@ -3,8 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -124,6 +122,132 @@ type dashboardMovieSeed struct {
 }
 
 /* =========================================================
+   DASHBOARD PAGE CACHE
+   ========================================================= */
+
+const dashboardPageCacheTTL = 5 * time.Minute
+
+type dashboardPageCacheEntry struct {
+	ExpiresAt time.Time
+	Data      DashboardPageData
+}
+
+var dashboardPageCache = struct {
+	sync.RWMutex
+	Entry dashboardPageCacheEntry
+}{}
+
+/* =========================================================
+   DASHBOARD CACHE READ
+   ========================================================= */
+
+func getCachedDashboardPageData() (DashboardPageData, bool) {
+
+	dashboardPageCache.RLock()
+
+	entry := dashboardPageCache.Entry
+
+	dashboardPageCache.RUnlock()
+
+	if entry.ExpiresAt.IsZero() {
+
+		return DashboardPageData{},
+			false
+
+	}
+
+	if time.Now().After(
+		entry.ExpiresAt,
+	) {
+
+		return DashboardPageData{},
+			false
+
+	}
+
+	/*
+		Copy the slices so callers don't directly
+		modify the cached slice backing arrays.
+	*/
+
+	data := DashboardPageData{
+
+		TrendingMovies: append(
+			[]DashboardHeroMovie(nil),
+			entry.Data.TrendingMovies...,
+		),
+
+		MayLikeMovies: append(
+			[]DashboardMovieCard(nil),
+			entry.Data.MayLikeMovies...,
+		),
+
+		TopRatedMovies: append(
+			[]DashboardMovieCard(nil),
+			entry.Data.TopRatedMovies...,
+		),
+
+		PopularTrailerMovies: append(
+			[]DashboardTrailerCard(nil),
+			entry.Data.PopularTrailerMovies...,
+		),
+	}
+
+	return data,
+		true
+}
+
+/* =========================================================
+   DASHBOARD CACHE WRITE
+   ========================================================= */
+
+func saveDashboardPageData(
+	data DashboardPageData,
+) {
+
+	copied := DashboardPageData{
+
+		TrendingMovies: append(
+			[]DashboardHeroMovie(nil),
+			data.TrendingMovies...,
+		),
+
+		MayLikeMovies: append(
+			[]DashboardMovieCard(nil),
+			data.MayLikeMovies...,
+		),
+
+		TopRatedMovies: append(
+			[]DashboardMovieCard(nil),
+			data.TopRatedMovies...,
+		),
+
+		PopularTrailerMovies: append(
+			[]DashboardTrailerCard(nil),
+			data.PopularTrailerMovies...,
+		),
+	}
+
+	dashboardPageCache.Lock()
+
+	dashboardPageCache.Entry =
+		dashboardPageCacheEntry{
+
+			ExpiresAt: time.Now().Add(
+				dashboardPageCacheTTL,
+			),
+
+			Data: copied,
+		}
+
+	dashboardPageCache.Unlock()
+}
+
+/* =========================================================
+   DASHBOARD HANDLER
+   ========================================================= */
+
+/* =========================================================
    DASHBOARD HANDLER
    ========================================================= */
 
@@ -143,32 +267,54 @@ func DashBoardHandler(
 		return
 	}
 
+	w.Header().Set(
+		"Content-Type",
+		"text/html; charset=utf-8",
+	)
+
+	w.Header().Set(
+		"Cache-Control",
+		"private, max-age=30, stale-while-revalidate=120",
+	)
+
 	/* =====================================================
-	   TMDB API KEY
+	   CHECK SERVER CACHE
 	   ===================================================== */
 
-	apiKey :=
-		strings.TrimSpace(
-			os.Getenv("TMDB_TOKEN"),
-		)
+	if cachedData, ok :=
+		getCachedDashboardPageData(); ok {
 
-	if apiKey == "" {
+		err :=
+			renderTemplate(
+				w,
+				"dashboard.html",
+				cachedData,
+			)
 
-		http.Error(
-			w,
-			"TMDB_TOKEN is not configured",
-			http.StatusInternalServerError,
-		)
+		if err != nil {
+
+			fmt.Println(
+				"DASHBOARD CACHED RENDER ERROR:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Failed to render dashboard",
+				http.StatusInternalServerError,
+			)
+
+		}
 
 		return
 	}
 
 	/* =====================================================
-	   INITIALIZE TMDB CLIENT
+	   INITIALIZE OPTIMIZED TMDB CLIENT
 	   ===================================================== */
 
 	tmdbClient, err :=
-		tmdb.Init(apiKey)
+		newMovieTMDBClient()
 
 	if err != nil {
 
@@ -185,23 +331,6 @@ func DashBoardHandler(
 
 		return
 	}
-
-	/*
-	   Let the wrapper retry 429 responses.
-	*/
-
-	tmdbClient.SetClientAutoRetry()
-
-	/*
-	   Don't allow a single slow TMDB request
-	   to hang the dashboard forever.
-	*/
-
-	tmdbClient.SetClientConfig(
-		&http.Client{
-			Timeout: 12 * time.Second,
-		},
-	)
 
 	/* =====================================================
 	   1. TRENDING TODAY HERO
@@ -245,6 +374,10 @@ func DashBoardHandler(
 			44,
 		)
 
+	/* =====================================================
+	   3. TOP RATED
+	   ===================================================== */
+
 	topRatedSeeds :=
 		getDashboardTopRatedSeeds(
 			tmdbClient,
@@ -257,6 +390,10 @@ func DashBoardHandler(
 			topRatedSeeds,
 			44,
 		)
+
+	/* =====================================================
+	   4. POPULAR TRAILERS
+	   ===================================================== */
 
 	popularTrailerSeeds :=
 		getDashboardPopularTrailerSeeds(
@@ -287,7 +424,15 @@ func DashBoardHandler(
 		}
 
 	/* =====================================================
-	   RENDER DASHBOARD
+	   SAVE PAGE CACHE
+	   ===================================================== */
+
+	saveDashboardPageData(
+		pageData,
+	)
+
+	/* =====================================================
+	   RENDER
 	   ===================================================== */
 
 	err =

@@ -1,0 +1,563 @@
+{{ define "anime_page" }}
+
+<!-- =========================================================
+     MOVIPILOT ANIME PAGE
+     Mixed Anime Movie + TV Series Discovery
+     ========================================================= -->
+
+<section
+    class="anime-page-shell"
+    id="animePage"
+    aria-label="MoviPilot Anime"
+>
+
+
+    <!-- =====================================================
+         HERO ARTWORK
+         ===================================================== -->
+
+    <div
+        class="anime-hero-media"
+        id="animeHeroMedia"
+    >
+
+        <img
+            class="anime-hero-image"
+            src="/img/Animephoto.png"
+            alt="MoviPilot Anime"
+        >
+
+        <div class="anime-hero-overlay"></div>
+
+        <div
+            class="anime-hero-glow"
+            aria-hidden="true"
+        ></div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ANIME INTRODUCTION
+         ===================================================== -->
+
+    <div class="anime-introduction">
+
+        <span class="anime-intro-eyebrow">
+            MOVIPILOT ANIME
+        </span>
+
+
+        <h1 class="anime-page-title">
+            Step into worlds beyond imagination.
+        </h1>
+
+
+        <p class="anime-page-description">
+            Explore anime movies and series from legendary classics
+            to brand-new adventures. Discover action-packed battles,
+            unforgettable romance, mysterious worlds, magical stories
+            and timeless Studio Ghibli favourites, all in one
+            cinematic collection.
+        </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ANIME FILTER PANEL
+
+         This panel NEVER gets replaced.
+
+         Only #animeResults changes.
+         ===================================================== -->
+
+    <div
+        class="anime-filter-panel"
+        aria-label="Anime discovery categories"
+    >
+
+
+        <!-- =================================================
+             DISCOVER FILTERS
+             ================================================= -->
+
+        <div class="anime-filter-group">
+
+            <span class="anime-filter-group-label">
+                DISCOVER
+            </span>
+
+
+            <div class="anime-filter-buttons">
+
+                <button
+                    class="anime-filter-button is-active"
+                    type="button"
+                    data-anime-filter="all"
+                    aria-pressed="true"
+                >
+                    <span>All Anime</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="new"
+                    aria-pressed="false"
+                >
+                    <span>New Anime</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="old-gen"
+                    aria-pressed="false"
+                >
+                    <span>Old Gen Anime</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="upcoming"
+                    aria-pressed="false"
+                >
+                    <span>Upcoming Anime</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="popular"
+                    aria-pressed="false"
+                >
+                    <span>Popular Anime</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="top-rated"
+                    aria-pressed="false"
+                >
+                    <span>Top Rated</span>
+                </button>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="anime-filter-divider"></div>
+
+
+
+        <!-- =================================================
+             GENRE FILTERS
+             ================================================= -->
+
+        <div class="anime-filter-group">
+
+            <span class="anime-filter-group-label">
+                GENRES
+            </span>
+
+
+            <div class="anime-filter-buttons">
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="action"
+                    aria-pressed="false"
+                >
+                    <span>Action</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="romance"
+                    aria-pressed="false"
+                >
+                    <span>Romance</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="adventure"
+                    aria-pressed="false"
+                >
+                    <span>Adventure</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="magic"
+                    aria-pressed="false"
+                >
+                    <span>Magic</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="mystery"
+                    aria-pressed="false"
+                >
+                    <span>Mystery</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="swordsman"
+                    aria-pressed="false"
+                >
+                    <span>Swordsman</span>
+                </button>
+
+
+                <button
+                    class="anime-filter-button"
+                    type="button"
+                    data-anime-filter="ghibli"
+                    aria-pressed="false"
+                >
+                    <span>Ghibli Studio</span>
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS HEADER
+         ===================================================== -->
+
+    <div class="anime-results-header">
+
+        <div class="anime-results-heading">
+
+            <span class="anime-results-eyebrow">
+                ANIME CATALOG
+            </span>
+
+
+            <h2
+                class="anime-results-title"
+                id="animeResultsTitle"
+            >
+                Anime for You
+            </h2>
+
+        </div>
+
+
+        <span
+            class="anime-results-count"
+            id="animeResultsCount"
+        >
+            60 ANIME
+        </span>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         RESULTS AREA
+
+         ONLY THIS AREA IS REPLACED.
+         ===================================================== -->
+
+    <div
+        class="anime-results"
+        id="animeResults"
+        aria-live="polite"
+        aria-busy="true"
+    >
+
+        <div class="anime-loading-state">
+
+            <div class="anime-loading-spinner"></div>
+
+            <span>
+                Preparing your anime collection...
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+{{ end }}
+
+
+
+{{ define "anime_cards" }}
+
+{{ if .Cards }}
+
+    <div class="anime-card-grid">
+
+        {{ range $index, $anime := .Cards }}
+
+            <article
+                class="anime-card"
+                data-anime-id="{{ $anime.ID }}"
+                data-anime-type="{{ $anime.MediaType }}"
+            >
+
+
+                <!-- =========================================
+                     POSTER
+                     ========================================= -->
+
+                <div class="anime-card-media">
+
+                    <div
+                        class="anime-card-loader"
+                        aria-hidden="true"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+
+                    <img
+                        class="anime-card-poster"
+                        src="{{ $anime.PosterURL }}"
+                        alt="{{ $anime.Title }} poster"
+                        decoding="async"
+
+                        {{ if lt $index 6 }}
+
+                            loading="eager"
+                            fetchpriority="high"
+
+                        {{ else }}
+
+                            loading="lazy"
+                            fetchpriority="low"
+
+                        {{ end }}
+                    >
+
+
+                    <!-- MEDIA TYPE -->
+
+                    {{ if eq $anime.MediaType "series" }}
+
+                        <span class="anime-card-type anime-card-type-series">
+                            SERIES
+                        </span>
+
+                    {{ else }}
+
+                        <span class="anime-card-type anime-card-type-movie">
+                            MOVIE
+                        </span>
+
+                    {{ end }}
+
+
+                    <!-- RATING -->
+
+                    {{ if gt $anime.Rating 0.0 }}
+
+                        <span class="anime-card-rating">
+
+                            <span class="anime-card-rating-star">
+                                ★
+                            </span>
+
+                            {{ printf "%.1f" $anime.Rating }}
+
+                        </span>
+
+                    {{ end }}
+
+
+                    <div
+                        class="anime-card-shine"
+                        aria-hidden="true"
+                    ></div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     INFORMATION
+                     ========================================= -->
+
+                <div class="anime-card-content">
+
+                    <h3
+                        class="anime-card-title"
+                        title="{{ $anime.Title }}"
+                    >
+                        {{ $anime.Title }}
+                    </h3>
+
+
+                    <!-- GENRE + YEAR -->
+
+                    <div class="anime-card-meta">
+
+                        <span class="anime-card-genre">
+                            {{ $anime.Genre }}
+                        </span>
+
+                        <i></i>
+
+                        <span>
+                            {{ $anime.ReleaseYear }}
+                        </span>
+
+                    </div>
+
+
+                    <!-- SERIES INFORMATION -->
+
+                    {{ if eq $anime.MediaType "series" }}
+
+                        <div class="anime-card-series-stats">
+
+                            <span>
+
+                                {{ $anime.Seasons }}
+
+                                {{ if eq $anime.Seasons 1 }}
+                                    season
+                                {{ else }}
+                                    seasons
+                                {{ end }}
+
+                            </span>
+
+
+                            <i></i>
+
+
+                            <span>
+
+                                {{ $anime.Episodes }}
+
+                                {{ if eq $anime.Episodes 1 }}
+                                    episode
+                                {{ else }}
+                                    episodes
+                                {{ end }}
+
+                            </span>
+
+                        </div>
+
+                    {{ else }}
+
+                        <div class="anime-card-series-stats">
+
+                            <span>
+                                Feature Film
+                            </span>
+
+                        </div>
+
+                    {{ end }}
+
+
+                    <!-- EXPLORE -->
+
+                    <button
+                        class="anime-explore-button"
+                        type="button"
+                        data-anime-id="{{ $anime.ID }}"
+                        data-anime-type="{{ $anime.MediaType }}"
+                    >
+
+                        <span>
+                            Explore
+                        </span>
+
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M5 12H18"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M13 7L18 12L13 17"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+            </article>
+
+        {{ end }}
+
+    </div>
+
+{{ else }}
+
+    <div class="anime-empty-state">
+
+        <span class="anime-empty-kicker">
+            NOTHING HERE YET
+        </span>
+
+        <h3>
+            We couldn't find enough anime for this collection.
+        </h3>
+
+        <p>
+            Try another category and let MoviPilot discover
+            another world for you.
+        </p>
+
+    </div>
+
+{{ end }}
+
+{{ end }}

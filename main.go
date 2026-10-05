@@ -38,6 +38,8 @@ func main() {
 	http.HandleFunc("/dashboard/series/cards", handlers.SeriesCardsHandler)
 	http.HandleFunc("/movies", handlers.MoviesPageHandler)
 	http.HandleFunc("/movies/cards", handlers.MoviesCardsHandler)
+	http.HandleFunc("/anime", handlers.AnimePageHandler)
+	http.HandleFunc("/dashboard/anime/cards", handlers.AnimeCardsHandler)
 
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))

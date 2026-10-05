@@ -345,6 +345,286 @@ const navigationButtons =
 const dashboardMain =
     document.getElementById("dashboardMain");
 
+    /* =========================================================
+   CURRENT DASHBOARD PAGE
+   ========================================================= */
+
+let currentDashboardPage =
+    document.querySelector(
+        ".nav-link.active"
+    )?.dataset.page ||
+    "home";
+
+
+/* =========================================================
+   HOME PAGE DOM CACHE
+   ---------------------------------------------------------
+   We keep the actual Home DOM nodes alive.
+
+   That means:
+
+   - Hero state is preserved.
+   - Carousel positions are preserved.
+   - Event listeners remain attached.
+   - Trailer/player state can be cleaned up.
+   - Returning Home does not hit the server.
+   ========================================================= */
+
+const homePageCache =
+    document.createElement(
+        "div"
+    );
+
+
+homePageCache.id =
+    "movipilotHomePageCache";
+
+
+homePageCache.style.display =
+    "none";
+
+
+document.body.appendChild(
+    homePageCache
+);
+
+
+let homeScrollPosition =
+    0;
+
+    /* =========================================================
+   PAUSE HOME PAGE
+   ========================================================= */
+
+function pauseDashboardHomePage() {
+
+    /*
+        Stop the large hero carousel.
+    */
+
+    if (
+        typeof closeHeroTrailer ===
+        "function"
+    ) {
+
+        closeHeroTrailer(
+            false
+        );
+
+    }
+
+
+    if (
+        typeof closeMovieTrailer ===
+        "function"
+    ) {
+
+        closeMovieTrailer(
+            false
+        );
+
+    }
+
+
+    if (
+        typeof stopHeroAutoPlay ===
+        "function"
+    ) {
+
+        stopHeroAutoPlay();
+
+    }
+
+
+    /*
+        Pause all movie-row autoplay timers.
+
+        The row code already treats mouseenter
+        as a pause signal, so we can reuse
+        that existing behavior.
+    */
+
+    document
+        .querySelectorAll(
+            "[data-section-carousel]"
+        )
+        .forEach(
+            (section) => {
+
+                section.dispatchEvent(
+                    new Event(
+                        "mouseenter"
+                    )
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   CACHE CURRENT HOME DOM
+   ========================================================= */
+
+function cacheDashboardHomePage() {
+
+    if (
+        currentDashboardPage !==
+        "home"
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !dashboardMain ||
+        !dashboardMain.childNodes.length
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        Don't overwrite an existing
+        Home snapshot.
+    */
+
+    if (
+        homePageCache.childNodes.length
+    ) {
+
+        return;
+
+    }
+
+
+    homeScrollPosition =
+        window.scrollY;
+
+
+    pauseDashboardHomePage();
+
+
+    /*
+        Moving DOM nodes instead of cloning them
+        is important.
+
+        Their existing event listeners
+        stay attached.
+    */
+
+    while (
+        dashboardMain.firstChild
+    ) {
+
+        homePageCache.appendChild(
+            dashboardMain.firstChild
+        );
+
+    }
+
+
+    console.log(
+        "[MOVIPILOT] Home page cached"
+    );
+
+}
+
+
+/* =========================================================
+   RESTORE HOME DOM
+   ========================================================= */
+
+function restoreDashboardHomePage() {
+
+    if (
+        !homePageCache.childNodes.length
+    ) {
+
+        return false;
+
+    }
+
+
+    /*
+        Put the original Home nodes
+        back into dashboardMain.
+    */
+
+    while (
+        homePageCache.firstChild
+    ) {
+
+        dashboardMain.appendChild(
+            homePageCache.firstChild
+        );
+
+    }
+
+
+    currentDashboardPage =
+        "home";
+
+
+    /*
+        Restore the user's previous
+        Home scroll position.
+    */
+
+    window.scrollTo(
+        0,
+        homeScrollPosition
+    );
+
+
+    /*
+        Restart the row autoplay timers.
+    */
+
+    document
+        .querySelectorAll(
+            "[data-section-carousel]"
+        )
+        .forEach(
+            (section) => {
+
+                section.dispatchEvent(
+                    new Event(
+                        "mouseleave"
+                    )
+                );
+
+            }
+        );
+
+
+    /*
+        Restart hero autoplay.
+    */
+
+    if (
+        typeof startHeroAutoPlay ===
+        "function"
+    ) {
+
+        startHeroAutoPlay();
+
+    }
+
+
+    console.log(
+        "[MOVIPILOT] Home page restored instantly"
+    );
+
+
+    return true;
+
+}
 
 /* =========================================================
    DASHBOARD PAGE ROUTES
@@ -367,7 +647,10 @@ const dashboardPageRoutes = {
         "/series",
 
     movies:
-        "/movies"
+        "/movies",
+
+    anime:
+        "/anime"
 
 };
 
@@ -447,6 +730,19 @@ async function initializeDashboardPage(
         return;
 
     }
+
+    if (
+    page === "anime" &&
+    typeof window.initAnimePage ===
+    "function"
+) {
+
+    await window.initAnimePage();
+
+    return;
+
+}
+
 
 }
 
@@ -621,6 +917,21 @@ async function loadDashboardPage(
 ) {
 
     /*
+        Don't reload the page the user is
+        already viewing.
+    */
+
+    if (
+        page ===
+        currentDashboardPage
+    ) {
+
+        return;
+
+    }
+
+
+    /*
         Cancel previous request.
     */
 
@@ -634,7 +945,33 @@ async function loadDashboardPage(
 
 
     /*
-        Create new request controller.
+        If we are leaving Home,
+        save its live DOM before replacing it.
+    */
+
+    if (
+        currentDashboardPage ===
+            "home" &&
+        page !==
+            "home"
+    ) {
+
+        cacheDashboardHomePage();
+
+    }
+
+
+    /*
+        The selected page becomes the
+        current page immediately.
+    */
+
+    currentDashboardPage =
+        page;
+
+
+    /*
+        Create request controller.
     */
 
     currentPageRequest =
@@ -645,32 +982,61 @@ async function loadDashboardPage(
         currentPageRequest;
 
 
-    /*
-        -----------------------------------------------------
-        HOME
-        -----------------------------------------------------
-    */
+    /* =====================================================
+       HOME
+       ===================================================== */
 
     if (
-        page === "home"
+        page ===
+        "home"
     ) {
 
-        window.location.href =
-            dashboardPageRoutes.home;
+        /*
+            Best case:
+
+            Home already exists in memory.
+
+            Restore it immediately.
+
+            ZERO network request.
+            ZERO Go handler.
+            ZERO TMDB request.
+        */
+
+        if (
+            restoreDashboardHomePage()
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+            Fallback.
+
+            This happens when:
+            - the user entered Home for the first time
+            - the DOM cache isn't available
+        */
+
+        await loadDashboardHTML(
+            page,
+            dashboardPageRoutes.home,
+            controller
+        );
 
         return;
-
     }
 
 
-    /*
-        -----------------------------------------------------
-        MOVIES
-        -----------------------------------------------------
-    */
+    /* =====================================================
+       MOVIES
+       ===================================================== */
 
     if (
-        page === "movies"
+        page ===
+        "movies"
     ) {
 
         await loadDashboardHTML(
@@ -680,18 +1046,16 @@ async function loadDashboardPage(
         );
 
         return;
-
     }
 
 
-    /*
-        -----------------------------------------------------
-        TV SERIES
-        -----------------------------------------------------
-    */
+    /* =====================================================
+       TV SERIES
+       ===================================================== */
 
     if (
-        page === "tv"
+        page ===
+        "tv"
     ) {
 
         await loadDashboardHTML(
@@ -701,43 +1065,29 @@ async function loadDashboardPage(
         );
 
         return;
-
     }
 
 
-    /*
-        -----------------------------------------------------
-        ANIME
-        -----------------------------------------------------
-    */
+    /* =====================================================
+       ANIME
+       ===================================================== */
 
     if (
-        page === "anime"
+        page ===
+        "anime"
     ) {
 
-        dashboardMain.innerHTML = `
-
-            <div
-                class="dashboard-page-loading"
-            >
-
-                <strong>
-                    Anime is coming soon.
-                </strong>
-
-                <span>
-                    We're preparing this section for you.
-                </span>
-
-            </div>
-
-        `;
+        await loadDashboardHTML(
+            page,
+            dashboardPageRoutes.anime,
+            controller
+        );
 
         return;
-
     }
 
 }
+
 
 
 /* =========================================================
@@ -3173,8 +3523,9 @@ function closeMovieTrailer(
 
 
     if (
-        section
-    ) {
+    restoreAutoPlay &&
+    section
+) {
 
         section.classList.remove(
             "is-video-active"

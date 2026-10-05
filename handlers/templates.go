@@ -18,6 +18,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/policy.html",
 		"templates/dashboard.html",
 		"templates/series_page.html",
+		"templates/movie_page.html",
 	)
 	if err != nil {
 		http.Error(

@@ -334,309 +334,123 @@ genreButton.addEventListener(
     }
 );
 
-
 /* =========================================================
    MAIN NAVIGATION
    ========================================================= */
 
 const navigationButtons =
-    document.querySelectorAll(".nav-link");
+    document.querySelectorAll(
+        ".nav-link"
+    );
+
 
 const dashboardMain =
-    document.getElementById("dashboardMain");
-
-    /* =========================================================
-   CURRENT DASHBOARD PAGE
-   ========================================================= */
-
-let currentDashboardPage =
-    document.querySelector(
-        ".nav-link.active"
-    )?.dataset.page ||
-    "home";
+    document.getElementById(
+        "dashboardMain"
+    );
 
 
 /* =========================================================
-   HOME PAGE DOM CACHE
-   ---------------------------------------------------------
-   We keep the actual Home DOM nodes alive.
-
-   That means:
-
-   - Hero state is preserved.
-   - Carousel positions are preserved.
-   - Event listeners remain attached.
-   - Trailer/player state can be cleaned up.
-   - Returning Home does not hit the server.
+   SAFETY CHECK
    ========================================================= */
 
-const homePageCache =
+if (!dashboardMain) {
+
+    console.error(
+        "[MOVIPILOT] #dashboardMain was not found."
+    );
+
+}
+
+
+/* =========================================================
+   CREATE PERMANENT HOME VIEW
+   ---------------------------------------------------------
+   IMPORTANT:
+
+   We take the Home content that already exists
+   inside dashboardMain and place it inside a
+   permanent Home wrapper.
+
+   Those DOM nodes are NEVER destroyed.
+   ========================================================= */
+
+const dashboardHomeView =
     document.createElement(
         "div"
     );
 
 
-homePageCache.id =
-    "movipilotHomePageCache";
+dashboardHomeView.id =
+    "dashboardHomeView";
 
 
-homePageCache.style.display =
-    "none";
+dashboardHomeView.className =
+    "dashboard-home-view";
 
 
-document.body.appendChild(
-    homePageCache
+/*
+    Move the existing Home elements into
+    dashboardHomeView.
+
+    This preserves the original DOM nodes
+    and therefore preserves their listeners.
+*/
+
+while (
+    dashboardMain.firstChild
+) {
+
+    dashboardHomeView.appendChild(
+        dashboardMain.firstChild
+    );
+
+}
+
+
+/*
+    Put Home back inside dashboardMain.
+*/
+
+dashboardMain.appendChild(
+    dashboardHomeView
 );
 
 
-let homeScrollPosition =
-    0;
-
-    /* =========================================================
-   PAUSE HOME PAGE
-   ========================================================= */
-
-function pauseDashboardHomePage() {
-
-    /*
-        Stop the large hero carousel.
-    */
-
-    if (
-        typeof closeHeroTrailer ===
-        "function"
-    ) {
-
-        closeHeroTrailer(
-            false
-        );
-
-    }
-
-
-    if (
-        typeof closeMovieTrailer ===
-        "function"
-    ) {
-
-        closeMovieTrailer(
-            false
-        );
-
-    }
-
-
-    if (
-        typeof stopHeroAutoPlay ===
-        "function"
-    ) {
-
-        stopHeroAutoPlay();
-
-    }
-
-
-    /*
-        Pause all movie-row autoplay timers.
-
-        The row code already treats mouseenter
-        as a pause signal, so we can reuse
-        that existing behavior.
-    */
-
-    document
-        .querySelectorAll(
-            "[data-section-carousel]"
-        )
-        .forEach(
-            (section) => {
-
-                section.dispatchEvent(
-                    new Event(
-                        "mouseenter"
-                    )
-                );
-
-            }
-        );
-
-}
-
-
 /* =========================================================
-   CACHE CURRENT HOME DOM
+   CREATE DYNAMIC PAGE VIEW
+   ---------------------------------------------------------
+   Movies / Series / Anime will live here.
+
+   Home never goes inside this element.
    ========================================================= */
 
-function cacheDashboardHomePage() {
-
-    if (
-        currentDashboardPage !==
-        "home"
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        !dashboardMain ||
-        !dashboardMain.childNodes.length
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-        Don't overwrite an existing
-        Home snapshot.
-    */
-
-    if (
-        homePageCache.childNodes.length
-    ) {
-
-        return;
-
-    }
-
-
-    homeScrollPosition =
-        window.scrollY;
-
-
-    pauseDashboardHomePage();
-
-
-    /*
-        Moving DOM nodes instead of cloning them
-        is important.
-
-        Their existing event listeners
-        stay attached.
-    */
-
-    while (
-        dashboardMain.firstChild
-    ) {
-
-        homePageCache.appendChild(
-            dashboardMain.firstChild
-        );
-
-    }
-
-
-    console.log(
-        "[MOVIPILOT] Home page cached"
-    );
-
-}
-
-
-/* =========================================================
-   RESTORE HOME DOM
-   ========================================================= */
-
-function restoreDashboardHomePage() {
-
-    if (
-        !homePageCache.childNodes.length
-    ) {
-
-        return false;
-
-    }
-
-
-    /*
-        Put the original Home nodes
-        back into dashboardMain.
-    */
-
-    while (
-        homePageCache.firstChild
-    ) {
-
-        dashboardMain.appendChild(
-            homePageCache.firstChild
-        );
-
-    }
-
-
-    currentDashboardPage =
-        "home";
-
-
-    /*
-        Restore the user's previous
-        Home scroll position.
-    */
-
-    window.scrollTo(
-        0,
-        homeScrollPosition
+const dashboardDynamicPage =
+    document.createElement(
+        "div"
     );
 
 
-    /*
-        Restart the row autoplay timers.
-    */
-
-    document
-        .querySelectorAll(
-            "[data-section-carousel]"
-        )
-        .forEach(
-            (section) => {
-
-                section.dispatchEvent(
-                    new Event(
-                        "mouseleave"
-                    )
-                );
-
-            }
-        );
+dashboardDynamicPage.id =
+    "dashboardDynamicPage";
 
 
-    /*
-        Restart hero autoplay.
-    */
-
-    if (
-        typeof startHeroAutoPlay ===
-        "function"
-    ) {
-
-        startHeroAutoPlay();
-
-    }
+dashboardDynamicPage.className =
+    "dashboard-dynamic-page";
 
 
-    console.log(
-        "[MOVIPILOT] Home page restored instantly"
-    );
+dashboardDynamicPage.hidden =
+    true;
 
 
-    return true;
+dashboardMain.appendChild(
+    dashboardDynamicPage
+);
 
-}
 
 /* =========================================================
-   DASHBOARD PAGE ROUTES
+   DASHBOARD ROUTES
    ========================================================= */
-
-/*
-    These are the HTML shell routes.
-
-    IMPORTANT:
-    The Series route MUST match the route registered
-    by your Go backend.
-*/
 
 const dashboardPageRoutes = {
 
@@ -656,11 +470,27 @@ const dashboardPageRoutes = {
 
 
 /* =========================================================
-   PAGE REQUEST STATE
+   PAGE STATE
    ========================================================= */
+
+let currentDashboardPage =
+    "home";
+
 
 let currentPageRequest =
     null;
+
+
+let navigationSerial =
+    0;
+
+
+/*
+    Used when returning Home.
+*/
+
+let homeScrollPosition =
+    0;
 
 
 /* =========================================================
@@ -674,14 +504,10 @@ function setActiveNavigation(
     navigationButtons.forEach(
         (button) => {
 
-            const isActive =
-                button.dataset.page ===
-                activePage;
-
-
             button.classList.toggle(
                 "active",
-                isActive
+                button.dataset.page ===
+                activePage
             );
 
         }
@@ -691,7 +517,248 @@ function setActiveNavigation(
 
 
 /* =========================================================
-   INITIALIZE DYNAMIC PAGE
+   PAUSE HOME
+   ========================================================= */
+
+function pauseDashboardHomePage() {
+
+    /*
+        Close Home hero trailer.
+    */
+
+    if (
+        typeof closeHeroTrailer ===
+        "function"
+    ) {
+
+        closeHeroTrailer(
+            false
+        );
+
+    }
+
+
+    /*
+        Close movie-row trailer.
+    */
+
+    if (
+        typeof closeMovieTrailer ===
+        "function"
+    ) {
+
+        closeMovieTrailer(
+            false
+        );
+
+    }
+
+
+    /*
+        Stop hero autoplay.
+    */
+
+    if (
+        typeof stopHeroAutoPlay ===
+        "function"
+    ) {
+
+        stopHeroAutoPlay();
+
+    }
+
+
+    /*
+        Pause content-row autoplay.
+    */
+
+    dashboardHomeView
+        .querySelectorAll(
+            "[data-section-carousel]"
+        )
+        .forEach(
+            (section) => {
+
+                section.dispatchEvent(
+                    new Event(
+                        "mouseenter"
+                    )
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   RESUME HOME
+   ========================================================= */
+
+function resumeDashboardHomePage() {
+
+    /*
+        Restart Home hero.
+    */
+
+    if (
+        typeof startHeroAutoPlay ===
+        "function"
+    ) {
+
+        startHeroAutoPlay();
+
+    }
+
+
+    /*
+        Restart content-row autoplay.
+
+        Mouseleave tells the existing row
+        system that the pointer is no longer
+        inside the section.
+    */
+
+    dashboardHomeView
+        .querySelectorAll(
+            "[data-section-carousel]"
+        )
+        .forEach(
+            (section) => {
+
+                section.dispatchEvent(
+                    new Event(
+                        "mouseleave"
+                    )
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   SHOW HOME
+   ========================================================= */
+
+function showDashboardHome() {
+
+    /*
+        Cancel any dynamic page request.
+    */
+
+    if (
+        currentPageRequest
+    ) {
+
+        currentPageRequest.abort();
+
+        currentPageRequest =
+            null;
+
+    }
+
+
+    /*
+        Hide dynamic content.
+    */
+
+    dashboardDynamicPage.hidden =
+        true;
+
+
+    /*
+        Clear dynamic page.
+
+        Home is NOT affected.
+    */
+
+    dashboardDynamicPage.replaceChildren();
+
+
+    /*
+        Show Home.
+    */
+
+    dashboardHomeView.hidden =
+        false;
+
+
+    /*
+        Update state.
+    */
+
+    currentDashboardPage =
+        "home";
+
+
+    setActiveNavigation(
+        "home"
+    );
+
+
+    /*
+        Restore scroll.
+    */
+
+    window.scrollTo(
+        0,
+        homeScrollPosition
+    );
+
+
+    /*
+        Restart Home animations.
+    */
+
+    resumeDashboardHomePage();
+
+
+    console.log(
+        "[MOVIPILOT] Home displayed."
+    );
+
+}
+
+
+/* =========================================================
+   HIDE HOME
+   ========================================================= */
+
+function hideDashboardHome() {
+
+    /*
+        Remember where the user was.
+    */
+
+    homeScrollPosition =
+        window.scrollY;
+
+
+    /*
+        Stop Home animations.
+    */
+
+    pauseDashboardHomePage();
+
+
+    /*
+        Hide Home.
+
+        IMPORTANT:
+
+        The DOM remains alive.
+    */
+
+    dashboardHomeView.hidden =
+        true;
+
+}
+
+
+/* =========================================================
+   INITIALIZE PAGE-SPECIFIC JAVASCRIPT
    ========================================================= */
 
 async function initializeDashboardPage(
@@ -731,43 +798,54 @@ async function initializeDashboardPage(
 
     }
 
+
+    /*
+        ANIME
+    */
+
     if (
-    page === "anime" &&
-    typeof window.initAnimePage ===
-    "function"
-) {
+        page === "anime" &&
+        typeof window.initAnimePage ===
+        "function"
+    ) {
 
-    await window.initAnimePage();
+        await window.initAnimePage();
 
-    return;
+        return;
 
-}
-
+    }
 
 }
 
 
 /* =========================================================
-   LOAD DASHBOARD HTML
+   LOAD PAGE HTML
    ========================================================= */
 
 async function loadDashboardHTML(
     page,
     url,
-    controller
+    controller,
+    requestID
 ) {
 
     try {
 
         /*
-            Show dashboard-level loading state.
+            Show dynamic area.
         */
 
-        dashboardMain.innerHTML = `
+        dashboardDynamicPage.hidden =
+            false;
 
-            <div
-                class="dashboard-page-loading"
-            >
+
+        /*
+            Show lightweight loader.
+        */
+
+        dashboardDynamicPage.innerHTML = `
+
+            <div class="dashboard-page-loading">
 
                 <div
                     class="dashboard-page-loading-spinner"
@@ -783,29 +861,28 @@ async function loadDashboardHTML(
 
 
         /*
-            Request page shell.
+            Ask Go for the page shell.
         */
 
         const response =
             await fetch(
                 url,
                 {
-                    method: "GET",
+                    method:
+                        "GET",
 
                     signal:
                         controller.signal,
 
                     headers: {
+
                         "X-Requested-With":
                             "XMLHttpRequest"
+
                     }
                 }
             );
 
-
-        /*
-            HTTP failure.
-        */
 
         if (!response.ok) {
 
@@ -817,7 +894,7 @@ async function loadDashboardHTML(
 
 
         /*
-            Read returned HTML.
+            Read HTML.
         */
 
         const html =
@@ -825,9 +902,18 @@ async function loadDashboardHTML(
 
 
         /*
-            Make sure this is still
-            the latest navigation request.
+            Ignore stale responses.
         */
+
+        if (
+            requestID !==
+            navigationSerial
+        ) {
+
+            return;
+
+        }
+
 
         if (
             controller !==
@@ -840,16 +926,18 @@ async function loadDashboardHTML(
 
 
         /*
-            Inject page into dashboard shell.
+            IMPORTANT:
+
+            Only the dynamic area changes.
+            Home remains untouched.
         */
 
-        dashboardMain.innerHTML =
+        dashboardDynamicPage.innerHTML =
             html;
 
 
         /*
-            Initialize page-specific
-            JavaScript AFTER injection.
+            Start the page-specific logic.
         */
 
         await initializeDashboardPage(
@@ -857,16 +945,29 @@ async function loadDashboardHTML(
         );
 
 
+        /*
+            One final stale-request check.
+        */
+
+        if (
+            requestID !==
+            navigationSerial
+        ) {
+
+            return;
+
+        }
+
+
         console.log(
-            "[MOVIPILOT] Loaded page:",
+            "[MOVIPILOT] Loaded:",
             page
         );
 
     } catch (error) {
 
         /*
-            Aborted requests are normal when
-            the user quickly changes pages.
+            Aborted requests are normal.
         */
 
         if (
@@ -879,17 +980,29 @@ async function loadDashboardHTML(
         }
 
 
+        /*
+            Ignore errors from old requests.
+        */
+
+        if (
+            requestID !==
+            navigationSerial
+        ) {
+
+            return;
+
+        }
+
+
         console.error(
-            "[MOVIPILOT DASHBOARD NAVIGATION]",
+            "[MOVIPILOT PAGE LOAD]",
             error
         );
 
 
-        dashboardMain.innerHTML = `
+        dashboardDynamicPage.innerHTML = `
 
-            <div
-                class="dashboard-page-loading"
-            >
+            <div class="dashboard-page-loading">
 
                 <strong>
                     We couldn't load this page.
@@ -916,9 +1029,15 @@ async function loadDashboardPage(
     page
 ) {
 
+    if (!page) {
+
+        return;
+
+    }
+
+
     /*
-        Don't reload the page the user is
-        already viewing.
+        Prevent unnecessary reload.
     */
 
     if (
@@ -932,6 +1051,16 @@ async function loadDashboardPage(
 
 
     /*
+        Every click gets a unique number.
+    */
+
+    navigationSerial++;
+
+    const requestID =
+        navigationSerial;
+
+
+    /*
         Cancel previous request.
     */
 
@@ -941,33 +1070,76 @@ async function loadDashboardPage(
 
         currentPageRequest.abort();
 
+        currentPageRequest =
+            null;
+
     }
 
 
-    /*
-        If we are leaving Home,
-        save its live DOM before replacing it.
-    */
+    /* =====================================================
+       HOME
+       ===================================================== */
+
+    if (
+        page ===
+        "home"
+    ) {
+
+        /*
+            Home is local.
+
+            No /dashboard request.
+        */
+
+        showDashboardHome();
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       LEAVING HOME
+       ===================================================== */
 
     if (
         currentDashboardPage ===
-            "home" &&
-        page !==
-            "home"
+        "home"
     ) {
 
-        cacheDashboardHomePage();
+        hideDashboardHome();
 
     }
 
 
     /*
-        The selected page becomes the
-        current page immediately.
+        Update current page.
     */
 
     currentDashboardPage =
         page;
+
+
+    setActiveNavigation(
+        page
+    );
+
+
+    /*
+        Start selected page at top.
+    */
+
+    window.scrollTo(
+        0,
+        0
+    );
+
+
+    /*
+        Remove previous dynamic page.
+    */
+
+    dashboardDynamicPage.replaceChildren();
 
 
     /*
@@ -983,88 +1155,42 @@ async function loadDashboardPage(
 
 
     /* =====================================================
-       HOME
-       ===================================================== */
-
-    if (
-        page ===
-        "home"
-    ) {
-
-        /*
-            Best case:
-
-            Home already exists in memory.
-
-            Restore it immediately.
-
-            ZERO network request.
-            ZERO Go handler.
-            ZERO TMDB request.
-        */
-
-        if (
-            restoreDashboardHomePage()
-        ) {
-
-            return;
-
-        }
-
-
-        /*
-            Fallback.
-
-            This happens when:
-            - the user entered Home for the first time
-            - the DOM cache isn't available
-        */
-
-        await loadDashboardHTML(
-            page,
-            dashboardPageRoutes.home,
-            controller
-        );
-
-        return;
-    }
-
-
-    /* =====================================================
        MOVIES
        ===================================================== */
 
     if (
-        page ===
-        "movies"
+        page === "movies"
     ) {
 
         await loadDashboardHTML(
             page,
             dashboardPageRoutes.movies,
-            controller
+            controller,
+            requestID
         );
 
         return;
+
     }
 
 
     /* =====================================================
-       TV SERIES
+       SERIES
        ===================================================== */
 
     if (
-        page ===
-        "tv"
+        page === "tv"
     ) {
 
         await loadDashboardHTML(
             page,
             dashboardPageRoutes.tv,
-            controller
+            controller,
+            requestID
         );
 
         return;
+
     }
 
 
@@ -1073,21 +1199,21 @@ async function loadDashboardPage(
        ===================================================== */
 
     if (
-        page ===
-        "anime"
+        page === "anime"
     ) {
 
         await loadDashboardHTML(
             page,
             dashboardPageRoutes.anime,
-            controller
+            controller,
+            requestID
         );
 
         return;
+
     }
 
 }
-
 
 
 /* =========================================================
@@ -1112,24 +1238,16 @@ navigationButtons.forEach(
                 }
 
 
-                /*
-                    Immediately update navbar state.
-                */
-
                 setActiveNavigation(
                     page
                 );
 
 
                 console.log(
-                    "[MOVIPILOT] Selected page:",
+                    "[MOVIPILOT] Selected:",
                     page
                 );
 
-
-                /*
-                    Load selected page.
-                */
 
                 await loadDashboardPage(
                     page
@@ -3555,16 +3673,17 @@ function closeMovieTrailer(
         restoreAutoPlay
     ) {
 
-        const event =
-            new Event(
-                "movipilotTrailerClosed"
-            );
+        if (
+    section
+) {
 
+    section.dispatchEvent(
+        new Event(
+            "movipilotTrailerClosed"
+        )
+    );
 
-        document.dispatchEvent(
-            event
-        );
-
+}
     }
 
 }

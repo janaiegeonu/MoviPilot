@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"html/template"
 	"net/http"
 )
@@ -20,6 +21,7 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		"templates/series_page.html",
 		"templates/movie_page.html",
 	)
+
 	if err != nil {
 		http.Error(
 			w,
@@ -29,13 +31,20 @@ func renderTemplate(w http.ResponseWriter, tmplName string, data interface{}) er
 		return err
 	}
 
-	err = tmpl.ExecuteTemplate(w, tmplName, data)
+	var buf bytes.Buffer
+
+	err = tmpl.ExecuteTemplate(&buf, tmplName, data)
 	if err != nil {
 		http.Error(
 			w,
 			"Template Execution Error: "+err.Error(),
 			http.StatusInternalServerError,
 		)
+		return err
+	}
+
+	_, err = w.Write(buf.Bytes())
+	if err != nil {
 		return err
 	}
 

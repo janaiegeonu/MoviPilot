@@ -17,10 +17,10 @@
         href="/img/logo favicon.png"
     >
 
-    <link
-        rel="stylesheet"
-        href="/templates/css/dashboard.css"
-    >
+   <link
+    rel="stylesheet"
+    href="/templates/css/dashboard.css?v=20261006-sidebar"
+>
     <link
     rel="stylesheet"
     href="/templates/css/series.css"
@@ -87,7 +87,7 @@
         <!-- LOGO -->
 
         <a
-            href="/home"
+            href="/dashboard"
             class="legal-brand"
         >
 
@@ -270,588 +270,818 @@
              SIDEBAR
              ===================================================== -->
 
-        <aside
-            class="dashboard-sidebar"
-            id="dashboardSidebar"
+       <!-- =========================================================
+     MOVIPILOT SIDEBAR
+     ========================================================= -->
+
+<aside
+    class="dashboard-sidebar"
+    id="dashboardSidebar"
+    aria-label="MoviPilot sidebar"
+>
+
+    <!-- =====================================================
+         SIDEBAR HEADER / TOGGLE
+         ===================================================== -->
+
+    <div class="sidebar-top">
+
+        <button
+            class="sidebar-toggle"
+            id="sidebarToggle"
+            type="button"
+            aria-label="Collapse sidebar"
+            aria-expanded="true"
         >
 
+            <!-- Expanded state icon -->
 
-            <!-- =================================================
-                 SIDEBAR TOGGLE
-                 ================================================= -->
+            <svg
+                class="toggle-icon toggle-expanded-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <path
+                    d="M9 6L15 12L9 18"
+                    stroke="currentColor"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                />
+            </svg>
 
-            <div class="sidebar-top">
 
-                <button
-                    class="sidebar-toggle"
-                    id="sidebarToggle"
-                    aria-label="Toggle sidebar"
-                    type="button"
-                >
+            <!-- Collapsed state icon -->
+
+            <svg
+                class="toggle-icon toggle-collapsed-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <rect
+                    x="4"
+                    y="5"
+                    width="16"
+                    height="14"
+                    rx="2"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                />
+
+                <path
+                    d="M9 5V19"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                />
+
+                <path
+                    d="M13 9H17"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                />
+
+                <path
+                    d="M13 12H17"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                />
+
+                <path
+                    d="M13 15H16"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                />
+            </svg>
 
 
-                    <!-- Expanded arrow -->
+            <span class="toggle-label">
+                Collapse
+            </span>
+
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         SIDEBAR SCROLL AREA
+         ===================================================== -->
+
+    <div class="sidebar-scroll">
+
+        <!-- =================================================
+             MY MOVIPILOT
+             ================================================= -->
+
+        <section
+            class="sidebar-section"
+            aria-labelledby="sidebarMyMoviPilot"
+        >
+
+            <div
+                class="sidebar-section-heading"
+                id="sidebarMyMoviPilot"
+            >
+                <span class="sidebar-section-label">
+                    My MoviPilot
+                </span>
+
+                <span class="sidebar-section-line"></span>
+            </div>
+
+
+            <!-- WATCHLIST -->
+
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="watchlist"
+                data-sidebar-label="Watchlist"
+            >
+
+                <span class="sidebar-icon watchlist-icon">
 
                     <svg
-                        class="toggle-icon toggle-expanded-icon"
-                        viewBox="0 0 24 24"
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
                     >
 
+                        <!-- Floating bookmark -->
+
+                        <g class="watchlist-bookmark">
+
+                            <path
+                                d="M15 9.5C15 7.57 16.57 6 18.5 6H29.5C31.43 6 33 7.57 33 9.5V40L24 34.8L15 40V9.5Z"
+                                stroke="currentColor"
+                                stroke-width="2.2"
+                                stroke-linejoin="round"
+                            />
+
+                            <path
+                                d="M20 14H28"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+
+                        </g>
+
+
+                        <!-- Small plus -->
+
+                        <g class="watchlist-plus">
+
+                            <path
+                                d="M34.5 12V20"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M30.5 16H38.5"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            />
+
+                        </g>
+
+                    </svg>
+
+                </span>
+
+
+                <span class="sidebar-label">
+                    Watchlist
+                </span>
+
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
+
+            </button>
+
+
+            <!-- WATCH HISTORY -->
+
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="history"
+                data-sidebar-label="Watch History"
+            >
+
+                <span class="sidebar-icon history-icon">
+
+                    <svg
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+
+                        <!-- Outer history arrow -->
+
                         <path
-                            d="M9 6L15 12L9 18"
+                            class="history-arrow"
+                            d="M13 19C15.2 12.6 21.1 8.5 27.9 9C35.4 9.55 41 15.8 41 23.3C41 31.2 34.6 37.5 26.7 37.5C20.3 37.5 14.8 33.35 12.9 27.3"
                             stroke="currentColor"
-                            stroke-width="1.9"
+                            stroke-width="2.1"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M8 18.5L13.5 19.2L12.2 24.5"
+                            stroke="currentColor"
+                            stroke-width="2.1"
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         />
 
+
+                        <!-- Clock -->
+
+                        <circle
+                            class="history-clock"
+                            cx="25"
+                            cy="23"
+                            r="9.2"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        />
+
+                        <path
+                            class="history-hand-minute"
+                            d="M25 17.8V23L29 25.6"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                        <circle
+                            cx="25"
+                            cy="23"
+                            r="1.5"
+                            fill="currentColor"
+                        />
+
                     </svg>
 
+                </span>
 
 
-                    <!-- Collapsed sidebar icon -->
+                <span class="sidebar-label">
+                    Watch History
+                </span>
+
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
+
+            </button>
+
+
+            <!-- MY RATING -->
+
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="ratings"
+                data-sidebar-label="My Rating"
+            >
+
+                <span class="sidebar-icon rating-icon">
 
                     <svg
-                        class="toggle-icon toggle-collapsed-icon"
-                        viewBox="0 0 24 24"
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
                     >
 
-                        <rect
-                            x="4"
-                            y="5"
-                            width="16"
-                            height="14"
-                            rx="2"
+                        <!-- Orbit ring -->
+
+                        <circle
+                            class="rating-orbit"
+                            cx="24"
+                            cy="24"
+                            r="15.5"
                             stroke="currentColor"
-                            stroke-width="1.6"
+                            stroke-width="1.4"
+                            stroke-dasharray="2.8 4"
                         />
+
+
+                        <!-- Main star -->
 
                         <path
-                            d="M9 5V19"
+                            class="rating-star"
+                            d="M24 8L28.2 16.8L37.5 18.2L30.7 24.8L32.3 34.1L24 29.8L15.7 34.1L17.3 24.8L10.5 18.2L19.8 16.8L24 8Z"
                             stroke="currentColor"
-                            stroke-width="1.6"
+                            stroke-width="2"
+                            stroke-linejoin="round"
                         />
 
-                        <path
-                            d="M13 9H17"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                        />
 
-                        <path
-                            d="M13 12H17"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                        />
+                        <!-- Rating spark -->
 
-                        <path
-                            d="M13 15H16"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            stroke-linecap="round"
-                        />
-
-                    </svg>
-
-
-                    <span class="toggle-label">
-                        Collapse
-                    </span>
-
-                </button>
-
-            </div>
-
-
-
-            <!-- =================================================
-                 SIDEBAR MENU
-                 ================================================= -->
-
-            <div class="sidebar-menu">
-
-
-
-                <!-- =================================================
-                     GENRE
-                     ================================================= -->
-
-                <div class="sidebar-group">
-
-                    <button
-                        class="sidebar-item genre-button"
-                        id="genreButton"
-                        aria-expanded="false"
-                        type="button"
-                    >
-
-
-                        <span class="sidebar-icon genre-icon">
-
-
-                            <!-- NORMAL GENRE SVG -->
-
-                            <svg
-                                class="genre-normal-svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-
-                                <rect
-                                    x="4"
-                                    y="4"
-                                    width="16"
-                                    height="16"
-                                    rx="2.5"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                />
-
-                                <path
-                                    d="M8 8H16"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                    stroke-linecap="round"
-                                />
-
-                                <path
-                                    d="M8 12H16"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                    stroke-linecap="round"
-                                />
-
-                                <path
-                                    d="M8 16H13"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                    stroke-linecap="round"
-                                />
-
-                            </svg>
-
-                            <!-- KONOHA STYLE SVG -->
-
-                            <svg
-    class="hidden-leaf-svg"
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
->
-    <path
-        d="M10.593931 17.99997H7.738773C6.968159 17.99997 6.488644 17.06497 6.879434 16.39897L7.994979 14.53898C8.577177 15.87897 9.474398 16.99997 10.593931 17.99997M11.722437 5.45598C14.470925 3.13098 17.528457 4.06498 20.109464 4.56598C20.872102 4.71498 21.651688 4.40498 22.106281 3.77298L23.81798 1.53099C24.094125 1.14599 24.052254 0.61799 23.718289 0.28299C23.288619 -0.14801 22.572836 -0.07701 22.235879 0.42999C20.40455 2.83398 20.703624 2.84898 17.294182 2.05899C16.470732 1.86799 15.615381 1.78999 14.779968 1.92499C10.230058 2.65998 6.838561 6.82598 7.288168 11.65598L4.277491 16.89197C3.496909 18.22497 4.455939 19.99997 5.997166 19.99997H15.963304C19.950955 20.00997 22.511027 17.40397 23.039391 13.90298C23.611619 10.10298 21.175164 6.76798 17.732824 5.98398C14.524758 5.25298 11.234946 7.47998 11.215008 10.77998C11.201051 13.26898 13.008454 15.33897 15.373131 15.73997C17.163587 16.04297 18.997906 14.94598 19.18732 13.13498C19.376733 11.33198 17.975074 9.80998 16.21652 9.80998C15.666224 9.80998 15.220604 10.25698 15.220604 10.80998C15.220604 11.36198 15.667221 11.80998 16.218513 11.80998C16.768809 11.80998 17.215426 12.25698 17.215426 12.80998C17.215426 13.36198 16.768809 13.80998 16.218513 13.80998C14.459959 13.80998 13.056306 12.28698 13.244722 10.48498C13.435133 8.67298 15.264468 7.57598 17.054923 7.87998C19.4196 8.28098 21.217034 10.35098 21.203078 12.83898C21.184136 16.08197 17.970089 18.31997 14.803894 17.66597C11.62773 17.00998 9.240124 14.18898 9.240124 10.80998C9.240124 8.66198 10.205135 6.73998 11.722437 5.45598"
-        fill="currentColor"
-        transform="translate(2 0) scale(0.69)"
-        transform-origin="center"
-    />
-</svg>
-   
-
-
-                        <span class="sidebar-genre sidebar-label">
-                            Genre
-                        </span>
-
-
-                        <svg
-                            class="dropdown-arrow"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                        <g class="rating-spark">
 
                             <path
-                                d="M6 9L12 15L18 9"
+                                d="M37.5 8V13"
                                 stroke="currentColor"
                                 stroke-width="1.8"
                                 stroke-linecap="round"
-                                stroke-linejoin="round"
                             />
 
-                        </svg>
+                            <path
+                                d="M35 10.5H40"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                            />
 
-                    </button>
+                        </g>
+
+                    </svg>
+
+                </span>
 
 
+                <span class="sidebar-label">
+                    My Rating
+                </span>
 
-                    <!-- GENRE OPTIONS -->
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
 
-                    <div
-                        class="genre-dropdown"
-                        id="genreDropdown"
+            </button>
+
+        </section>
+
+
+        <!-- =================================================
+             SMART DISCOVERY
+             ================================================= -->
+
+        <section
+            class="sidebar-section"
+            aria-labelledby="sidebarSmartDiscovery"
+        >
+
+            <div
+                class="sidebar-section-heading"
+                id="sidebarSmartDiscovery"
+            >
+                <span class="sidebar-section-label">
+                    Smart Discovery
+                </span>
+
+                <span class="sidebar-section-line"></span>
+            </div>
+
+
+            <!-- FOR YOU -->
+
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="for-you"
+                data-sidebar-label="For You"
+            >
+
+                <span class="sidebar-icon for-you-icon">
+
+                    <svg
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
                     >
 
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Action
-                        </button>
+                        <!-- Orbit -->
+
+                        <ellipse
+                            class="foryou-orbit"
+                            cx="24"
+                            cy="24"
+                            rx="17"
+                            ry="8"
+                        />
 
 
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Adventure
-                        </button>
+                        <ellipse
+                            class="foryou-orbit foryou-orbit-second"
+                            cx="24"
+                            cy="24"
+                            rx="17"
+                            ry="8"
+                            transform="rotate(60 24 24)"
+                        />
 
 
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Comedy
-                        </button>
+                        <!-- Compass -->
 
+                        <path
+                            class="foryou-compass"
+                            d="M31.5 16.5L27.3 27.3L16.5 31.5L20.7 20.7L31.5 16.5Z"
+                            fill="currentColor"
+                        />
 
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Anime
-                        </button>
-
-
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Horror
-                        </button>
-
-
-                        <button
-                            class="genre-option"
-                            type="button"
-                        >
-                            Romance
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- =================================================
-                     TOP RATED
-                     ================================================= -->
-
-                <button
-                    class="sidebar-item star"
-                    type="button"
-                >
-
-                    <span class="sidebar-icon star-icon">
-
-                        <svg
-                            viewBox="0 0 24 24"
+                        <circle
+                            cx="24"
+                            cy="24"
+                            r="3"
                             fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                        />
 
 
-                            <!-- SPARK RAYS -->
+                        <!-- Orbit dot -->
 
-                            <g class="star-sparks">
+                        <circle
+                            class="foryou-orbit-dot"
+                            cx="40"
+                            cy="24"
+                            r="2.2"
+                            fill="currentColor"
+                        />
 
-                                <path d="M12 1.8V4.2" />
-                                <path d="M12 19.8V22.2" />
 
-                                <path d="M1.8 12H4.2" />
-                                <path d="M19.8 12H22.2" />
+                        <!-- Spark -->
 
-                                <path d="M4.6 4.6L6.3 6.3" />
-                                <path d="M17.7 17.7L19.4 19.4" />
+                        <path
+                            class="foryou-spark"
+                            d="M36 7V12"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            class="foryou-spark"
+                            d="M33.5 9.5H38.5"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
+                </span>
+
+
+                <span class="sidebar-label">
+                    For You
+                </span>
+
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
 
-                                <path d="M19.4 4.6L17.7 6.3" />
-                                <path d="M6.3 17.7L4.6 19.4" />
+            </button>
+
+
+            <!-- MOOD PICKER -->
 
-                            </g>
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="mood"
+                data-sidebar-label="Mood Picker"
+            >
 
+                <span class="sidebar-icon mood-icon">
 
+                    <svg
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
 
-                            <!-- STAR -->
+                        <!-- Mood dial -->
 
-                            <path
-                                class="star-shape"
-                                d="M12 4L14.45 8.95L20 9.75L16 13.62L16.95 19.1L12 16.5L7.05 19.1L8 13.62L4 9.75L9.55 8.95L12 4Z"
-                            />
+                        <circle
+                            class="mood-face"
+                            cx="24"
+                            cy="24"
+                            r="14.5"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        />
 
-                        </svg>
 
-                    </span>
+                        <!-- Eyes -->
 
+                        <circle
+                            class="mood-eye mood-eye-left"
+                            cx="19"
+                            cy="21"
+                            r="1.7"
+                            fill="currentColor"
+                        />
 
-                    <span class="sidebar-label">
-                        Top Rated Movies
-                    </span>
+                        <circle
+                            class="mood-eye mood-eye-right"
+                            cx="29"
+                            cy="21"
+                            r="1.7"
+                            fill="currentColor"
+                        />
 
-                </button>
 
+                        <!-- Smile -->
 
+                        <path
+                            class="mood-smile"
+                            d="M17.5 27C19.2 30.2 21.5 31.7 24 31.7C26.5 31.7 28.8 30.2 30.5 27"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
 
-                <!-- =================================================
-                     WATCHLIST
-                     ================================================= -->
 
-                <button
-                    class="sidebar-item"
-                    type="button"
-                >
+                        <!-- Floating mood particles -->
 
-                    <span class="sidebar-icon watchlist-icon">
+                        <circle
+                            class="mood-particle mood-particle-one"
+                            cx="39"
+                            cy="12"
+                            r="2"
+                            fill="currentColor"
+                        />
 
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                        <circle
+                            class="mood-particle mood-particle-two"
+                            cx="10"
+                            cy="10"
+                            r="1.5"
+                            fill="currentColor"
+                        />
 
-                            <g class="watchlist-page">
+                        <circle
+                            class="mood-particle mood-particle-three"
+                            cx="38"
+                            cy="36"
+                            r="1.6"
+                            fill="currentColor"
+                        />
 
-                                <path
-                                    d="M6 5.5C6 4.67 6.67 4 7.5 4H16.5C17.33 4 18 4.67 18 5.5V20L12 16.8L6 20V5.5Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.6"
-                                    stroke-linejoin="round"
-                                />
+                    </svg>
 
-                                <path
-                                    d="M9 8H15"
-                                    stroke="currentColor"
-                                    stroke-width="1.45"
-                                    stroke-linecap="round"
-                                />
+                </span>
 
-                            </g>
 
-                        </svg>
+                <span class="sidebar-label">
+                    Mood Picker
+                </span>
 
-                    </span>
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
 
+            </button>
 
-                    <span class="sidebar-label">
-                        Watchlist
-                    </span>
+        </section>
 
-                </button>
 
+        <!-- =================================================
+             LIBRARY
+             ================================================= -->
 
+        <section
+            class="sidebar-section"
+            aria-labelledby="sidebarLibrary"
+        >
 
-                <!-- =================================================
-                     TRENDING
-                     ================================================= -->
+            <div
+                class="sidebar-section-heading"
+                id="sidebarLibrary"
+            >
+                <span class="sidebar-section-label">
+                    Library
+                </span>
 
-                <button
-                    class="sidebar-item"
-                    type="button"
-                >
-
-                    <span class="sidebar-icon flame-icon">
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-
-
-                            <!-- HEAT / FLAME PARTICLES -->
-
-                            <g class="flame-sparks">
-
-                                <path d="M8.1 8.3L7.2 6.6" />
-                                <path d="M16.1 7.9L16.9 6.3" />
-                                <path d="M18.8 11.1L20.1 10.2" />
-
-                            </g>
-
-
-
-                            <!-- OUTER FLAME -->
-
-                            <path
-                                class="flame-outer"
-                                d="M13.2 3.5C13.2 3.5 14.1 7.1 11.5 9.3C10.5 8 9.8 6.7 9.8 5.5C7.6 7.5 6 10.1 6 13C6 17 8.7 20 12 20C15.8 20 18 17.4 18 14.1C18 10.2 15.1 7.2 13.2 3.5Z"
-                                stroke="currentColor"
-                                stroke-width="1.55"
-                                stroke-linejoin="round"
-                            />
-
-
-
-                            <!-- INNER FLAME -->
-
-                            <path
-                                class="flame-inner"
-                                d="M12.7 10.2C12.7 10.2 13.1 12.2 11.6 13.7C11 13 10.7 12.3 10.8 11.5C9.8 12.7 9.2 14 9.4 15.2C9.7 17 10.8 18 12.2 18C13.9 18 15 16.8 15 15.3C15 13.3 13.7 11.8 12.7 10.2Z"
-                                stroke="currentColor"
-                                stroke-width="1.2"
-                                stroke-linejoin="round"
-                            />
-
-                        </svg>
-
-                    </span>
-
-
-                    <span class="sidebar-label">
-                        Trending Movies
-                    </span>
-
-                </button>
-
-
-
-                <!-- =================================================
-                     COMING SOON
-                     ================================================= -->
-
-                <button
-                    class="sidebar-item"
-                    type="button"
-                >
-
-                    <span class="sidebar-icon calendar-icon">
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-
-                            <rect
-                                x="4"
-                                y="5"
-                                width="16"
-                                height="15"
-                                rx="2"
-                                stroke="currentColor"
-                                stroke-width="1.55"
-                            />
-
-                            <path
-                                d="M8 3V7"
-                                stroke="currentColor"
-                                stroke-width="1.55"
-                                stroke-linecap="round"
-                            />
-
-                            <path
-                                d="M16 3V7"
-                                stroke="currentColor"
-                                stroke-width="1.55"
-                                stroke-linecap="round"
-                            />
-
-                            <path
-                                d="M4 10H20"
-                                stroke="currentColor"
-                                stroke-width="1.55"
-                            />
-
-
-                            <!-- FRONT PAGE -->
-
-                            <g class="calendar-flap">
-
-                                <path
-                                    d="M9 13H17V19H9Z"
-                                    stroke="currentColor"
-                                    stroke-width="1.4"
-                                    stroke-linejoin="round"
-                                />
-
-                                <path
-                                    d="M9 13L13 16L17 13"
-                                    stroke="currentColor"
-                                    stroke-width="1.25"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-
-                            </g>
-
-                        </svg>
-
-                    </span>
-
-
-                    <span class="sidebar-label">
-                        Coming Soon
-                    </span>
-
-                </button>
-
+                <span class="sidebar-section-line"></span>
             </div>
 
 
+            <!-- MY COLLECTION -->
 
-            <!-- =====================================================
-                 LOGOUT
-                 ===================================================== -->
+            <button
+                class="sidebar-item"
+                type="button"
+                data-sidebar-action="collections"
+                data-sidebar-label="My Collection"
+            >
 
-            <div class="sidebar-bottom">
+                <span class="sidebar-icon collection-icon">
 
-                <button
-                    class="sidebar-item logout-item"
-                    type="button"
+                    <svg
+                        class="sidebar-icon-svg"
+                        viewBox="0 0 48 48"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                    >
+
+                        <!-- Back cards -->
+
+                        <rect
+                            class="collection-card collection-card-back"
+                            x="11"
+                            y="10"
+                            width="22"
+                            height="27"
+                            rx="3"
+                            transform="rotate(-8 11 10)"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        />
+
+                        <rect
+                            class="collection-card collection-card-middle"
+                            x="15"
+                            y="8"
+                            width="22"
+                            height="28"
+                            rx="3"
+                            transform="rotate(4 15 8)"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        />
+
+
+                        <!-- Front card -->
+
+                        <rect
+                            class="collection-card collection-card-front"
+                            x="15"
+                            y="13"
+                            width="21"
+                            height="27"
+                            rx="3"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        />
+
+
+                        <!-- Card detail -->
+
+                        <path
+                            d="M20 19H31"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                        <path
+                            d="M20 24H28"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+
+                        <!-- Floating plus -->
+
+                        <g class="collection-plus">
+
+                            <circle
+                                cx="37"
+                                cy="11"
+                                r="5"
+                                fill="currentColor"
+                            />
+
+                            <path
+                                d="M37 8.5V13.5"
+                                stroke="#020713"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+
+                            <path
+                                d="M34.5 11H39.5"
+                                stroke="#020713"
+                                stroke-width="1.5"
+                                stroke-linecap="round"
+                            />
+
+                        </g>
+
+                    </svg>
+
+                </span>
+
+
+                <span class="sidebar-label">
+                    My Collection
+                </span>
+
+                <span
+                    class="sidebar-item-glow"
+                    aria-hidden="true"
+                ></span>
+
+            </button>
+
+        </section>
+
+    </div>
+
+
+    <!-- =====================================================
+         SIDEBAR BOTTOM
+         ===================================================== -->
+
+    <div class="sidebar-bottom">
+
+        <button
+            class="sidebar-item logout-item"
+            id="sidebarLogoutButton"
+            type="button"
+            data-sidebar-action="logout"
+            data-sidebar-label="Logout"
+        >
+
+            <span class="sidebar-icon logout-icon">
+
+                <svg
+                    class="sidebar-icon-svg logout-svg"
+                    viewBox="0 0 48 48"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
                 >
 
-                    <span class="sidebar-icon">
+                    <path
+                        d="M20 10H13C11.34 10 10 11.34 10 13V35C10 36.66 11.34 38 13 38H20"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                    />
 
-                        <svg
-                            class="logout-svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
+                    <path
+                        class="logout-arrow"
+                        d="M25 17L33 24L25 31"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
 
-                            <path
-                                d="M10 5H6.5C5.67 5 5 5.67 5 6.5V17.5C5 18.33 5.67 19 6.5 19H10"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
+                    <path
+                        d="M33 24H18"
+                        stroke="currentColor"
+                        stroke-width="2.2"
+                        stroke-linecap="round"
+                    />
 
-                            <path
-                                d="M14 8L18 12L14 16"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
+                </svg>
 
-                            <path
-                                d="M18 12H9"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                            />
-
-                        </svg>
-
-                    </span>
+            </span>
 
 
-                    <span class="sidebar-label">
-                        Logout
-                    </span>
+            <span class="sidebar-label">
+                Logout
+            </span>
 
-                </button>
 
-            </div>
+            <span
+                class="sidebar-item-glow"
+                aria-hidden="true"
+            ></span>
 
-        </aside>
+        </button>
+
+    </div>
+
+</aside>
 
 
 
@@ -2370,8 +2600,10 @@
     </div>
 
 
-<script src="/templates/js/dashboard.js?v=20261006"></script>
+<script src="/templates/js/dashboard.js?v=20261006-sidebar"></script>
+
     <script src="/templates/js/series.js"></script>
+
     <script
     src="/templates/js/movie_page.js?v=1"
     defer

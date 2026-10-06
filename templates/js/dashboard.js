@@ -1,9 +1,9 @@
 /* =========================================================
-   MOVIPILOT DASHBOARD JS
+   MOVIPILOT SIDEBAR
    ========================================================= */
 
 console.log(
-    "MOVIPILOT DASHBOARD JS LOADED"
+    "MOVIPILOT SIDEBAR JS LOADED"
 );
 
 
@@ -29,40 +29,40 @@ const mobileMenuButton =
     );
 
 
-const genreButton =
-    document.getElementById(
-        "genreButton"
-    );
-
-
-const genreDropdown =
-    document.getElementById(
-        "genreDropdown"
+const sidebarItems =
+    document.querySelectorAll(
+        ".sidebar-item[data-sidebar-action]"
     );
 
 
 /* =========================================================
-   MOBILE CHECK
+   SAFETY CHECK
    ========================================================= */
 
-function isMobile() {
+if (
+    sidebar &&
+    sidebarToggle &&
+    mobileMenuButton
+) {
 
-    return window.innerWidth <= 720;
 
-}
+    /* =====================================================
+       MOBILE CHECK
+       ===================================================== */
+
+    function isMobile() {
+
+        return window.innerWidth <= 720;
+
+    }
 
 
-/* =========================================================
-   DESKTOP SIDEBAR STATE
-   ========================================================= */
-
+    /* =====================================================
+       DESKTOP COLLAPSE
+       ===================================================== */
 function setSidebarCollapsed(
     collapsed
 ) {
-
-    /*
-        Mobile does not use this function.
-    */
 
     if (isMobile()) {
 
@@ -77,130 +77,66 @@ function setSidebarCollapsed(
     );
 
 
+    sidebarToggle.setAttribute(
+        "aria-expanded",
+        String(!collapsed)
+    );
+
+
+    sidebarToggle.setAttribute(
+        "aria-label",
+        collapsed
+            ? "Expand sidebar"
+            : "Collapse sidebar"
+    );
+
+
     localStorage.setItem(
         "movipilotSidebarCollapsed",
-        collapsed
+        String(collapsed)
     );
 
 }
 
+    /* =====================================================
+       RESTORE DESKTOP SIDEBAR STATE
+       ===================================================== */
 
-/* =========================================================
-   RESTORE SIDEBAR STATE
-   ========================================================= */
-
-const savedSidebarState =
-    localStorage.getItem(
-        "movipilotSidebarCollapsed"
-    );
-
-
-if (
-    savedSidebarState === "true" &&
-    !isMobile()
-) {
-
-    sidebar.classList.add(
-        "collapsed"
-    );
-
-}
-
-
-/* =========================================================
-   SIDEBAR TOGGLE
-   ========================================================= */
-
-sidebarToggle.addEventListener(
-    "click",
-    (event) => {
-
-        event.stopPropagation();
-
-
-        /*
-            On mobile, this button closes
-            the sidebar instead of changing
-            it into icon mode.
-
-            The hamburger opens it again.
-        */
-
-        if (isMobile()) {
-
-            sidebar.classList.remove(
-                "mobile-open"
-            );
-
-            return;
-
-        }
-
-
-        const shouldCollapse =
-            !sidebar.classList.contains(
-                "collapsed"
-            );
-
-
-        setSidebarCollapsed(
-            shouldCollapse
+    const savedSidebarState =
+        localStorage.getItem(
+            "movipilotSidebarCollapsed"
         );
 
 
-        /*
-            Close the Genre dropdown
-            when entering icon-only mode.
-        */
+    if (
+        savedSidebarState === "true" &&
+        !isMobile()
+    ) {
 
-        if (shouldCollapse) {
-
-            genreDropdown.classList.remove(
-                "open"
-            );
-
-            genreButton.classList.remove(
-                "open"
-            );
-
-            genreButton.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-
-        }
-
-    }
-);
+        sidebar.classList.add(
+            "collapsed"
+        );
 
 
-/* =========================================================
-   MOBILE HAMBURGER
-   ========================================================= */
-
-mobileMenuButton.addEventListener(
-    "click",
-    (event) => {
-
-        event.stopPropagation();
+        sidebarToggle.setAttribute(
+            "aria-expanded",
+            "false"
+        );
 
 
-        sidebar.classList.toggle(
-            "mobile-open"
+        sidebarToggle.setAttribute(
+            "aria-label",
+            "Expand sidebar"
         );
 
     }
-);
 
 
-/* =========================================================
-   CLOSE MOBILE SIDEBAR
-   WHEN CLICKING OUTSIDE
-   ========================================================= */
+    /* =====================================================
+       OPEN MOBILE SIDEBAR
+       ===================================================== */
 
-document.addEventListener(
-    "click",
-    (event) => {
+    function openMobileSidebar() {
 
         if (!isMobile()) {
 
@@ -209,130 +145,367 @@ document.addEventListener(
         }
 
 
-        const clickedInsideSidebar =
-            sidebar.contains(
-                event.target
-            );
-
-
-        const clickedHamburger =
-            mobileMenuButton.contains(
-                event.target
-            );
-
-
-        if (
-            !clickedInsideSidebar &&
-            !clickedHamburger
-        ) {
-
-            sidebar.classList.remove(
-                "mobile-open"
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   GENRE DROPDOWN
-   ========================================================= */
-
-genreButton.addEventListener(
-    "click",
-    (event) => {
-
-        event.stopPropagation();
-
-
-        /*
-            Don't open Genre dropdown
-            while desktop sidebar is
-            icon-only.
-        */
-
-        if (
-            !isMobile() &&
-            sidebar.classList.contains(
-                "collapsed"
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        const isOpen =
-            genreDropdown.classList.contains(
-                "open"
-            );
-
-
-        genreDropdown.classList.toggle(
-            "open"
+        sidebar.classList.add(
+            "mobile-open"
         );
 
 
-        genreButton.classList.toggle(
-            "open"
-        );
-
-
-        genreButton.setAttribute(
+        mobileMenuButton.setAttribute(
             "aria-expanded",
-            String(!isOpen)
+            "true"
+        );
+
+
+        document.body.classList.add(
+            "sidebar-open"
         );
 
     }
-);
 
 
-/* =========================================================
-   GENRE HOVER ANIMATION
-   ========================================================= */
+    /* =====================================================
+       CLOSE MOBILE SIDEBAR
+       ===================================================== */
 
-genreButton.addEventListener(
-    "mouseenter",
-    () => {
+    function closeMobileSidebar() {
 
-        /*
-            Remove first so the animation
-            can restart every time the user
-            leaves and comes back.
-        */
-
-        genreButton.classList.remove(
-            "is-animating"
+        sidebar.classList.remove(
+            "mobile-open"
         );
 
 
-        requestAnimationFrame(
-            () => {
+        mobileMenuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
 
-                genreButton.classList.add(
-                    "is-animating"
+
+        document.body.classList.remove(
+            "sidebar-open"
+        );
+
+    }
+
+
+    /* =====================================================
+       SIDEBAR TOGGLE
+       ===================================================== */
+
+    sidebarToggle.addEventListener(
+        "click",
+        (event) => {
+
+            event.stopPropagation();
+
+
+            /* ---------------------------------------------
+               MOBILE
+               --------------------------------------------- */
+
+            if (isMobile()) {
+
+                closeMobileSidebar();
+
+                return;
+
+            }
+
+
+            /* ---------------------------------------------
+               DESKTOP
+               --------------------------------------------- */
+
+            const shouldCollapse =
+                !sidebar.classList.contains(
+                    "collapsed"
+                );
+
+
+            setSidebarCollapsed(
+                shouldCollapse
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       MOBILE HAMBURGER
+       ===================================================== */
+
+    mobileMenuButton.addEventListener(
+        "click",
+        (event) => {
+
+            event.stopPropagation();
+
+
+            if (
+                sidebar.classList.contains(
+                    "mobile-open"
+                )
+            ) {
+
+                closeMobileSidebar();
+
+            } else {
+
+                openMobileSidebar();
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       CLOSE MOBILE SIDEBAR
+       WHEN CLICKING OUTSIDE
+       ===================================================== */
+
+    document.addEventListener(
+        "click",
+        (event) => {
+
+            if (!isMobile()) {
+
+                return;
+
+            }
+
+
+            if (
+                !sidebar.classList.contains(
+                    "mobile-open"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const clickedInsideSidebar =
+                sidebar.contains(
+                    event.target
+                );
+
+
+            const clickedHamburger =
+                mobileMenuButton.contains(
+                    event.target
+                );
+
+
+            if (
+                !clickedInsideSidebar &&
+                !clickedHamburger
+            ) {
+
+                closeMobileSidebar();
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       ESCAPE KEY
+       ===================================================== */
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key === "Escape" &&
+                isMobile() &&
+                sidebar.classList.contains(
+                    "mobile-open"
+                )
+            ) {
+
+                closeMobileSidebar();
+
+                mobileMenuButton.focus();
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       SIDEBAR FEATURE BUTTONS
+       ===================================================== */
+
+    sidebarItems.forEach(
+        (item) => {
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    const action =
+                        item.dataset.sidebarAction;
+
+
+                    const label =
+                        item.dataset.sidebarLabel;
+
+
+                    /* -------------------------------------
+                       ACTIVE STATE
+                       ------------------------------------- */
+
+                    sidebarItems.forEach(
+                        (sidebarItem) => {
+
+                            sidebarItem.classList.remove(
+                                "is-selected"
+                            );
+
+
+                            sidebarItem.removeAttribute(
+                                "aria-current"
+                            );
+
+                        }
+                    );
+
+
+                    item.classList.add(
+                        "is-selected"
+                    );
+
+
+                    item.setAttribute(
+                        "aria-current",
+                        "page"
+                    );
+
+
+                    /* -------------------------------------
+                       CLOSE MOBILE SIDEBAR
+                       ------------------------------------- */
+
+                    if (isMobile()) {
+
+                        closeMobileSidebar();
+
+                    }
+
+
+                    /* -------------------------------------
+                       FUTURE PAGE HOOK
+                       -------------------------------------
+
+                       We intentionally do NOT redirect
+                       anywhere yet because these pages
+                       have not been created.
+
+                       Later you can connect:
+                         watchlist
+                         history
+                         ratings
+                         for-you
+                         mood
+                         collections
+
+                       to your dashboard page loader.
+                       ------------------------------------- */
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "movipilotSidebarAction",
+                            {
+                                detail: {
+                                    action: action,
+                                    label: label
+                                }
+                            }
+                        )
+                    );
+
+
+                    console.log(
+                        "MoviPilot sidebar action:",
+                        action
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       LISTEN FOR FUTURE SIDEBAR PAGE EVENTS
+       ===================================================== */
+
+    window.addEventListener(
+        "movipilotSidebarAction",
+        (event) => {
+
+            console.log(
+                "Sidebar feature selected:",
+                event.detail
+            );
+
+        }
+    );
+
+
+    /* =====================================================
+       HANDLE SCREEN SIZE CHANGES
+       ===================================================== */
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            if (isMobile()) {
+
+                sidebar.classList.remove(
+                    "collapsed"
+                );
+
+                return;
+
+            }
+
+
+            closeMobileSidebar();
+
+
+            const savedState =
+                localStorage.getItem(
+                    "movipilotSidebarCollapsed"
+                );
+
+
+            if (
+                savedState === "true"
+            ) {
+
+                sidebar.classList.add(
+                    "collapsed"
+                );
+
+            } else {
+
+                sidebar.classList.remove(
+                    "collapsed"
                 );
 
             }
-        );
 
-    }
-);
+        }
+    );
 
-
-genreButton.addEventListener(
-    "mouseleave",
-    () => {
-
-        genreButton.classList.remove(
-            "is-animating"
-        );
-
-    }
-);
+}
 
 /* =========================================================
    MAIN NAVIGATION

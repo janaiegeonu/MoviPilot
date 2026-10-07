@@ -1,0 +1,118 @@
+{{ define "person_page" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020713">
+    <title>{{ .Name }} — MoviPilot</title>
+    <link rel="icon" href="/img/logo favicon.png">
+    <link rel="stylesheet" href="/templates/css/person_page.css?v=1">
+</head>
+<body class="person-page">
+    <div class="person-bg" aria-hidden="true">
+        <div class="person-glow one"></div>
+        <div class="person-glow two"></div>
+        <div class="person-grid"></div>
+    </div>
+
+    <header class="person-topbar">
+        <div class="person-topbar-inner">
+            <button id="personBack" type="button" class="person-back">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M11 18L5 12L11 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Back
+            </button>
+            <a class="person-brand" href="/dashboard"><img src="/img/logo favicon.png" alt="MoviPilot"><span>Movi<span>Pilot</span></span></a>
+            <a class="person-dashboard-link" href="/dashboard">Dashboard</a>
+        </div>
+    </header>
+
+    <main class="person-shell">
+        <section class="person-hero reveal-person">
+            <div class="person-art-ring" aria-hidden="true">
+                <svg viewBox="0 0 300 300" fill="none">
+                    <circle cx="150" cy="150" r="120" stroke="currentColor" stroke-width="1" stroke-dasharray="4 8"/>
+                    <circle cx="150" cy="150" r="94" stroke="currentColor" stroke-width="1" opacity=".45"/>
+                    <path d="M150 18V42M150 258V282M18 150H42M258 150H282" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".7"/>
+                </svg>
+            </div>
+
+            <div class="person-photo-wrap">
+                {{ if .ProfileURL }}
+                    <img class="person-photo" src="{{ .ProfileURL }}" alt="{{ .Name }}">
+                {{ else }}
+                    <div class="person-photo-fallback">MP</div>
+                {{ end }}
+            </div>
+
+            <div class="person-copy">
+                <span class="person-kicker">MOVIPILOT TALENT PROFILE</span>
+                <h1>{{ .Name }}</h1>
+                {{ if .KnownFor }}<p class="person-known-for">Known for {{ .KnownFor }}</p>{{ end }}
+                <div class="person-fact-row">
+                    {{ if .Birthday }}<span><b>Born</b> {{ .Birthday }}</span>{{ end }}
+                    {{ if .Deathday }}<span><b>Died</b> {{ .Deathday }}</span>{{ end }}
+                    {{ if .PlaceOfBirth }}<span><b>From</b> {{ .PlaceOfBirth }}</span>{{ end }}
+                    {{ if .IMDbURL }}<a href="{{ .IMDbURL }}" target="_blank" rel="noopener noreferrer">IMDb profile →</a>{{ end }}
+                </div>
+            </div>
+        </section>
+
+        <section class="person-section reveal-person">
+            <div class="person-section-head">
+                <div>
+                    <span>THE STORY</span>
+                    <h2>Biography</h2>
+                </div>
+            </div>
+            <div class="person-bio-card">
+                {{ if .Biography }}
+                    <p>{{ .Biography }}</p>
+                {{ else }}
+                    <p class="muted">No biography is currently available from TMDB.</p>
+                {{ end }}
+            </div>
+        </section>
+
+        <section class="person-section reveal-person">
+            <div class="person-section-head">
+                <div>
+                    <span>FILMOGRAPHY</span>
+                    <h2>Movies &amp; series</h2>
+                </div>
+            </div>
+
+            <div class="person-filmography-grid">
+                {{ if .Credits }}
+                    {{ range .Credits }}
+                        <a class="person-credit-card" href="/explore?type={{ .MediaType }}&id={{ .ID }}">
+                            <div class="person-credit-poster">
+                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy">{{ end }}
+                                <span class="person-credit-shine"></span>
+                                <span class="person-credit-type">{{ if eq .MediaType "tv" }}Series{{ else }}Movie{{ end }}</span>
+                            </div>
+                            <div class="person-credit-copy">
+                                <h3>{{ .Title }}</h3>
+                                <div>
+                                    {{ if .Year }}<span>{{ .Year }}</span>{{ end }}
+                                    {{ if .Character }}<i></i><span>as {{ .Character }}</span>{{ end }}
+                                    {{ if .Rating }}<i></i><span>★ {{ printf "%.1f" .Rating }}</span>{{ end }}
+                                </div>
+                            </div>
+                        </a>
+                    {{ end }}
+                {{ else }}
+                    <div class="person-empty">No credited movies or series were returned by TMDB.</div>
+                {{ end }}
+            </div>
+        </section>
+
+        <footer class="person-footer">
+            <span>MoviPilot uses TMDB metadata and imagery.</span>
+        </footer>
+    </main>
+
+    <script src="/templates/js/person_page.js?v=1" defer></script>
+</body>
+</html>
+{{ end }}

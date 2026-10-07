@@ -1,0 +1,694 @@
+{{ define "explore_page" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020713">
+    <title>{{ .Media.Title }} — MoviPilot Explore</title>
+    <link rel="icon" href="/img/logo favicon.png">
+    <link rel="stylesheet" href="/templates/css/explore_page.css?v=1">
+</head>
+<body
+    class="explore-page"
+    data-media-type="{{ .Media.MediaType }}"
+    data-media-id="{{ .Media.ID }}"
+    data-logged-in="{{ .LoggedIn }}"
+>
+
+    <div class="explore-background" aria-hidden="true">
+        <div class="explore-ambient explore-ambient-one"></div>
+        <div class="explore-ambient explore-ambient-two"></div>
+        <div class="explore-grid-glow"></div>
+        <div class="explore-noise"></div>
+    </div>
+
+    <header class="explore-topbar">
+        <div class="explore-topbar-inner">
+            <button class="explore-back-button" id="exploreBack" type="button">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M19 12H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M11 18L5 12L11 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Back</span>
+            </button>
+
+            <a class="explore-brand" href="/dashboard" aria-label="Back to MoviPilot dashboard">
+                <img src="/img/logo favicon.png" alt="MoviPilot">
+                <span>Movi<span>Pilot</span></span>
+            </a>
+
+            <a class="explore-dashboard-link" href="/dashboard">
+                <span>Dashboard</span>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M5 12H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                    <path d="M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <main class="explore-shell">
+
+        <!-- =========================================================
+             HERO
+             ========================================================= -->
+        <section class="explore-hero reveal-on-load">
+            <div class="explore-hero-backdrop-wrap">
+                {{ if .Media.BackdropURL }}
+                    <img class="explore-hero-backdrop" src="{{ .Media.BackdropURL }}" alt="{{ .Media.Title }} backdrop" fetchpriority="high">
+                {{ end }}
+                <div class="explore-hero-overlay"></div>
+                <div class="explore-hero-vignette"></div>
+                <div class="explore-hero-radiance"></div>
+            </div>
+
+            <div class="explore-hero-content">
+                <div class="explore-poster-column">
+                    <div class="explore-poster-frame">
+                        {{ if .Media.PosterURL }}
+                            <img class="explore-poster" src="{{ .Media.PosterURL }}" alt="{{ .Media.Title }} poster">
+                        {{ else }}
+                            <div class="explore-poster-fallback">MP</div>
+                        {{ end }}
+                        <span class="explore-poster-shine"></span>
+                    </div>
+
+                    <div class="explore-poster-caption">
+                        <span class="poster-caption-dot"></span>
+                        <span>{{ .Media.MediaTypeLabel }} profile</span>
+                    </div>
+                </div>
+
+                <div class="explore-hero-info">
+                    <div class="explore-kicker-row">
+                        <span class="explore-kicker">MOVIPILOT EXPLORE</span>
+                        <span class="explore-kicker-line"></span>
+                        <span class="explore-kicker-type">{{ .Media.MediaTypeLabel }}</span>
+                    </div>
+
+                    <h1 class="explore-title">{{ .Media.Title }}</h1>
+
+                    {{ if .Media.Tagline }}
+                        <p class="explore-tagline">{{ .Media.Tagline }}</p>
+                    {{ end }}
+
+                    <div class="explore-meta-cluster">
+                        {{ if .Media.Year }}<span class="explore-meta-chip">{{ .Media.Year }}</span>{{ end }}
+                        {{ if .Media.Runtime }}<span class="explore-meta-chip">{{ .Media.Runtime }}</span>{{ end }}
+                        {{ if .Media.Seasons }}<span class="explore-meta-chip">{{ .Media.Seasons }} {{ if eq .Media.Seasons 1 }}Season{{ else }}Seasons{{ end }}</span>{{ end }}
+                        {{ if .Media.Episodes }}<span class="explore-meta-chip">{{ .Media.Episodes }} {{ if eq .Media.Episodes 1 }}Episode{{ else }}Episodes{{ end }}</span>{{ end }}
+                        {{ if .Media.Certification }}<span class="explore-meta-chip certification-chip">{{ .Media.Certification }}</span>{{ end }}
+                        {{ range .Media.Genres }}<span class="explore-meta-chip genre-chip">{{ . }}</span>{{ end }}
+                        {{ if .Media.Status }}<span class="explore-meta-chip status-chip">{{ .Media.Status }}</span>{{ end }}
+                    </div>
+
+                    <div class="explore-ratings-line">
+                        <div class="tmdb-rating-block">
+                            <span class="rating-orb">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M12 3.9L14.7 9.35L20.7 10.22L16.35 14.45L17.38 20.4L12 17.58L6.62 20.4L7.65 14.45L3.3 10.22L9.3 9.35L12 3.9Z" fill="currentColor"/>
+                                </svg>
+                            </span>
+                            <div>
+                                <span class="rating-label">MOVIPILOT OFFICIAL • TMDB</span>
+                                <strong>{{ printf "%.1f" .Media.VoteAverage }}<span>/10</span></strong>
+                                {{ if .Media.VoteCount }}<small>{{ .Media.VoteCount }} votes</small>{{ end }}
+                            </div>
+                        </div>
+
+                        {{ if .Media.IMDbURL }}
+                            <a class="external-rating-link" href="{{ .Media.IMDbURL }}" target="_blank" rel="noopener noreferrer">IMDb</a>
+                        {{ end }}
+                    </div>
+
+                    <div class="explore-actions">
+                        <button class="explore-action-button primary{{ if .User.Watchlisted }} is-active{{ end }}" id="watchlistButton" type="button" data-auth-required="true">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6.5 5.5C6.5 4.67 7.17 4 8 4H16C16.83 4 17.5 4.67 17.5 5.5V20L12 16.9L6.5 20V5.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                            </svg>
+                            <span id="watchlistButtonLabel">{{ if .User.Watchlisted }}Remove from Watchlist{{ else }}Add to Watchlist{{ end }}</span>
+                        </button>
+
+                        {{ if .Media.PrimaryTrailer }}
+                            <button class="explore-action-button trailer" id="heroTrailerButton" type="button" data-video-key="{{ .Media.PrimaryTrailer.Key }}" data-video-title="{{ .Media.PrimaryTrailer.Name }}">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="M8 5.5L18.5 12L8 18.5V5.5Z" fill="currentColor"/>
+                                </svg>
+                                <span>Official Trailer</span>
+                            </button>
+                        {{ end }}
+
+                        <button class="explore-action-button collection" id="collectionButton" type="button" data-auth-required="true">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M5 7.5C5 6.67 5.67 6 6.5 6H10L12 8H17.5C18.33 8 19 8.67 19 9.5V17.5C19 18.33 18.33 19 17.5 19H6.5C5.67 19 5 18.33 5 17.5V7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                                <path d="M12 11V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                <path d="M9.5 13.5H14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <span>Add to Collection</span>
+                        </button>
+                    </div>
+
+                    <div class="explore-rating-panel">
+                        <div class="rating-panel-copy">
+                            <span class="rating-panel-kicker">YOUR MOVIPILOT RATING</span>
+                            <strong id="userRatingMessage">
+                                {{ if .User.Rating }}You rated this {{ .User.Rating }}/5{{ else if .User.CanRate }}How would you rate it?{{ else }}Watch this title from a MoviPilot recommendation to unlock rating{{ end }}
+                            </strong>
+                        </div>
+
+                        <div class="star-rating" id="starRating" role="radiogroup" aria-label="Rate this title from 1 to 5 stars" aria-disabled="{{ if .User.CanRate }}false{{ else }}true{{ end }}">
+                            <button class="rating-star{{ if ge .User.Rating 1 }} is-filled{{ end }}" type="button" data-rating="1" aria-label="1 star" {{ if not .User.CanRate }}disabled{{ end }}>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="rating-star{{ if ge .User.Rating 2 }} is-filled{{ end }}" type="button" data-rating="2" aria-label="2 stars" {{ if not .User.CanRate }}disabled{{ end }}>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="rating-star{{ if ge .User.Rating 3 }} is-filled{{ end }}" type="button" data-rating="3" aria-label="3 stars" {{ if not .User.CanRate }}disabled{{ end }}>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="rating-star{{ if ge .User.Rating 4 }} is-filled{{ end }}" type="button" data-rating="4" aria-label="4 stars" {{ if not .User.CanRate }}disabled{{ end }}>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                            </button>
+                            <button class="rating-star{{ if ge .User.Rating 5 }} is-filled{{ end }}" type="button" data-rating="5" aria-label="5 stars" {{ if not .User.CanRate }}disabled{{ end }}>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                            </button>
+                        </div>
+
+                        {{ if not .User.CanRate }}
+                            {{ if .LoggedIn }}
+                                <button class="unlock-rating-button" id="unlockRatingButton" type="button">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M7 10V8.5C7 5.46 9.24 3 12 3C14.76 3 17 5.46 17 8.5V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        <rect x="5" y="10" width="14" height="11" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+                                    </svg>
+                                    Mark watched
+                                </button>
+                            {{ end }}
+                        {{ end }}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             COLLECTION MODAL / PICKER
+             ========================================================= -->
+        <section class="collection-panel" id="collectionPanel" hidden>
+            <div class="collection-panel-inner">
+                <div class="collection-panel-head">
+                    <div>
+                        <span class="section-kicker">YOUR LIBRARY</span>
+                        <h2>Add {{ .Media.Title }} to a collection</h2>
+                    </div>
+                    <button class="icon-close-button" id="collectionPanelClose" type="button" aria-label="Close collection picker">×</button>
+                </div>
+
+                <div class="collection-columns">
+                    <div class="existing-collections">
+                        <div class="collection-subhead">Existing collections</div>
+                        <div id="collectionList" class="collection-list">
+                            {{ if .User.Collections }}
+                                {{ range .User.Collections }}
+                                    <button class="collection-choice" type="button" data-collection-id="{{ .ID }}">
+                                        <span class="collection-choice-icon">
+                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M5 7.5C5 6.67 5.67 6 6.5 6H10L12 8H17.5C18.33 8 19 8.67 19 9.5V17.5C19 18.33 18.33 19 17.5 19H6.5C5.67 19 5 18.33 5 17.5V7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                                            </svg>
+                                        </span>
+                                        <span>
+                                            <strong>{{ .Name }}</strong>
+                                            <small>{{ .ItemCount }} items</small>
+                                        </span>
+                                    </button>
+                                {{ end }}
+                            {{ else }}
+                                <div class="collection-empty">No collections yet. Create your first one beside it.</div>
+                            {{ end }}
+                        </div>
+                    </div>
+
+                    <form class="create-collection-form" id="createCollectionForm">
+                        <div class="collection-subhead">Create a new collection</div>
+                        <label for="newCollectionName">Collection name</label>
+                        <input id="newCollectionName" name="name" type="text" maxlength="80" placeholder="e.g. Weekend Sci-Fi" autocomplete="off" required>
+                        <button type="submit" class="create-collection-button">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M12 5V19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                                <path d="M5 12H19" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                            </svg>
+                            Create & Add
+                        </button>
+                        <p class="collection-note">Only you can see and manage your personal collections.</p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================================
+             OVERVIEW + DETAILS
+             ========================================================= -->
+        <section class="explore-section overview-section reveal-on-scroll">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">THE STORY</span>
+                    <h2>Overview &amp; details</h2>
+                </div>
+                <div class="section-orb" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none">
+                        <circle cx="24" cy="24" r="15" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3 4"/>
+                        <path d="M24 14V34M14 24H34" stroke="currentColor" stroke-width="1.2" opacity=".7"/>
+                        <circle cx="24" cy="24" r="4" fill="currentColor"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="overview-grid">
+                <article class="overview-copy-card">
+                    {{ if .Media.Overview }}
+                        <p class="overview-text">{{ .Media.Overview }}</p>
+                    {{ else }}
+                        <p class="overview-text muted-copy">No overview is currently available from TMDB.</p>
+                    {{ end }}
+                    {{ if .Media.Tagline }}
+                        <div class="tagline-block">
+                            <span>Short bio / tagline</span>
+                            <strong>“{{ .Media.Tagline }}”</strong>
+                        </div>
+                    {{ end }}
+                </article>
+
+                <article class="detail-card">
+                    <div class="detail-row"><span>Original title</span><strong>{{ if .Media.OriginalTitle }}{{ .Media.OriginalTitle }}{{ else }}—{{ end }}</strong></div>
+                    <div class="detail-row"><span>Original language</span><strong>{{ if .Media.OriginalLanguage }}{{ .Media.OriginalLanguage }}{{ else }}—{{ end }}</strong></div>
+                    <div class="detail-row"><span>Release / first air date</span><strong>{{ if .Media.ReleaseDate }}{{ .Media.ReleaseDate }}{{ else }}—{{ end }}</strong></div>
+                    {{ if .Media.LastAirDate }}<div class="detail-row"><span>Last air date</span><strong>{{ .Media.LastAirDate }}</strong></div>{{ end }}
+                    {{ if .Media.NextEpisodeDate }}<div class="detail-row"><span>Next episode</span><strong>{{ .Media.NextEpisodeDate }}</strong></div>{{ end }}
+                    {{ if .Media.NextEpisodeName }}<div class="detail-row"><span>Next episode title</span><strong>{{ .Media.NextEpisodeName }}</strong></div>{{ end }}
+                    {{ if .Media.Type }}<div class="detail-row"><span>TV type</span><strong>{{ .Media.Type }}</strong></div>{{ end }}
+                    {{ if .Media.Popularity }}<div class="detail-row"><span>TMDB popularity</span><strong>{{ printf "%.2f" .Media.Popularity }}</strong></div>{{ end }}
+                </article>
+            </div>
+
+            <div class="metadata-grid">
+                {{ if .Media.ProductionCompanies }}
+                    <div class="metadata-card">
+                        <span>Production</span>
+                        <strong>{{ range $i, $value := .Media.ProductionCompanies }}{{ if $i }}, {{ end }}{{ $value }}{{ end }}</strong>
+                    </div>
+                {{ end }}
+                {{ if .Media.ProductionCountries }}
+                    <div class="metadata-card">
+                        <span>Production countries</span>
+                        <strong>{{ range $i, $value := .Media.ProductionCountries }}{{ if $i }}, {{ end }}{{ $value }}{{ end }}</strong>
+                    </div>
+                {{ end }}
+                {{ if .Media.SpokenLanguages }}
+                    <div class="metadata-card">
+                        <span>Spoken languages</span>
+                        <strong>{{ range $i, $value := .Media.SpokenLanguages }}{{ if $i }}, {{ end }}{{ $value }}{{ end }}</strong>
+                    </div>
+                {{ end }}
+                {{ if .Media.Networks }}
+                    <div class="metadata-card">
+                        <span>Networks</span>
+                        <strong>{{ range $i, $value := .Media.Networks }}{{ if $i }}, {{ end }}{{ $value }}{{ end }}</strong>
+                    </div>
+                {{ end }}
+                {{ if .Media.CreatedBy }}
+                    <div class="metadata-card">
+                        <span>Created by</span>
+                        <strong>{{ range $i, $value := .Media.CreatedBy }}{{ if $i }}, {{ end }}{{ $value }}{{ end }}</strong>
+                    </div>
+                {{ end }}
+                {{ if .Media.IMDbURL }}
+                    <div class="metadata-card link-card">
+                        <span>External reference</span>
+                        <a href="{{ .Media.IMDbURL }}" target="_blank" rel="noopener noreferrer">Open IMDb profile →</a>
+                    </div>
+                {{ end }}
+            </div>
+
+            {{ if and (eq .Media.MediaType "movie") .Media.Budget }}
+                <div class="finance-strip">
+                    <div><span>Budget</span><strong>{{ .Media.BudgetLabel }}</strong></div>
+                    {{ if .Media.Revenue }}<div><span>Revenue</span><strong>{{ .Media.RevenueLabel }}</strong></div>{{ end }}
+                    <div><span>Vote count</span><strong>{{ .Media.VoteCount }}</strong></div>
+                </div>
+            {{ end }}
+        </section>
+
+        <!-- =========================================================
+             CAST
+             ========================================================= -->
+        <section class="explore-section reveal-on-scroll" id="castSection">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">THE PEOPLE</span>
+                    <h2>Cast &amp; characters</h2>
+                </div>
+                <div class="section-nav-controls">
+                    <button class="rail-arrow" type="button" data-scroll-target="castRail" data-scroll-direction="-1" aria-label="Previous cast">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 6L8.5 12L14.5 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button class="rail-arrow" type="button" data-scroll-target="castRail" data-scroll-direction="1" aria-label="Next cast">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 6L15.5 12L9.5 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="horizontal-rail cast-rail" id="castRail">
+                {{ if .Media.Cast }}
+                    {{ range .Media.Cast }}
+                        <a class="cast-card reveal-child" href="/person?id={{ .ID }}">
+                            <div class="cast-photo-wrap">
+                                {{ if .ProfileURL }}
+                                    <img src="{{ .ProfileURL }}" alt="{{ .Name }} headshot" loading="lazy">
+                                {{ else }}
+                                    <div class="cast-photo-fallback">MP</div>
+                                {{ end }}
+                                <span class="cast-photo-ring"></span>
+                                <span class="cast-arrow">
+                                    <svg viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10 6H18V14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </span>
+                            </div>
+                            <strong>{{ .Name }}</strong>
+                            {{ if .Character }}<span>{{ .Character }}</span>{{ end }}
+                        </a>
+                    {{ end }}
+                {{ else }}
+                    <div class="empty-inline">No cast information was returned by TMDB for this title.</div>
+                {{ end }}
+            </div>
+        </section>
+
+        <!-- =========================================================
+             COMMUNITY
+             ========================================================= -->
+        <section class="explore-section community-section reveal-on-scroll">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">THE MOVIPILOT COMMUNITY</span>
+                    <h2>What viewers are saying</h2>
+                </div>
+                <div class="community-summary">
+                    <div class="community-like-total">
+                        <span class="community-heart" id="communityHeartState">♥</span>
+                        <strong id="communityLikeCount">{{ .Community.LikeCount }}</strong>
+                        <span>likes</span>
+                    </div>
+                    <div class="community-rating-total">
+                        <strong id="communityRatingAverage">{{ if .Community.RatingCount }}{{ printf "%.1f" .Community.CommunityRating }}{{ else }}—{{ end }}</strong>
+                        <span>/5 community</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="community-interaction-grid">
+                <article class="like-card">
+                    <div class="community-art" aria-hidden="true">
+                        <svg viewBox="0 0 64 64" fill="none">
+                            <circle cx="32" cy="32" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 5"/>
+                            <path class="community-heart-path" d="M32 45C28.8 42.1 18.5 35.6 18.5 26.7C18.5 21.3 22.4 18 26.7 18C29.1 18 31.3 19.2 32 21.4C32.7 19.2 34.9 18 37.3 18C41.6 18 45.5 21.3 45.5 26.7C45.5 35.6 35.2 42.1 32 45Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M9 14L14 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            <path d="M55 50L59 47" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="community-card-kicker">PUBLIC REACTION</span>
+                        <h3>Like this title</h3>
+                        <p>Your like contributes to the global MoviPilot pulse for everyone.</p>
+                        <button class="community-like-button{{ if .Community.CurrentUserLiked }} is-liked{{ end }}" id="likeButton" type="button" data-auth-required="true">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M20.2 8.6H14.8L15.7 4.8C16.1 3.2 14.8 2 13.3 2C12.8 2 12.4 2.2 12.1 2.6L7.8 8.6H4.5C3.67 8.6 3 9.27 3 10.1V18.4C3 19.23 3.67 19.9 4.5 19.9H16.9C18.7 19.9 20.2 18.6 20.5 16.8L21.5 11.4C21.7 10 20.7 8.6 20.2 8.6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                            <span id="likeButtonLabel">{{ if .Community.CurrentUserLiked }}Liked{{ else }}Like this title{{ end }}</span>
+                        </button>
+                    </div>
+                </article>
+
+                <article class="review-card">
+                    <div class="review-form-head">
+                        <div>
+                            <span class="community-card-kicker">GLOBAL REVIEW</span>
+                            <h3>Leave your take</h3>
+                        </div>
+                        <span class="review-limit">2000 chars</span>
+                    </div>
+                    <textarea id="reviewInput" maxlength="2000" placeholder="What did you think about {{ .Media.Title }}?"></textarea>
+                    <div class="review-form-foot">
+                        <span id="reviewStatus">{{ if .LoggedIn }}Visible to the MoviPilot community{{ else }}Log in to publish a review{{ end }}</span>
+                        <button class="review-submit-button" id="reviewSubmit" type="button" data-auth-required="true">
+                            Post Review
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12H19" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M13 6L19 12L13 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                </article>
+            </div>
+
+            <div class="reviews-feed" id="reviewsFeed">
+                {{ if .Community.Reviews }}
+                    {{ range .Community.Reviews }}
+                        <article class="review-item">
+                            <div class="review-avatar">{{ printf "%.1s" .AuthorName }}</div>
+                            <div class="review-body">
+                                <div class="review-meta">
+                                    <strong>{{ .AuthorName }}</strong>
+                                    <time>{{ .CreatedAt }}</time>
+                                </div>
+                                <p>{{ .Review }}</p>
+                            </div>
+                        </article>
+                    {{ end }}
+                {{ else }}
+                    <div class="review-empty">
+                        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                            <path d="M14 18C14 14.69 16.69 12 20 12H44C47.31 12 50 14.69 50 18V35C50 38.31 47.31 41 44 41H31L22 50V41H20C16.69 41 14 38.31 14 35V18Z" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M23 25H41M23 31H36" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                        <strong>No reviews yet</strong>
+                        <span>Be the first MoviPilot viewer to leave a public review.</span>
+                    </div>
+                {{ end }}
+            </div>
+        </section>
+
+        <!-- =========================================================
+             VIDEOS
+             ========================================================= -->
+        <section class="explore-section reveal-on-scroll">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">MEDIA VAULT</span>
+                    <h2>Videos &amp; extras</h2>
+                </div>
+            </div>
+
+            <div class="video-filter-row" id="videoFilters">
+                <button class="video-filter is-active" type="button" data-video-filter="all">All</button>
+                <button class="video-filter" type="button" data-video-filter="Trailer">Trailer</button>
+                <button class="video-filter" type="button" data-video-filter="Teaser">Teaser</button>
+                <button class="video-filter" type="button" data-video-filter="Behind the Scenes">Behind the Scenes</button>
+                <button class="video-filter" type="button" data-video-filter="Featurette">Featurette</button>
+                <button class="video-filter" type="button" data-video-filter="Clip">Clip</button>
+                <button class="video-filter" type="button" data-video-filter="Other">Other</button>
+            </div>
+
+            <div class="videos-grid" id="videosGrid">
+                {{ if .Media.Videos }}
+                    {{ range .Media.Videos }}
+                        <article class="video-card" data-video-type="{{ .Type }}" data-video-official="{{ .Official }}">
+                            <button class="video-thumb-button" type="button" data-video-key="{{ .Key }}" data-video-title="{{ .Name }}">
+                                {{ if .ThumbnailURL }}<img src="{{ .ThumbnailURL }}" alt="{{ .Name }} thumbnail" loading="lazy">{{ end }}
+                                <span class="video-thumb-shade"></span>
+                                <span class="video-play-orb">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.5 5.5L18.5 12L8.5 18.5V5.5Z" fill="currentColor"/></svg>
+                                </span>
+                            </button>
+                            <div class="video-card-content">
+                                <div class="video-type-row">
+                                    <span>{{ if .Type }}{{ .Type }}{{ else }}Other{{ end }}</span>
+                                    {{ if .Official }}<span class="official-badge">Official</span>{{ end }}
+                                </div>
+                                <h3>{{ .Name }}</h3>
+                                {{ if .PublishedAt }}<time>{{ .PublishedAt }}</time>{{ end }}
+                            </div>
+                        </article>
+                    {{ end }}
+                {{ else }}
+                    <div class="empty-inline">No TMDB videos were returned for this title.</div>
+                {{ end }}
+            </div>
+        </section>
+
+        <!-- =========================================================
+             COLLECTION / SEASONS
+             ========================================================= -->
+        {{ if .Media.Collection }}
+            <section class="explore-section reveal-on-scroll collection-section">
+                <div class="section-heading-row">
+                    <div>
+                        <span class="section-kicker">CONNECTED STORIES</span>
+                        <h2>{{ .Media.Collection.Name }}</h2>
+                    </div>
+                </div>
+                <div class="tmdb-collection-banner">
+                    {{ if .Media.Collection.BackdropURL }}<img src="{{ .Media.Collection.BackdropURL }}" alt="{{ .Media.Collection.Name }} backdrop" loading="lazy">{{ end }}
+                    <div class="collection-banner-overlay"></div>
+                    <div class="collection-banner-content">
+                        <span>Movie collection</span>
+                        {{ if .Media.Collection.Overview }}<p>{{ .Media.Collection.Overview }}</p>{{ end }}
+                    </div>
+                </div>
+                <div class="horizontal-rail collection-rail" id="tmdbCollectionRail">
+                    {{ range .Media.Collection.Parts }}
+                        <a class="recommend-card" href="/explore?type={{ .MediaType }}&id={{ .ID }}">
+                            <div class="recommend-poster-wrap">
+                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy">{{ end }}
+                                <span class="recommend-poster-glow"></span>
+                            </div>
+                            <div class="recommend-card-content">
+                                <h3>{{ .Title }}</h3>
+                                <div><span>{{ .Year }}</span><i></i><span>{{ .Genre }}</span>{{ if .Rating }}<i></i><span>★ {{ printf "%.1f" .Rating }}</span>{{ end }}</div>
+                            </div>
+                        </a>
+                    {{ end }}
+                </div>
+            </section>
+        {{ end }}
+
+        {{ if .Media.TVSeasons }}
+            <section class="explore-section reveal-on-scroll season-section">
+                <div class="section-heading-row">
+                    <div>
+                        <span class="section-kicker">EPISODIC JOURNEY</span>
+                        <h2>Seasons</h2>
+                    </div>
+                </div>
+                <div class="seasons-grid">
+                    {{ range .Media.TVSeasons }}
+                        <article class="season-card">
+                            <div class="season-poster-wrap">
+                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Name }} poster" loading="lazy">{{ end }}
+                                <span class="season-number">S{{ .Number }}</span>
+                            </div>
+                            <div class="season-content">
+                                <h3>{{ .Name }}</h3>
+                                <div class="season-meta"><span>{{ .EpisodeCount }} {{ if eq .EpisodeCount 1 }}episode{{ else }}episodes{{ end }}</span><i></i><span>{{ .AirDate }}</span></div>
+                                {{ if .Overview }}<p>{{ .Overview }}</p>{{ end }}
+                            </div>
+                        </article>
+                    {{ end }}
+                </div>
+            </section>
+        {{ end }}
+
+        <!-- =========================================================
+             RECOMMENDATIONS
+             ========================================================= -->
+        <section class="explore-section reveal-on-scroll recommendation-section">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">PERSONALIZED DISCOVERY</span>
+                    <h2>Because you clicked {{ .Media.Title }}, we recommend</h2>
+                </div>
+                <div class="section-nav-controls">
+                    <button class="rail-arrow" type="button" data-scroll-target="recommendRail" data-scroll-direction="-1" aria-label="Previous recommendations">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 6L8.5 12L14.5 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button class="rail-arrow" type="button" data-scroll-target="recommendRail" data-scroll-direction="1" aria-label="Next recommendations">
+                        <svg viewBox="0 0 24 24" fill="none"><path d="M9.5 6L15.5 12L9.5 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="horizontal-rail recommendation-rail" id="recommendRail">
+                {{ if .Media.Recommendations }}
+                    {{ range .Media.Recommendations }}
+                        <a class="recommend-card" href="/explore?type={{ .MediaType }}&id={{ .ID }}">
+                            <div class="recommend-poster-wrap">
+                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy">{{ end }}
+                                <span class="recommend-poster-glow"></span>
+                                {{ if .Rating }}<span class="recommend-rating">★ {{ printf "%.1f" .Rating }}</span>{{ end }}
+                            </div>
+                            <div class="recommend-card-content">
+                                <h3>{{ .Title }}</h3>
+                                <div><span>{{ .Year }}</span><i></i><span>{{ .Genre }}</span></div>
+                            </div>
+                        </a>
+                    {{ end }}
+                {{ else }}
+                    <div class="empty-inline">No direct recommendation set was returned by TMDB for this title.</div>
+                {{ end }}
+            </div>
+        </section>
+
+        <!-- =========================================================
+             KEYWORDS
+             ========================================================= -->
+        <section class="explore-section reveal-on-scroll keyword-section">
+            <div class="section-heading-row">
+                <div>
+                    <span class="section-kicker">DISCOVERY SIGNALS</span>
+                    <h2>Explore by keyword</h2>
+                </div>
+            </div>
+            <div class="keyword-intro">
+                <p>Tap a keyword to let MoviPilot fetch more movies carrying that discovery signal.</p>
+                <span class="keyword-pulse" aria-hidden="true"></span>
+            </div>
+            <div class="keyword-cloud" id="keywordCloud">
+                {{ if .Media.Keywords }}
+                    {{ range .Media.Keywords }}
+                        <button class="keyword-chip" type="button" data-keyword-id="{{ .ID }}" data-keyword-name="{{ .Name }}">
+                            <span>#</span>{{ .Name }}
+                        </button>
+                    {{ end }}
+                {{ else }}
+                    <div class="empty-inline">No keywords are currently attached to this title in TMDB.</div>
+                {{ end }}
+            </div>
+            <div class="keyword-results-panel" id="keywordResultsPanel" hidden>
+                <div class="keyword-results-head">
+                    <div>
+                        <span class="section-kicker">KEYWORD RESULTS</span>
+                        <h3 id="keywordResultsTitle">Movies</h3>
+                    </div>
+                    <button class="icon-close-button" id="keywordResultsClose" type="button" aria-label="Close keyword results">×</button>
+                </div>
+                <div class="keyword-results-grid" id="keywordResultsGrid"></div>
+            </div>
+        </section>
+
+        <footer class="explore-footer">
+            <div class="explore-footer-line"></div>
+            <p>{{ .TMDBBaseNote }}</p>
+            <p>MoviPilot uses TMDB metadata and imagery; TMDB does not endorse or certify this site.</p>
+        </footer>
+    </main>
+
+    <!-- =========================================================
+         VIDEO MODAL
+         ========================================================= -->
+    <div class="video-modal" id="videoModal" hidden>
+        <button class="video-modal-backdrop" id="videoModalBackdrop" type="button" aria-label="Close video"></button>
+        <div class="video-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+            <div class="video-modal-head">
+                <div>
+                    <span class="section-kicker">NOW PLAYING</span>
+                    <h2 id="videoModalTitle">Video</h2>
+                </div>
+                <button class="icon-close-button" id="videoModalClose" type="button" aria-label="Close video">×</button>
+            </div>
+            <div class="video-frame-wrap">
+                <iframe id="videoFrame" src="" title="MoviPilot video player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <div class="explore-toast" id="exploreToast" role="status" aria-live="polite"></div>
+
+    <script src="/templates/js/explore_page.js?v=1" defer></script>
+</body>
+</html>
+{{ end }}

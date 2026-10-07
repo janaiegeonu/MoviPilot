@@ -1,17 +1,43 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
 
-// CurrentUserID is the single authentication integration point used by
-// the Explore social/personal features.
+	"MoviPilot/funcs/storage"
+)
+
+// CurrentUserID is the authentication bridge used by the Explore subsystem.
 //
-// Set it from your existing MoviPilot auth/session middleware at startup,
-// for example:
+// MoviPilot already stores the authenticated user's session ID in the
+// "movipilot_session" cookie. This helper reads that cookie and resolves it
+// through the existing storage.GetUserIDBySession function.
 //
-//	handlers.CurrentUserID = auth.CurrentUserID
+// Both normal email/password login and Google OAuth must create the same
+// MoviPilot session before redirecting the user to /dashboard. That way,
+// Explore does not need a second authentication system.
 //
-// The Explore page itself remains publicly readable; write actions return
-// HTTP 401 until this function is wired to the real authenticated user.
+// The returned boolean is true only when a valid, non-expired session belongs
+// to a real user ID.
 var CurrentUserID = func(r *http.Request) (int64, bool) {
-	return 0, false
+	if r == nil {
+		return 0, false
+	}
+
+	cookie, err := r.Cookie("movipilot_session")
+	if err != nil {
+		return 0, false
+	}
+
+	sessionID := strings.TrimSpace(cookie.Value)
+	if sessionID == "" {
+		return 0, false
+	}
+
+	userID, err := storage.GetUserIDBySession(sessionID)
+	if err != nil || userID <= 0 {
+		return 0, false
+	}
+
+	return userID, true
 }

@@ -122,8 +122,29 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Password is correct.
-	// Session creation will come next.
+	sessionID, err := storage.CreateSession(user.ID)
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	if err != nil {
+		http.Error(
+			w,
+			"500 : Unable to create login session",
+			http.StatusInternalServerError,
+		)
+		return
+	}
+
+	// STORE SESSION IN COOKIE
+	setLoginCookie(
+		w,
+		r,
+		sessionID,
+	)
+
+	// LOGIN COMPLETE
+	http.Redirect(
+		w,
+		r,
+		"/dashboard",
+		http.StatusSeeOther,
+	)
 }

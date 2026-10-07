@@ -41,6 +41,20 @@ func main() {
 	http.HandleFunc("/anime", handlers.AnimePageHandler)
 	http.HandleFunc("/dashboard/anime/cards", handlers.AnimeCardsHandler)
 
+	//Explore page routes
+	http.HandleFunc("/explore", handlers.ExplorePageHandler)
+	http.HandleFunc("/person", handlers.PersonPageHandler)
+
+	http.HandleFunc("/api/explore/state", handlers.ExploreStateAPI)
+	http.HandleFunc("/api/explore/watchlist", handlers.ExploreWatchlistAPI)
+	http.HandleFunc("/api/explore/like", handlers.ExploreLikeAPI)
+	http.HandleFunc("/api/explore/rating", handlers.ExploreRatingAPI)
+	http.HandleFunc("/api/explore/review", handlers.ExploreReviewAPI)
+	http.HandleFunc("/api/explore/watch-event", handlers.ExploreWatchEventAPI)
+	http.HandleFunc("/api/explore/collections", handlers.ExploreCollectionsAPI)
+	http.HandleFunc("/api/explore/collection-items", handlers.ExploreCollectionItemsAPI)
+	http.HandleFunc("/api/explore/keyword-movies", handlers.ExploreKeywordMoviesAPI)
+
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)

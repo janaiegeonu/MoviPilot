@@ -322,8 +322,8 @@ func getExploreMovie(client *tmdb.Client, id int64) (ExploreMedia, error) {
 		}
 	}
 
-	if details.MovieVideosAppend != nil && details.MovieVideosAppend.Videos != nil && details.MovieVideosAppend.Videos.MovieVideos != nil {
-		for _, video := range details.MovieVideosAppend.Videos.MovieVideos.Results {
+	if details.MovieVideosAppend != nil && details.MovieVideosAppend.Videos != nil {
+		for _, video := range details.MovieVideosAppend.Videos.Results {
 			if video == nil || strings.TrimSpace(video.Key) == "" {
 				continue
 			}
@@ -356,8 +356,8 @@ func getExploreMovie(client *tmdb.Client, id int64) (ExploreMedia, error) {
 		}
 	}
 
-	if details.MovieRecommendationsAppend != nil && details.MovieRecommendationsAppend.Recommendations != nil && details.MovieRecommendationsAppend.Recommendations.MovieRecommendationsResults != nil {
-		for _, rec := range details.MovieRecommendationsAppend.Recommendations.MovieRecommendationsResults.Results {
+	if details.MovieRecommendationsAppend != nil && details.MovieRecommendationsAppend.Recommendations != nil && details.MovieRecommendationsAppend.Recommendations.Results != nil {
+		for _, rec := range details.MovieRecommendationsAppend.Recommendations.Results {
 			if rec == nil || rec.ID <= 0 || strings.TrimSpace(rec.Title) == "" {
 				continue
 			}
@@ -441,8 +441,8 @@ func getExploreTV(client *tmdb.Client, id int64) (ExploreMedia, error) {
 		}
 	}
 
-	if details.ExternalIDs != nil && strings.TrimSpace(details.ExternalIDs.IMDbID) != "" {
-		media.IMDbURL = "https://www.imdb.com/title/" + strings.TrimSpace(details.ExternalIDs.IMDbID) + "/"
+	if details.TVExternalIDsAppend != nil && strings.TrimSpace(details.TVExternalIDsAppend.IMDbID) != "" {
+		media.IMDbURL = "https://www.imdb.com/title/" + strings.TrimSpace(details.TVExternalIDsAppend.IMDbID) + "/"
 	}
 
 	for _, genre := range details.Genres {
@@ -470,21 +470,23 @@ func getExploreTV(client *tmdb.Client, id int64) (ExploreMedia, error) {
 		}
 	}
 
-	if details.TVVideosAppend != nil && details.TVVideosAppend.Videos != nil && details.TVVideosAppend.Videos.TVVideos != nil {
-		for _, video := range details.TVVideosAppend.Videos.TVVideos.Results {
+	if details.TVVideosAppend != nil && details.TVVideosAppend.Videos != nil {
+
+		for _, video := range details.TVVideosAppend.Videos.Results {
+
 			if video == nil || strings.TrimSpace(video.Key) == "" {
 				continue
 			}
+
 			media.Videos = append(media.Videos, ExploreVideo{
 				ID:           video.ID,
 				Name:         strings.TrimSpace(video.Name),
 				Key:          strings.TrimSpace(video.Key),
 				Type:         strings.TrimSpace(video.Type),
-				Official:     video.Official,
 				Site:         strings.TrimSpace(video.Site),
 				ThumbnailURL: youtubeThumb(video.Key),
-				PublishedAt:  strings.TrimSpace(video.PublishedAt),
 			})
+
 			if len(media.Videos) >= exploreVideoLimit {
 				break
 			}
@@ -492,8 +494,8 @@ func getExploreTV(client *tmdb.Client, id int64) (ExploreMedia, error) {
 	}
 	media.PrimaryTrailer = choosePrimaryTrailer(media.Videos)
 
-	if details.TVKeywordsAppend != nil && details.TVKeywordsAppend.Keywords != nil && details.TVKeywordsAppend.Keywords.TVKeywordsResults != nil {
-		for _, keyword := range details.TVKeywordsAppend.Keywords.TVKeywordsResults.Results {
+	if details.TVKeywordsAppend != nil && details.TVKeywordsAppend.Keywords != nil && details.TVKeywordsAppend.Keywords.Results != nil {
+		for _, keyword := range details.TVKeywordsAppend.Keywords.Results {
 			if keyword != nil && keyword.ID > 0 && strings.TrimSpace(keyword.Name) != "" {
 				media.Keywords = append(media.Keywords, ExploreKeyword{
 					ID:   keyword.ID,
@@ -503,8 +505,8 @@ func getExploreTV(client *tmdb.Client, id int64) (ExploreMedia, error) {
 		}
 	}
 
-	if details.TVRecommendationsAppend != nil && details.TVRecommendationsAppend.Recommendations != nil && details.TVRecommendationsAppend.Recommendations.TVRecommendationsResults != nil {
-		for _, rec := range details.TVRecommendationsAppend.Recommendations.TVRecommendationsResults.Results {
+	if details.TVRecommendationsAppend != nil && details.TVRecommendationsAppend.Recommendations != nil && details.TVRecommendationsAppend.Recommendations.Results != nil {
+		for _, rec := range details.TVRecommendationsAppend.Recommendations.Results {
 			if rec == nil || rec.ID <= 0 || strings.TrimSpace(rec.Name) == "" {
 				continue
 			}
@@ -623,7 +625,7 @@ func saveExploreCached(key string, media ExploreMedia) {
 	exploreDetailCache.Unlock()
 }
 
-func imageURL(path string, size string) string {
+func imageURL(path string, size tmdb.ImageSize) string {
 	path = strings.TrimSpace(path)
 	if path == "" {
 		return ""
@@ -786,10 +788,10 @@ func uniqueStrings(values []string) []string {
 }
 
 func movieUSCertification(details *tmdb.MovieDetails) string {
-	if details == nil || details.MovieReleaseDatesAppend == nil || details.MovieReleaseDatesAppend.ReleaseDates == nil || details.MovieReleaseDatesAppend.ReleaseDates.MovieReleaseDatesResults == nil {
+	if details == nil || details.MovieReleaseDatesAppend == nil || details.MovieReleaseDatesAppend.ReleaseDates == nil || details.MovieReleaseDatesAppend.ReleaseDates.Results == nil {
 		return ""
 	}
-	for _, country := range details.MovieReleaseDatesAppend.ReleaseDates.MovieReleaseDatesResults.Results {
+	for _, country := range details.MovieReleaseDatesAppend.ReleaseDates.Results {
 		if country == nil || country.CountryCode != "US" {
 			continue
 		}
@@ -803,10 +805,10 @@ func movieUSCertification(details *tmdb.MovieDetails) string {
 }
 
 func tvUSCertification(details *tmdb.TVDetails) string {
-	if details == nil || details.TVContentRatingsAppend == nil || details.TVContentRatingsAppend.ContentRatings == nil || details.TVContentRatingsAppend.ContentRatings.TVContentRatingsResults == nil {
+	if details == nil || details.TVContentRatingsAppend == nil || details.TVContentRatingsAppend.ContentRatings == nil || details.TVContentRatingsAppend.ContentRatings.Results == nil {
 		return ""
 	}
-	for _, rating := range details.TVContentRatingsAppend.ContentRatings.TVContentRatingsResults.Results {
+	for _, rating := range details.TVContentRatingsAppend.ContentRatings.Results {
 		if rating != nil && rating.CountryCode == "US" && strings.TrimSpace(rating.Rating) != "" {
 			return strings.TrimSpace(rating.Rating)
 		}

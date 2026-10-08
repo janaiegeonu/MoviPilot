@@ -3599,54 +3599,6 @@ movieRowImages.forEach(
 
 
 
-/* =========================================================
-   MOVIE DETAIL BUTTONS
-   ========================================================= */
-
-const movieExploreButtons =
-    document.querySelectorAll(
-        ".mp-explore-button"
-    );
-
-
-movieExploreButtons.forEach(
-    (button) => {
-
-        button.addEventListener(
-            "click",
-            (event) => {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-
-                const movieID =
-                    button.dataset.movieId;
-
-
-                console.log(
-                    "Explore movie:",
-                    movieID
-                );
-
-
-                /*
-                    Later:
-
-                    window.location.href =
-                        "/movie?id=" +
-                        encodeURIComponent(
-                            movieID
-                        );
-                */
-
-            }
-        );
-
-    }
-);
-
 
 
 /* =========================================================

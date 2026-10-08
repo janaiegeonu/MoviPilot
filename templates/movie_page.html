@@ -427,18 +427,16 @@
                      EXPLORE BUTTON
                      ===================================== -->
 
-                <button
-                    class="movie-explore-button"
-                    type="button"
-                    data-movie-id="{{ $movie.ID }}"
+                <a  
+                 class="movie-explore-button"
+                            href="/explore?type=movie&id={{ .ID }}"
+                            data-movie-id="{{ .ID }}"
+                            aria-label="Explore {{ .Title }}"
                 >
 
-                    <span>
+                     <span>
                         Explore
                     </span>
-
-
-
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -463,7 +461,11 @@
 
                     </svg>
 
-                </button>
+
+
+                </a>
+                   
+               
 
             </div>
 

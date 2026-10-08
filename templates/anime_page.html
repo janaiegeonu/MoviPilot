@@ -490,14 +490,15 @@
 
                     {{ end }}
 
+                           
 
                     <!-- EXPLORE -->
 
-                    <button
+                    <a
                         class="anime-explore-button"
-                        type="button"
-                        data-anime-id="{{ $anime.ID }}"
-                        data-anime-type="{{ $anime.MediaType }}"
+                         href="/explore?type=movie&id={{ .ID }}"
+                            data-movie-id="{{ .ID }}"
+                            aria-label="Explore {{ .Title }}"
                     >
 
                         <span>
@@ -529,7 +530,7 @@
 
                         </svg>
 
-                    </button>
+                    </a>
 
                 </div>
 

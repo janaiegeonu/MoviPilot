@@ -5298,6 +5298,8 @@ input:focus-visible {
 
         transform 0.25s ease;
 
+    text-decoration: none;
+
 }
 
 
@@ -5322,6 +5324,9 @@ input:focus-visible {
 
     transform:
         translateX(1px);
+
+    text-decoration: none;
+
 
 }
 

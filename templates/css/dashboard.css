@@ -1032,9 +1032,9 @@ body {
 
     color: #ecffff;
 
-    background: rgba(71, 200, 201, 0.060);
+    background: rgba(26, 58, 58, 0.075);
 
-    border-color: rgba(103, 224, 224, 0.095);
+    border-color: rgba(103, 224, 224, 0.192);
 
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.025);
@@ -1773,7 +1773,7 @@ body {
 
     color: rgba(255, 229, 229, 0.90);
 
-    background: rgba(182, 72, 84, 0.055);
+    background: rgba(145, 44, 56, 0.288);
 
     border-color: rgba(217, 103, 115, 0.08);
 }

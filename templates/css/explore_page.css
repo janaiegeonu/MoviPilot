@@ -5787,3 +5787,356 @@ img {
         transition: none !important;
     }
 }
+
+/* =========================================================
+   MOVIPILOT EXPLORE — FINAL CUSTOMIZATION PANEL
+   ---------------------------------------------------------
+   IMPORTANT:
+   - This is the LAST section of the stylesheet on purpose.
+   - Edit the values in this section when you want to change the
+     page's colours, surfaces, text, borders, or common dimensions.
+   - Earlier rules repeat some selectors as part of the v2/v3/v4
+     refinements, so editing an earlier copy may not change the result.
+   - The visible full-screen backdrop is .explore-background, NOT the
+     body's background colour alone.
+   - No JavaScript changes are required for these visual adjustments.
+   ========================================================= */
+
+/* 1. PAGE BACKDROP
+   Change the final #020713 to change the visible base colour of the page.
+   The radial gradients add subtle blue and sea-green atmosphere. */
+body.explore-page {
+    background: #020713;
+    color: #eefaff;
+}
+
+body.explore-page .explore-background {
+    background:
+        radial-gradient(ellipse at 12% 15%, rgba(52, 144, 185, .09), transparent 32%),
+        radial-gradient(ellipse at 91% 38%, rgba(48, 184, 153, .075), transparent 34%),
+        radial-gradient(ellipse at 48% 100%, rgba(35, 91, 155, .065), transparent 43%),
+        #020713;
+}
+
+/* 2. GLOBAL TEXT COLOURS
+   These are safe places to tune the main page text and section headings. */
+body.explore-page .explore-title {
+    color: #f1fcff;
+}
+
+body.explore-page .section-heading-row h2,
+body.explore-page .collection-panel-head h2,
+body.explore-page .keyword-results-head h3 {
+    color: #eaf8fc;
+}
+
+body.explore-page .explore-tagline,
+body.explore-page .overview-text,
+body.explore-page .collection-banner-content p,
+body.explore-page .keyword-intro p {
+    color: rgba(213, 235, 241, .72);
+}
+
+body.explore-page .explore-kicker,
+body.explore-page .section-kicker,
+body.explore-page .community-card-kicker,
+body.explore-page .rating-panel-kicker {
+    color: rgba(130, 211, 215, .82);
+}
+
+/* 3. NAVBAR GLASS AND BORDER
+   Adjust background opacity, blur, and edge colour here. */
+body.explore-page .explore-topbar {
+    background: rgba(3, 8, 19, .74);
+    border-bottom-color: rgba(177, 220, 232, .07);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+    backdrop-filter: blur(24px) saturate(118%);
+    -webkit-backdrop-filter: blur(24px) saturate(118%);
+}
+
+body.explore-page .explore-topbar::after {
+    background: linear-gradient(90deg, transparent, rgba(100, 174, 201, .22), rgba(94, 196, 173, .16), transparent);
+}
+
+/* 4. HERO SURFACE
+   The backdrop image remains visible through the cinematic overlays. */
+body.explore-page .explore-hero {
+    background: #030914;
+    border-color: rgba(173, 218, 230, .08);
+    box-shadow: 0 26px 74px rgba(0, 0, 0, .30), inset 0 1px rgba(255, 255, 255, .02);
+}
+
+body.explore-page .explore-hero-overlay {
+    background:
+        linear-gradient(90deg, rgba(2, 7, 18, .96) 0%, rgba(2, 7, 18, .85) 30%, rgba(2, 7, 18, .50) 62%, rgba(2, 7, 18, .72) 100%),
+        linear-gradient(180deg, rgba(2, 7, 18, .01) 0%, rgba(2, 7, 18, .07) 48%, rgba(2, 7, 18, .83) 100%);
+}
+
+body.explore-page .explore-hero-vignette {
+    box-shadow: inset 0 0 130px rgba(0, 0, 0, .39);
+}
+
+/* 5. HERO BUTTONS
+   This is the authoritative place to change button colour, size, and feel.
+   Each button variation has its own colour treatment, with a shared hover. */
+body.explore-page .explore-actions {
+    gap: 10px;
+}
+
+body.explore-page .explore-action-button {
+    min-height: 49px;
+    padding: 0 18px;
+    gap: 9px;
+    border: 1px solid rgba(153, 210, 225, .23);
+    border-radius: 14px;
+    color: rgba(236, 249, 253, .94);
+    background: linear-gradient(135deg, rgba(104, 177, 207, .17), rgba(53, 111, 151, .20) 53%, rgba(55, 145, 132, .17));
+    box-shadow: inset 0 1px rgba(255, 255, 255, .105), inset 0 -1px rgba(7, 22, 37, .14), 0 7px 19px rgba(0, 0, 0, .17);
+    font-size: 11px;
+    font-weight: 560;
+    letter-spacing: .005em;
+    backdrop-filter: blur(16px) saturate(132%);
+    -webkit-backdrop-filter: blur(16px) saturate(132%);
+    transition: transform .24s cubic-bezier(.2, .75, .25, 1), color .24s ease, border-color .24s ease, background .24s ease, box-shadow .24s ease;
+}
+
+body.explore-page .explore-action-button.primary,
+body.explore-page .explore-action-button.primary.is-active {
+    color: rgba(231, 255, 251, .98);
+    border-color: rgba(119, 212, 207, .31);
+    background: linear-gradient(135deg, rgba(73, 173, 183, .29), rgba(57, 126, 169, .25) 52%, rgba(52, 159, 131, .27));
+}
+
+body.explore-page .explore-action-button.trailer {
+    color: rgba(231, 245, 255, .97);
+    border-color: rgba(125, 183, 225, .29);
+    background: linear-gradient(135deg, rgba(77, 142, 196, .26), rgba(47, 91, 139, .24) 58%, rgba(53, 124, 139, .19));
+}
+
+body.explore-page .explore-action-button.collection {
+    color: rgba(226, 251, 244, .97);
+    border-color: rgba(114, 204, 178, .28);
+    background: linear-gradient(135deg, rgba(64, 157, 139, .25), rgba(38, 105, 111, .23) 55%, rgba(42, 112, 145, .18));
+}
+
+body.explore-page .explore-action-button:hover,
+body.explore-page .explore-action-button.primary:hover,
+body.explore-page .explore-action-button.primary.is-active:hover,
+body.explore-page .explore-action-button.trailer:hover,
+body.explore-page .explore-action-button.collection:hover {
+    transform: translateY(-2px);
+    color: #f4fdff;
+    border-color: rgba(174, 226, 232, .39);
+    background: linear-gradient(135deg, rgba(121, 194, 216, .25), rgba(67, 132, 170, .27) 53%, rgba(66, 165, 145, .23));
+    box-shadow: inset 0 1px rgba(255, 255, 255, .15), 0 11px 25px rgba(0, 0, 0, .23);
+}
+
+body.explore-page .explore-action-button.primary:hover,
+body.explore-page .explore-action-button.primary.is-active:hover {
+    background: linear-gradient(135deg, rgba(93, 190, 194, .35), rgba(70, 143, 177, .30) 52%, rgba(64, 177, 145, .31));
+}
+
+body.explore-page .explore-action-button.trailer:hover {
+    background: linear-gradient(135deg, rgba(99, 166, 215, .32), rgba(57, 111, 159, .29) 58%, rgba(58, 145, 157, .24));
+}
+
+body.explore-page .explore-action-button.collection:hover {
+    background: linear-gradient(135deg, rgba(83, 179, 156, .31), rgba(47, 123, 126, .28) 55%, rgba(54, 134, 166, .23));
+}
+
+body.explore-page .explore-action-button svg {
+    color: rgba(194, 239, 241, .98);
+}
+
+/* 6. DETAIL ROWS
+   Keep long values inside the right column instead of cutting them off. */
+body.explore-page .detail-card,
+body.explore-page .detail-row,
+body.explore-page .detail-row > span,
+body.explore-page .detail-row > strong {
+    min-width: 0;
+}
+
+body.explore-page .detail-row {
+    grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr);
+    align-items: start;
+    gap: 12px;
+}
+
+body.explore-page .detail-row > span,
+body.explore-page .detail-row > strong {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.55;
+}
+
+body.explore-page .detail-row > span {
+    color: rgba(175, 205, 215, .66);
+}
+
+body.explore-page .detail-row > strong {
+    color: rgba(238, 249, 252, .90);
+    text-align: right;
+}
+
+/* 7. CARD AND INFORMATION SURFACES
+   Edit surface colour and border colour here for the main content cards. */
+body.explore-page .overview-copy-card,
+body.explore-page .detail-card,
+body.explore-page .metadata-card,
+body.explore-page .finance-strip,
+body.explore-page .like-card,
+body.explore-page .review-card,
+body.explore-page .review-item,
+body.explore-page .review-empty,
+body.explore-page .video-card,
+body.explore-page .season-card {
+    border-color: rgba(153, 201, 214, .085);
+    background-color: rgba(5, 17, 31, .84);
+}
+
+body.explore-page .metadata-card > span {
+    color: rgba(151, 205, 211, .76);
+}
+
+body.explore-page .metadata-card strong,
+body.explore-page .metadata-card a {
+    color: rgba(233, 249, 251, .86);
+}
+
+/* 8. VIDEO CARDS AND PLAY BUTTON
+   Adjust play-button colour and video-title readability in this block. */
+body.explore-page .video-card {
+    min-height: 335px;
+    border-color: rgba(157, 204, 218, .10);
+    background: linear-gradient(150deg, rgba(7, 20, 36, .94), rgba(3, 12, 24, .97));
+}
+
+body.explore-page .video-card-content h3 {
+    color: rgba(241, 250, 253, .94);
+    font-size: 12px;
+    font-weight: 620;
+    line-height: 1.55;
+}
+
+body.explore-page .video-card-content time {
+    color: rgba(194, 222, 230, .72);
+}
+
+body.explore-page .video-play-orb {
+    background: linear-gradient(145deg, rgba(145, 218, 239, .32), rgba(72, 139, 187, .43) 52%, rgba(68, 174, 150, .34));
+    border-color: rgba(209, 241, 247, .47);
+    color: #f3fdff;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .26), inset 0 -1px rgba(8, 29, 45, .17), 0 8px 23px rgba(0, 0, 0, .32);
+}
+
+body.explore-page .video-card:hover .video-play-orb,
+body.explore-page .video-card:focus-within .video-play-orb {
+    background: linear-gradient(145deg, rgba(166, 229, 245, .39), rgba(87, 157, 202, .49) 52%, rgba(78, 187, 161, .40));
+    border-color: rgba(222, 247, 250, .59);
+}
+
+/* 9. RECOMMENDATION CARDS
+   Increase the content space and keep titles/metadata readable. */
+body.explore-page .recommend-card {
+    min-height: 365px;
+}
+
+body.explore-page .recommend-card-content h3 {
+    color: rgba(240, 251, 253, .94);
+    font-size: 11.5px;
+    line-height: 1.55;
+}
+
+body.explore-page .recommend-card-content > div {
+    color: rgba(199, 226, 232, .76);
+}
+
+/* 10. FILTERS
+   The selected filter uses a tinted glass fill instead of a solid colour. */
+body.explore-page .video-filter {
+    color: rgba(202, 228, 235, .78);
+    background: rgba(230, 246, 255, .035);
+    border-color: rgba(156, 205, 218, .11);
+}
+
+body.explore-page .video-filter.is-active {
+    color: rgba(225, 250, 250, .98);
+    border-color: rgba(125, 204, 211, .29);
+    background: linear-gradient(130deg, rgba(73, 150, 183, .24), rgba(55, 147, 139, .23));
+    box-shadow: inset 0 1px rgba(255, 255, 255, .09), 0 5px 14px rgba(0, 0, 0, .13);
+}
+
+/* 11. INPUT FOCUS COLOUR
+   Keep focus visible but remove the wide, bright glow. */
+body.explore-page .create-collection-form input:focus,
+body.explore-page .review-composer-field:focus-within {
+    border-color: rgba(126, 190, 205, .28);
+    box-shadow: none;
+}
+
+/* 12. RESPONSIVE VALUES FOR THE CUSTOMIZED ELEMENTS */
+@media (max-width: 800px) {
+    body.explore-page .detail-card {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    body.explore-page .video-card {
+        min-height: 315px;
+    }
+
+    body.explore-page .recommend-card {
+        min-height: 350px;
+    }
+}
+
+@media (max-width: 600px) {
+    body.explore-page .explore-action-button,
+    body.explore-page .explore-action-button.primary,
+    body.explore-page .explore-action-button.primary.is-active,
+    body.explore-page .explore-action-button.trailer,
+    body.explore-page .explore-action-button.collection {
+        min-height: 46px;
+        padding: 0 14px;
+        gap: 8px;
+        font-size: 10px;
+    }
+
+    body.explore-page .detail-row {
+        grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+        gap: 10px;
+    }
+
+    body.explore-page .videos-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 11px;
+    }
+
+    body.explore-page .video-card {
+        min-height: 300px;
+    }
+
+    body.explore-page .recommend-card {
+        width: 162px;
+        flex-basis: 162px;
+        min-height: 330px;
+    }
+}
+
+@media (max-width: 410px) {
+    body.explore-page .videos-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.explore-page .video-card {
+        min-height: 0;
+    }
+
+    body.explore-page .recommend-card {
+        width: 154px;
+        flex-basis: 154px;
+        min-height: 315px;
+    }
+}

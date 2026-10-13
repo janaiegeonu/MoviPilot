@@ -1002,8 +1002,12 @@ body {
 }
 
 
-.sidebar-item:hover::before,
-.sidebar-item.is-selected::before {
+/* =========================================================
+   SUBTLE LEFT ACTIVE LINE — EXCLUDE LOGOUT
+   ========================================================= */
+
+.sidebar-item:not(.logout-item):hover::before,
+.sidebar-item:not(.logout-item).is-selected::before {
 
     opacity: 1;
 
@@ -1011,16 +1015,15 @@ body {
         translateX(0)
         scaleY(1);
 
-     background:
+    background:
         linear-gradient(
             180deg,
             #62fff2,
             #012422
         );
-        height: 30px;
-        width: 4px ;
-        
 
+    height: 30px;
+    width: 4px;
 }
 
 

@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#020713">
     <title>{{ .Media.Title }} — MoviPilot Explore</title>
     <link rel="icon" href="/img/logo favicon.png">
-    <link rel="stylesheet" href="/templates/css/explore_page.css?v=1">
+    <link rel="stylesheet" href="/templates/css/explore_page.css?v=3">
 </head>
 <body
     class="explore-page"
@@ -159,19 +159,34 @@
 
                         <div class="star-rating" id="starRating" role="radiogroup" aria-label="Rate this title from 1 to 5 stars" aria-disabled="{{ if .User.CanRate }}false{{ else }}true{{ end }}">
                             <button class="rating-star{{ if ge .User.Rating 1 }} is-filled{{ end }}" type="button" data-rating="1" aria-label="1 star" {{ if not .User.CanRate }}disabled{{ end }}>
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <defs><linearGradient id="ratingGradient1" x1="3" y1="4" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#9BFFF0"/><stop offset=".48" stop-color="#63CEFF"/><stop offset="1" stop-color="#75F0C7"/></linearGradient></defs>
+                                    <path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" fill="url(#ratingGradient1)" fill-opacity="0" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/>
+                                </svg>
                             </button>
                             <button class="rating-star{{ if ge .User.Rating 2 }} is-filled{{ end }}" type="button" data-rating="2" aria-label="2 stars" {{ if not .User.CanRate }}disabled{{ end }}>
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <defs><linearGradient id="ratingGradient2" x1="3" y1="4" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#9BFFF0"/><stop offset=".48" stop-color="#63CEFF"/><stop offset="1" stop-color="#75F0C7"/></linearGradient></defs>
+                                    <path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" fill="url(#ratingGradient2)" fill-opacity="0" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/>
+                                </svg>
                             </button>
                             <button class="rating-star{{ if ge .User.Rating 3 }} is-filled{{ end }}" type="button" data-rating="3" aria-label="3 stars" {{ if not .User.CanRate }}disabled{{ end }}>
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <defs><linearGradient id="ratingGradient3" x1="3" y1="4" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#9BFFF0"/><stop offset=".48" stop-color="#63CEFF"/><stop offset="1" stop-color="#75F0C7"/></linearGradient></defs>
+                                    <path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" fill="url(#ratingGradient3)" fill-opacity="0" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/>
+                                </svg>
                             </button>
                             <button class="rating-star{{ if ge .User.Rating 4 }} is-filled{{ end }}" type="button" data-rating="4" aria-label="4 stars" {{ if not .User.CanRate }}disabled{{ end }}>
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <defs><linearGradient id="ratingGradient4" x1="3" y1="4" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#9BFFF0"/><stop offset=".48" stop-color="#63CEFF"/><stop offset="1" stop-color="#75F0C7"/></linearGradient></defs>
+                                    <path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" fill="url(#ratingGradient4)" fill-opacity="0" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/>
+                                </svg>
                             </button>
                             <button class="rating-star{{ if ge .User.Rating 5 }} is-filled{{ end }}" type="button" data-rating="5" aria-label="5 stars" {{ if not .User.CanRate }}disabled{{ end }}>
-                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <defs><linearGradient id="ratingGradient5" x1="3" y1="4" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop stop-color="#9BFFF0"/><stop offset=".48" stop-color="#63CEFF"/><stop offset="1" stop-color="#75F0C7"/></linearGradient></defs>
+                                    <path d="M12 3.8L14.75 9.38L20.9 10.28L16.45 14.64L17.5 20.8L12 17.9L6.5 20.8L7.55 14.64L3.1 10.28L9.25 9.38L12 3.8Z" fill="url(#ratingGradient5)" fill-opacity="0" stroke="currentColor" stroke-width="1.55" stroke-linejoin="round"/>
+                                </svg>
                             </button>
                         </div>
 
@@ -405,13 +420,26 @@
             </div>
 
             <div class="community-interaction-grid">
-                <article class="like-card">
+                <article class="like-card" id="likeCard" data-like-card>
                     <div class="community-art" aria-hidden="true">
+                        <span class="community-orbit orbit-one"></span>
+                        <span class="community-orbit orbit-two"></span>
+                        <span class="community-art-particle particle-one"></span>
+                        <span class="community-art-particle particle-two"></span>
+                        <span class="community-art-particle particle-three"></span>
                         <svg viewBox="0 0 64 64" fill="none">
-                            <circle cx="32" cy="32" r="22" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 5"/>
-                            <path class="community-heart-path" d="M32 45C28.8 42.1 18.5 35.6 18.5 26.7C18.5 21.3 22.4 18 26.7 18C29.1 18 31.3 19.2 32 21.4C32.7 19.2 34.9 18 37.3 18C41.6 18 45.5 21.3 45.5 26.7C45.5 35.6 35.2 42.1 32 45Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                            <path d="M9 14L14 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                            <path d="M55 50L59 47" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="communityHeartGradient" x1="15" y1="15" x2="49" y2="48" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#83F3F0"/>
+                                    <stop offset=".52" stop-color="#63C8FF"/>
+                                    <stop offset="1" stop-color="#66F2C7"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="community-orbit-path" cx="32" cy="32" r="22" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 5"/>
+                            <circle class="community-core-ring" cx="32" cy="32" r="16" stroke="currentColor" stroke-width=".8" opacity=".35"/>
+                            <path class="community-heart-path" d="M32 45C28.8 42.1 18.5 35.6 18.5 26.7C18.5 21.3 22.4 18 26.7 18C29.1 18 31.3 19.2 32 21.4C32.7 19.2 34.9 18 37.3 18C41.6 18 45.5 21.3 45.5 26.7C45.5 35.6 35.2 42.1 32 45Z" stroke="url(#communityHeartGradient)" stroke-width="2.1" stroke-linejoin="round"/>
+                            <path class="community-ray" d="M9 14L14 11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                            <path class="community-ray" d="M55 50L59 47" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
                         </svg>
                     </div>
                     <div>
@@ -433,9 +461,15 @@
                             <span class="community-card-kicker">GLOBAL REVIEW</span>
                             <h3>Leave your take</h3>
                         </div>
-                        <span class="review-limit">2000 chars</span>
+                        <span class="review-limit" id="reviewCharacterCount" aria-live="polite">0 / 2,000</span>
                     </div>
-                    <textarea id="reviewInput" maxlength="2000" placeholder="What did you think about {{ .Media.Title }}?"></textarea>
+                    <div class="review-composer-field">
+                        <textarea id="reviewInput" maxlength="2000" placeholder="What did you think about {{ .Media.Title }}?" aria-label="Write a public review"></textarea>
+                        <div class="composer-field-footer">
+                            <span><span class="composer-live-dot"></span> Your voice joins the conversation</span>
+                            <span class="composer-public-label">PUBLIC POST</span>
+                        </div>
+                    </div>
                     <div class="review-form-foot">
                         <span id="reviewStatus">{{ if .LoggedIn }}Visible to the MoviPilot community{{ else }}Log in to publish a review{{ end }}</span>
                         <button class="review-submit-button" id="reviewSubmit" type="button" data-auth-required="true">
@@ -498,7 +532,7 @@
                 {{ if .Media.Videos }}
                     {{ range .Media.Videos }}
                         <article class="video-card" data-video-type="{{ .Type }}" data-video-official="{{ .Official }}">
-                            <button class="video-thumb-button" type="button" data-video-key="{{ .Key }}" data-video-title="{{ .Name }}">
+                            <button class="video-thumb-button" type="button" aria-label="Play video" data-video-key="{{ .Key }}" data-video-title="{{ .Name }}">
                                 {{ if .ThumbnailURL }}<img src="{{ .ThumbnailURL }}" alt="{{ .Name }} thumbnail" loading="lazy">{{ end }}
                                 <span class="video-thumb-shade"></span>
                                 <span class="video-play-orb">
@@ -688,7 +722,7 @@
 
     <div class="explore-toast" id="exploreToast" role="status" aria-live="polite"></div>
 
-    <script src="/templates/js/explore_page.js?v=1" defer></script>
+    <script src="/templates/js/explore_page.js?v=3" defer></script>
 </body>
 </html>
 {{ end }}

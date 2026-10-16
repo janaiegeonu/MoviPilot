@@ -1212,7 +1212,7 @@ body.explore-page .explore-action-button svg {
     flex: 0 0 36px;
     border: 1px solid rgba(104, 226, 218, .14);
     border-radius: 11px;
-    background: linear-gradient(145deg, rgba(58, 186, 210, .12), rgba(66, 221, 176, .08));
+    background: linear-gradient(145deg, rgba(67, 208, 233, 0.76), rgba(66, 221, 176, .08));
     box-shadow: 0 4px 13px rgba(0, 0, 0, .13);
 }
 
@@ -1266,7 +1266,7 @@ body.explore-page .explore-action-button svg {
     animation: collectionPanelEnter .38s cubic-bezier(.18,.8,.24,1) both;
     border-color: rgba(155, 206, 219, .10);
     border-radius: 20px;
-    background: rgba(4, 12, 24, .82);
+    background: linear-gradient(360deg, rgba(4, 14, 26, 0.938) 0%, rgba(16, 28, 54, 0.82) 100%);
     box-shadow: 0 20px 55px rgba(0, 0, 0, .20);
 }
 
@@ -1291,8 +1291,8 @@ body.explore-page .explore-action-button svg {
 .collection-choice:hover {
     box-shadow: 0 9px 24px rgba(0, 0, 0, .14), 0 0 22px rgba(48, 205, 204, .045);
     transform: none;
-    border-color: rgba(157, 205, 219, .13);
-    background: rgba(235, 250, 255, .045);
+    border-color: rgba(155, 236, 232, 0.178);
+    background: rgba(104, 217, 255, 0.045);
 }
 
 .create-collection-form {
@@ -1337,14 +1337,14 @@ body.explore-page .explore-action-button svg {
     min-height: 43px;
     border: 1px solid rgba(151, 204, 217, .14);
     border-radius: 11px;
-    background: linear-gradient(135deg, rgba(234, 249, 255, .065), rgba(66, 123, 148, .11), rgba(54, 136, 119, .08));
+    background: linear-gradient(135deg, rgba(40, 141, 172, 0.671), rgba(32, 70, 114, 0.432) 58%, rgba(36, 58, 105, 0.459));
     color: rgba(224, 245, 248, .88);
     font-size: 10px;
     font-weight: 580;
     box-shadow: inset 0 1px rgba(255, 255, 255, .065), 0 5px 16px rgba(0, 0, 0, .12);
     backdrop-filter: blur(12px) saturate(118%);
     -webkit-backdrop-filter: blur(12px) saturate(118%);
-    transition: color .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    transition: color .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
 }
 
 .create-collection-button::after {
@@ -1372,12 +1372,12 @@ body.explore-page .explore-action-button svg {
 }
 
 .create-collection-button:hover {
-    transform: none;
     filter: none;
     color: #f0fbff;
     border-color: rgba(161, 213, 222, .21);
-    background: linear-gradient(135deg, rgba(234, 249, 255, .085), rgba(66, 123, 148, .14), rgba(54, 136, 119, .11));
+    background: linear-gradient(135deg, rgba(51, 168, 204, 0.671), rgba(46, 95, 151, 0.432) 58%, rgba(55, 85, 151, 0.459));
     box-shadow: inset 0 1px rgba(255, 255, 255, .08), 0 7px 18px rgba(0, 0, 0, .15);
+    transform: translateY(-2px);
 }
 
 body.explore-page .collection-panel-head h2 {
@@ -2128,8 +2128,8 @@ body.explore-page .metadata-card strong {
 
 .community-art {
     /* A larger reactor/heart graphic becomes the focal point of this card. */
-    width: 92px;
-    height: 92px;
+    width: 100px;
+    height: 100px;
     display: grid;
     place-items: center;
     position: relative;
@@ -2588,7 +2588,7 @@ body.explore-page .like-card.is-liked::after {
     -webkit-backdrop-filter: blur(12px) saturate(120%);
     color: rgba(227, 247, 250, .91);
     border-color: rgba(139, 207, 209, .17);
-    background: linear-gradient(135deg, rgba(52, 119, 139, .23), rgba(51, 112, 123, .20), rgba(47, 128, 105, .19));
+    background: linear-gradient(135deg, rgba(40, 141, 172, 0.671), rgba(32, 70, 114, 0.432) 58%, rgba(36, 58, 105, 0.459));
 }
 
 .review-submit-button:hover {
@@ -2840,8 +2840,9 @@ body.explore-page .review-composer-field:focus-within {
 .video-card:hover {
     --lift-y: 0px;
     transform: translateY(-3px);
-    border-color: rgba(157, 204, 218, .15);
+    border-color: rgba(73, 211, 253, 0.747);
     box-shadow: 0 17px 32px rgba(0, 0, 0, .23);
+    
 }
 
 .video-thumb-button::after {
@@ -2929,7 +2930,7 @@ body.explore-page .review-composer-field:focus-within {
 }
 
 body.explore-page .video-card {
-    border: 1px solid rgba(106, 214, 212, .08);
+    border: 0.03px solid rgba(94, 202, 230, 0.055);
     position: relative;
     overflow: hidden;
     border-radius: 17px;
@@ -2946,6 +2947,13 @@ body.explore-page .video-card {
     min-height: 335px;
     border-color: rgba(157, 204, 218, .10);
     background: linear-gradient(150deg, rgba(7, 20, 36, .94), rgba(3, 12, 24, .97));
+}
+
+body.explore-page .video-card:hover {
+  
+    background: linear-gradient(150deg, rgba(31, 144, 148, 0.94), rgba(3, 12, 24, .97));
+        border: 0.03px solid rgba(94, 203, 230, 0.171);
+
 }
 
 body.explore-page .video-card-content h3 {
@@ -3009,12 +3017,11 @@ body.explore-page .video-card:hover .video-play-orb {
     color: #f1ffff;
     box-shadow: inset 0 1px rgba(255, 255, 255, .30),
         0 10px 26px rgba(0, 0, 0, .36);
-    background: linear-gradient(145deg, rgba(166, 229, 245, .39), rgba(87, 157, 202, .49) 52%, rgba(78, 187, 161, .40));
+        background: linear-gradient(135deg, rgba(51, 175, 212, 0.884), rgba(51, 105, 167, 0.808) 58%, rgba(56, 89, 160, 0.781));
     border-color: rgba(222, 247, 250, .59);
 }
 
 body.explore-page .video-filter {
-    border: 1px solid rgba(111, 217, 214, .09);
     font-size: 9px;
     cursor: pointer;
     min-height: 34px;
@@ -3024,15 +3031,19 @@ body.explore-page .video-filter {
     box-shadow: none;
     transition: color .2s ease, border-color .2s ease, background .2s ease;
     color: rgba(202, 228, 235, .78);
-    background: rgba(230, 246, 255, .035);
-    border-color: rgba(156, 205, 218, .11);
+    background: linear-gradient(135deg, rgba(40, 141, 172, 0.671), rgba(32, 70, 114, 0.432) 58%, rgba(36, 58, 105, 0.459));
+}
+
+body.explore-page .video-filter:hover {
+   
+        background: linear-gradient(135deg, rgba(51, 175, 212, 0.884), rgba(51, 105, 167, 0.808) 58%, rgba(56, 89, 160, 0.781));
 }
 
 body.explore-page .video-filter.is-active {
     transform: translateY(-1px);
     color: rgba(225, 250, 250, .98);
     border-color: rgba(125, 204, 211, .29);
-    background: linear-gradient(130deg, rgba(73, 150, 183, .24), rgba(55, 147, 139, .23));
+            background: linear-gradient(135deg, rgba(77, 199, 240, 0.925), rgba(56, 123, 199, 0.938) 58%, rgba(64, 98, 177, 0.897));
     box-shadow: inset 0 1px rgba(255, 255, 255, .09), 0 5px 14px rgba(0, 0, 0, .13);
 }
 

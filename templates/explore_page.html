@@ -110,15 +110,13 @@
                                 </svg>
                             </span>
                             <div>
-                                <span class="rating-label">MOVIPILOT OFFICIAL • TMDB</span>
+                                <span class="rating-label">MOVIPILOT OFFICIAL </span>
                                 <strong>{{ printf "%.1f" .Media.VoteAverage }}<span>/10</span></strong>
                                 {{ if .Media.VoteCount }}<small>{{ .Media.VoteCount }} votes</small>{{ end }}
                             </div>
                         </div>
 
-                        {{ if .Media.IMDbURL }}
-                            <a class="external-rating-link" href="{{ .Media.IMDbURL }}" target="_blank" rel="noopener noreferrer">IMDb</a>
-                        {{ end }}
+                        
                     </div>
 
                     <div class="explore-actions">
@@ -336,10 +334,7 @@
                     </div>
                 {{ end }}
                 {{ if .Media.IMDbURL }}
-                    <div class="metadata-card link-card">
-                        <span>External reference</span>
-                        <a href="{{ .Media.IMDbURL }}" target="_blank" rel="noopener noreferrer">Open IMDb profile →</a>
-                    </div>
+                   
                 {{ end }}
             </div>
 

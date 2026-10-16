@@ -736,14 +736,14 @@ body.explore-page .explore-topbar::after {
     z-index: 2;
     transform: translateY(-1px) scale(1.045);
     color: rgba(177, 237, 235, .96);
-    background: rgba(74, 152, 171, 0.151);
+    background: rgba(74, 151, 171, .075);
     filter: drop-shadow(0 1px 3px rgba(86, 188, 202, .12));
     box-shadow: none;
 }
 
 .rating-star.is-previewed svg path {
     fill-opacity: .28;
-    stroke: rgba(149, 243, 238, 0.966);
+    stroke: rgba(179, 239, 236, .92);
 }
 
 .rating-star:hover:not(:disabled) svg path {
@@ -753,7 +753,7 @@ body.explore-page .explore-topbar::after {
 
 .rating-star.is-filled {
     color: rgba(158, 229, 226, .92);
-    background: rgba(49, 119, 139, 0.24);
+    background: rgba(49, 119, 139, .065);
     filter: drop-shadow(0 1px 3px rgba(77, 180, 199, .16));
 }
 
@@ -763,7 +763,7 @@ body.explore-page .explore-topbar::after {
 }
 
 .rating-star.is-filled:nth-child(3) {
-    filter: drop-shadow(0 1px 4px rgba(77, 181, 199, 0.295));
+    filter: drop-shadow(0 1px 4px rgba(77, 180, 199, .16));
 }
 
 .rating-star.is-filled.is-submitting {
@@ -800,7 +800,7 @@ body.explore-page .explore-topbar::after {
     min-height: 43px;
     border: 1px solid rgba(151, 204, 217, .14);
     border-radius: 11px;
-    background: linear-gradient(135deg, rgba(113, 236, 236, 0.438), rgba(0, 158, 226, 0.281), rgba(54, 136, 119, .08));
+    background: linear-gradient(135deg, rgba(234, 249, 255, .065), rgba(66, 123, 148, .11), rgba(54, 136, 119, .08));
     color: rgba(224, 245, 248, .88);
     font-size: 10px;
     font-weight: 580;
@@ -815,7 +815,7 @@ body.explore-page .explore-topbar::after {
     filter: none;
     color: #f0fbff;
     border-color: rgba(161, 213, 222, .21);
-    background: linear-gradient(135deg, rgba(113, 236, 236, 0.637), rgba(0, 158, 226, 0.5), rgba(54, 136, 119, .08));
+    background: linear-gradient(135deg, rgba(234, 249, 255, .085), rgba(66, 123, 148, .14), rgba(54, 136, 119, .11));
     box-shadow: inset 0 1px rgba(255, 255, 255, .08), 0 7px 18px rgba(0, 0, 0, .15);
 }
 
@@ -903,7 +903,7 @@ body.explore-page .explore-actions {
 }
 
 body.explore-page .explore-action-button {
-    display: inline-flex;
+   display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -930,7 +930,7 @@ body.explore-page .explore-action-button {
 }
 
 body.explore-page .explore-action-button.primary {
-    position: relative;
+   position: relative;
     border: 1px solid rgba(172, 221, 230, .12);
     transform: translateY(0);
     min-height: 49px;
@@ -956,7 +956,7 @@ body.explore-page .explore-action-button.primary {
 }
 
 body.explore-page .explore-action-button.primary.is-active {
-    position: relative;
+   position: relative;
     border: 1px solid rgba(172, 221, 230, .12);
     transform: translateY(0);
     min-height: 49px;
@@ -982,7 +982,7 @@ body.explore-page .explore-action-button.primary.is-active {
 }
 
 body.explore-page .explore-action-button.trailer {
-    position: relative;
+   position: relative;
     border: 1px solid rgba(172, 221, 230, .12);
     transform: translateY(0);
     min-height: 49px;
@@ -1043,6 +1043,14 @@ body.explore-page .explore-action-button:hover {
     box-shadow: inset 0 1px rgba(255, 255, 255, .15), 0 11px 25px rgba(0, 0, 0, .23);
 }
 
+body.explore-page .explore-action-button:hover {
+    transform: translateY(-2px);
+    color: #f4fdff;
+    border-color: rgba(174, 226, 232, .39);
+    background: linear-gradient(135deg, rgba(121, 194, 216, .25), rgba(67, 132, 170, .27) 53%, rgba(66, 165, 145, .23));
+    box-shadow: inset 0 1px rgba(255, 255, 255, .15), 0 11px 25px rgba(0, 0, 0, .23);
+}
+
 body.explore-page .explore-action-button.primary.is-active:hover {
     transform: translateY(-2px);
     color: #f4fdff;
@@ -1074,7 +1082,6 @@ body.explore-page .explore-action-button.collection:hover {
     box-shadow: inset 0 1px rgba(255, 255, 255, .15), 0 11px 25px rgba(0, 0, 0, .23);
     background: linear-gradient(135deg, rgba(101, 214, 192, 0.514), rgba(86, 194, 204, 0.438) 55%, rgba(42, 113, 146, 0.18));
 }
-
 body.explore-page .explore-action-button svg {
     width: 17px;
     height: 17px;
@@ -1225,13 +1232,14 @@ body.explore-page .explore-action-button svg {
 }
 
 .collection-empty {
+    border: 1px dashed rgba(117, 219, 216, .10);
     border-radius: 11px;
     color: rgba(204, 231, 232, .45);
     font-size: 10px;
     line-height: 1.5;
     padding: 24px 18px;
     border-color: rgba(112, 219, 219, .17);
-    background: rgba(3, 13, 22, 0.48);
+    background: rgba(7, 24, 41, .48);
     text-align: center;
 }
 
@@ -1258,12 +1266,8 @@ body.explore-page .explore-action-button svg {
     animation: collectionPanelEnter .38s cubic-bezier(.18,.8,.24,1) both;
     border-color: rgba(155, 206, 219, .10);
     border-radius: 20px;
- background: linear-gradient(
-    135deg, 
-    rgba(14, 28, 53, 0.9) 0%, 
-    rgba(4, 10, 19, 0.82) 100%
-  );
-      box-shadow: 0 20px 55px rgba(0, 0, 0, .20);
+    background: rgba(4, 12, 24, .82);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, .20);
 }
 
 .collection-choice {
@@ -1333,8 +1337,8 @@ body.explore-page .explore-action-button svg {
     min-height: 43px;
     border: 1px solid rgba(151, 204, 217, .14);
     border-radius: 11px;
-    background: linear-gradient(135deg, rgba(47, 236, 221, 0.438), rgba(46, 83, 99, 0.61), rgba(7, 19, 26, 0.473));
-    color: rgb(224, 245, 248);
+    background: linear-gradient(135deg, rgba(234, 249, 255, .065), rgba(66, 123, 148, .11), rgba(54, 136, 119, .08));
+    color: rgba(224, 245, 248, .88);
     font-size: 10px;
     font-weight: 580;
     box-shadow: inset 0 1px rgba(255, 255, 255, .065), 0 5px 16px rgba(0, 0, 0, .12);
@@ -1372,9 +1376,8 @@ body.explore-page .explore-action-button svg {
     filter: none;
     color: #f0fbff;
     border-color: rgba(161, 213, 222, .21);
-    background: linear-gradient(135deg, rgba(71, 248, 233, 0.534), rgba(83, 146, 173, 0.644), rgba(7, 19, 26, 0.473));
+    background: linear-gradient(135deg, rgba(234, 249, 255, .085), rgba(66, 123, 148, .14), rgba(54, 136, 119, .11));
     box-shadow: inset 0 1px rgba(255, 255, 255, .08), 0 7px 18px rgba(0, 0, 0, .15);
-    transform: translateY(-1.5px);
 }
 
 body.explore-page .collection-panel-head h2 {
@@ -1870,8 +1873,8 @@ body.explore-page .metadata-card strong {
 
 .cast-card:hover {
     transform: translateY(-2px) !important;
-    border-color: rgba(161, 210, 218, .15);
-    background: linear-gradient(155deg, rgba(10, 26, 43, .89), rgba(4, 14, 26, .82));
+    border-color: rgba(162, 229, 240, 0.226);
+    background: linear-gradient(155deg, rgba(16, 40, 66, 0.89), rgba(4, 14, 26, .82));
     box-shadow: 0 12px 24px rgba(0, 0, 0, .17);
 }
 
@@ -2124,15 +2127,16 @@ body.explore-page .metadata-card strong {
 }
 
 .community-art {
-    width: 70px;
-    height: 70px;
+    /* A larger reactor/heart graphic becomes the focal point of this card. */
+    width: 92px;
+    height: 92px;
     display: grid;
     place-items: center;
     position: relative;
     isolation: isolate;
     overflow: visible;
     color: rgba(106, 224, 231, .83);
-    filter: drop-shadow(0 0 13px rgba(63, 199, 217, .08));
+    filter: drop-shadow(0 0 15px rgba(63, 199, 217, .10));
 }
 
 .community-art svg {
@@ -2374,15 +2378,26 @@ body.explore-page .metadata-card strong {
     outline: none;
 }
 
-.like-card.is-liked {
-    border-color: rgba(106, 201, 183, .21);
-    background: linear-gradient(130deg, rgba(7, 32, 42, .92), rgba(4, 17, 29, .90));
-    box-shadow: 0 15px 34px rgba(0, 0, 0, .17), inset 0 1px rgba(160, 230, 222, .035);
+body.explore-page .like-card.is-liked {
+    /* A smooth, unmistakable navy/sea-green gradient confirms the saved reaction. */
+    border-color: rgba(111, 218, 202, .34);
+    background: linear-gradient(128deg,
+        rgba(8, 43, 52, .97) 0%,
+        rgba(5, 30, 43, .96) 48%,
+        rgba(4, 22, 34, .96) 100%);
+    box-shadow:
+        0 17px 38px rgba(0, 0, 0, .20),
+        0 0 28px rgba(64, 187, 177, .075),
+        inset 0 1px rgba(190, 255, 245, .075);
 }
 
-.like-card.is-liked::after {
-    opacity: .52;
-    transform: scale(1.05);
+body.explore-page .like-card.is-liked::after {
+    opacity: .76;
+    transform: scale(1.10);
+    background: radial-gradient(circle,
+        rgba(70, 198, 208, .19),
+        rgba(67, 199, 168, .075) 38%,
+        transparent 72%);
 }
 
 .community-like-button {
@@ -2390,50 +2405,60 @@ body.explore-page .metadata-card strong {
     align-items: center;
     justify-content: center;
     gap: 7px;
-    border: 1px solid rgba(103, 218, 213, .12);
-    cursor: pointer;
-    transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
     margin-top: 11px;
+    min-height: 43px;
+    padding: 0 15px;
     position: relative;
     isolation: isolate;
     overflow: hidden;
     transform: translateZ(0);
-    min-height: 43px;
-    padding: 0 15px;
+    border: 1px solid rgba(154, 207, 219, .16);
     border-radius: 12px;
+    background: linear-gradient(135deg,
+        rgba(239, 250, 255, .065),
+        rgba(72, 119, 145, .10),
+        rgba(62, 147, 132, .075));
+    color: rgba(231, 247, 250, .90);
     font-size: 10px;
     font-weight: 560;
     letter-spacing: 0;
-    border-color: rgba(154, 207, 219, .14);
-    background: linear-gradient(135deg, rgba(239, 250, 255, .065), rgba(72, 119, 145, .10), rgba(62, 147, 132, .075));
-    color: rgba(231, 247, 250, .88);
+    cursor: pointer;
     box-shadow: inset 0 1px rgba(255, 255, 255, .065), 0 5px 16px rgba(0, 0, 0, .13);
     backdrop-filter: blur(12px) saturate(120%);
     -webkit-backdrop-filter: blur(12px) saturate(120%);
+    transition:
+        transform .22s cubic-bezier(.2, .8, .2, 1),
+        background .28s ease,
+        border-color .24s ease,
+        color .24s ease,
+        box-shadow .28s ease;
 }
 
 .community-like-button::after {
+    /* Diagonal gloss sweeps over the button on hover/focus. */
+    content: "";
     position: absolute;
+    z-index: 2;
     inset: -80% auto -80% -55%;
     width: 38%;
     transform: rotate(18deg) translateX(-180%);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .24), transparent);
-    transition: transform .7s cubic-bezier(.2,.7,.2,1);
+    background: linear-gradient(90deg, transparent, rgba(245, 255, 255, .48), transparent);
+    transition: transform .72s cubic-bezier(.2, .7, .2, 1);
     pointer-events: none;
-    display: none !important;
-    content: none !important;
 }
 
 .community-like-button::before {
+    /* Soft pointer-following colour fill; coordinates are supplied by the JS below. */
+    content: "";
     position: absolute;
-    z-index: -1;
+    z-index: 0;
     inset: -1px;
     opacity: 0;
-    background: radial-gradient(180px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(142, 255, 242, .24), transparent 68%);
-    transition: opacity .22s ease;
+    background:
+        radial-gradient(190px circle at var(--pointer-x, 50%) var(--pointer-y, 50%), rgba(142, 255, 242, .28), transparent 70%),
+        linear-gradient(120deg, rgba(92, 201, 212, .13), rgba(86, 196, 171, .11));
+    transition: opacity .24s ease;
     pointer-events: none;
-    display: none !important;
-    content: none !important;
 }
 
 .review-submit-button::after {
@@ -2461,41 +2486,70 @@ body.explore-page .metadata-card strong {
 }
 
 .community-like-button:hover {
-    transform: translateY(-1px);
-    color: #f0fbff;
-    border-color: rgba(164, 216, 224, .20);
-    background: linear-gradient(135deg, rgba(239, 250, 255, .085), rgba(72, 119, 145, .13), rgba(62, 147, 132, .095));
-    box-shadow: inset 0 1px rgba(255, 255, 255, .085), 0 8px 19px rgba(0, 0, 0, .16);
+    transform: translateY(-2px);
+    color: #f5ffff;
+    border-color: rgba(164, 231, 232, .34);
+    background: linear-gradient(125deg,
+        rgba(82, 172, 190, .22),
+        rgba(72, 119, 145, .18),
+        rgba(62, 163, 137, .17));
+    box-shadow:
+        inset 0 1px rgba(255, 255, 255, .13),
+        0 9px 22px rgba(0, 0, 0, .18),
+        0 0 24px rgba(83, 218, 211, .10);
+}
+
+/* Keep the icon and label above the interactive light-fill pseudo-elements. */
+.community-like-button > svg,
+.community-like-button > span {
+    position: relative;
+    z-index: 1;
+}
+
+.community-like-button:focus-visible {
+    outline: 1px solid rgba(153, 238, 232, .70);
+    outline-offset: 3px;
 }
 
 .community-like-button.is-liked {
-    color: rgba(195, 245, 231, .97);
-    border-color: rgba(108, 196, 177, .24);
-    background: linear-gradient(135deg, rgba(53, 134, 124, .21), rgba(62, 118, 151, .15), rgba(54, 143, 119, .19));
-    box-shadow: inset 0 1px rgba(255, 255, 255, .075), 0 6px 18px rgba(0, 0, 0, .15);
+    color: rgba(218, 255, 246, .99);
+    border-color: rgba(122, 226, 210, .39);
+    background: linear-gradient(128deg,
+        rgba(61, 159, 148, .32),
+        rgba(63, 133, 163, .24) 52%,
+        rgba(56, 166, 129, .29));
+    box-shadow:
+        inset 0 1px rgba(255, 255, 255, .12),
+        0 7px 20px rgba(0, 0, 0, .16),
+        0 0 22px rgba(85, 213, 196, .10);
 }
 
 .community-like-button.is-liked svg {
-    filter: drop-shadow(0 1px 3px rgba(111, 226, 202, .20));
+    filter: drop-shadow(0 1px 5px rgba(111, 226, 202, .34));
 }
 
 .like-card.is-liked .community-art {
-    color: rgba(152, 229, 222, .92);
-    filter: drop-shadow(0 0 9px rgba(91, 190, 195, .13));
+    color: rgba(170, 249, 234, .98);
+    filter: drop-shadow(0 0 13px rgba(91, 209, 205, .23));
 }
 
 .like-card.is-liked .community-heart-path {
-    animation-duration: 1.25s;
-    fill: rgba(94, 205, 190, .12);
-    filter: drop-shadow(0 0 3px rgba(97, 199, 206, .20));
+    animation-duration: 1.35s;
+    /* Use the gradient already present in the HTML SVG; no extra palette is introduced. */
+    fill: url(#communityHeartGradient);
+    fill-opacity: .92;
+    stroke: #dffff8;
+    stroke-width: 1.45;
+    filter: drop-shadow(0 0 5px rgba(97, 199, 206, .48))
+            drop-shadow(0 0 17px rgba(94, 220, 198, .22));
 }
 
 .community-like-button.is-celebrating {
-    animation: none;
+    animation: likeButtonCelebration .52s cubic-bezier(.2, .8, .25, 1);
 }
 
 .like-card.is-celebrating {
-    animation: none;
+    animation: likeCardCelebration .72s cubic-bezier(.2, .8, .25, 1);
 }
 
 .review-composer-field {
@@ -2580,7 +2634,7 @@ body.explore-page .community-card-kicker {
 body.explore-page .like-card {
     padding: 19px;
     display: grid;
-    grid-template-columns: 70px minmax(0, 1fr);
+    grid-template-columns: 96px minmax(0, 1fr);
     gap: 14px;
     align-items: center;
     position: relative;
@@ -3602,13 +3656,13 @@ body.explore-page .keyword-intro p {
     left: var(--spark-left, 50%);
     top: var(--spark-top, 50%);
     pointer-events: none;
-    animation: likeSparkFly .9s cubic-bezier(.16,.75,.3,1) forwards;
-    width: max(3px, var(--spark-size, 5px));
-    height: max(3px, var(--spark-size, 5px));
+    animation: likeSparkFly 1.3s cubic-bezier(.16, .75, .3, 1) forwards;
+    width: max(2px, var(--spark-size, 4px));
+    height: max(2px, var(--spark-size, 4px));
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #f0fffb, #9ce7ef 45%, #82dcbc 78%);
-    box-shadow: 0 0 6px rgba(149, 232, 226, .48), 0 0 13px rgba(98, 204, 210, .25);
-    animation-duration: 1.05s;
+    background: radial-gradient(circle at 35% 30%, #f4fffc, #9ce7ef 45%, #82dcbc 78%);
+    box-shadow: 0 0 5px rgba(149, 232, 226, .62), 0 0 12px rgba(98, 204, 210, .31);
+    mix-blend-mode: screen;
 }
 
 .like-spark::after {
@@ -3621,6 +3675,19 @@ body.explore-page .keyword-intro p {
     height: calc(var(--spark-size, 5px) + 8px);
     opacity: .78;
     background: linear-gradient(transparent, rgba(231, 255, 250, .92), transparent);
+}
+
+/* Some dust points also have a horizontal glint, creating a subtle confetti sparkle. */
+.like-spark.is-glint::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--spark-size, 4px) + 7px);
+    height: 1px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(90deg, transparent, rgba(238, 255, 252, .96), transparent);
+    box-shadow: 0 0 5px rgba(145, 232, 222, .42);
 }
 
 .interaction-ripple {
@@ -3708,7 +3775,24 @@ body.explore-page .videos-grid {
 }
 
 @keyframes heartPulse {
-    50% { transform: scale(1.12); }
+     0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.25); /* First sharp contraction */
+  }
+  28% {
+    transform: scale(1.05); /* Slight relaxation */
+  }
+  42% {
+    transform: scale(1.35); /* Second stronger contraction */
+  }
+  70% {
+    transform: scale(1);    /* Smooth return to rest */
+  }
+  100% {
+    transform: scale(1);   /* Rest period before next beat */
+  }
 }
 
 @keyframes communityArt {
@@ -3773,11 +3857,18 @@ body.explore-page .videos-grid {
 @keyframes communityRayFlash { 0%,100% { opacity: .48; } 50% { opacity: 1; } }
 
 @keyframes likeButtonCelebration {
-    0% { transform: scale(1); }
-    28% { transform: scale(1.08) rotate(-1deg); }
-    55% { transform: scale(.97) rotate(1deg); }
-    78% { transform: scale(1.035); }
-    100% { transform: scale(1); }
+    0% { transform: translateY(0) scale(1); }
+    28% { transform: translateY(-1px) scale(1.075) rotate(-1deg); }
+    55% { transform: translateY(0) scale(.975) rotate(1deg); }
+    78% { transform: translateY(0) scale(1.025); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes likeCardCelebration {
+    0% { transform: scale(1); filter: brightness(1); }
+    30% { transform: scale(1.012); filter: brightness(1.09); }
+    62% { transform: scale(.998); filter: brightness(1.035); }
+    100% { transform: scale(1); filter: brightness(1); }
 }
 
 @keyframes reviewCardEnter {
@@ -3981,7 +4072,12 @@ body.explore-page .videos-grid {
 
     body.explore-page .like-card {
         border-radius: 19px;
-        grid-template-columns: 70px minmax(0, 1fr);
+        grid-template-columns: 84px minmax(0, 1fr);
+    }
+
+    .community-art {
+        width: 80px;
+        height: 80px;
     }
 
     body.explore-page .video-card {
@@ -4206,14 +4302,14 @@ body.explore-page .videos-grid {
     }
 
     body.explore-page .like-card {
-        grid-template-columns: 54px minmax(0, 1fr);
+        grid-template-columns: 72px minmax(0, 1fr);
         gap: 12px;
         padding: 17px 15px;
     }
 
     .community-art {
-        width: 54px;
-        height: 54px;
+        width: 70px;
+        height: 70px;
     }
 
     .like-card h3 {
@@ -4406,8 +4502,8 @@ body.explore-page .videos-grid {
     }
 
     .community-art {
-        width: 62px;
-        height: 62px;
+        width: 76px;
+        height: 76px;
     }
 
     body.explore-page .video-card-content h3 {

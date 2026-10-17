@@ -5,114 +5,386 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#020713">
-    <title>{{ .Name }} — MoviPilot</title>
+    <meta name="description" content="Explore {{ .Name }} on MoviPilot: biography, credits, movie appearances and television work.">
+    <title>{{ .Name }} — MoviPilot Talent Profile</title>
     <link rel="icon" href="/img/logo favicon.png">
-    <link rel="stylesheet" href="/templates/css/person_page.css?v=1">
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="stylesheet" href="/templates/css/person_page.css?v=2">
 </head>
 <body class="person-page">
+    <a class="person-skip-link" href="#personMain">Skip to profile</a>
+
     <div class="person-bg" aria-hidden="true">
-        <div class="person-glow one"></div>
-        <div class="person-glow two"></div>
+        <div class="person-glow person-glow-one"></div>
+        <div class="person-glow person-glow-two"></div>
+        <div class="person-glow person-glow-three"></div>
         <div class="person-grid"></div>
+        <div class="person-orb person-orb-one"></div>
+        <div class="person-orb person-orb-two"></div>
     </div>
 
     <header class="person-topbar">
         <div class="person-topbar-inner">
-            <button id="personBack" type="button" class="person-back">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M11 18L5 12L11 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                Back
+            <button id="personBack" type="button" class="person-back" aria-label="Go back to the previous page">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M19 12H5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M11 18L5 12L11 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Back</span>
             </button>
-            <a class="person-brand" href="/dashboard"><img src="/img/logo favicon.png" alt="MoviPilot"><span>Movi<span>Pilot</span></span></a>
-            <a class="person-dashboard-link" href="/dashboard">Dashboard</a>
+
+            <a class="person-brand" href="/dashboard" aria-label="MoviPilot home">
+                <img src="/img/logo favicon.png" alt="" width="32" height="32">
+                <span class="person-brand-word">Movi<span>Pilot</span></span>
+            </a>
+
+            <a class="person-dashboard-link" href="/dashboard" aria-label="Go to MoviPilot dashboard">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M3.7 10.7 12 3.8l8.3 6.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5.8 9.5v10.1h12.4V9.5M9.5 19.6v-6.4h5v6.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Dashboard</span>
+                <svg class="person-nav-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </a>
         </div>
     </header>
 
-    <main class="person-shell">
-        <section class="person-hero reveal-person">
+    <main id="personMain" class="person-shell">
+        <section class="person-hero reveal-person" aria-labelledby="personName">
+            <div class="person-hero-media" aria-hidden="true">
+                {{ if .BackdropURL }}
+                    <img class="person-hero-backdrop" src="{{ .BackdropURL }}" alt="" fetchpriority="high" decoding="async">
+                {{ end }}
+                <div class="person-hero-backdrop-shade"></div>
+                <div class="person-hero-light person-hero-light-one"></div>
+                <div class="person-hero-light person-hero-light-two"></div>
+                <div class="person-hero-lines"></div>
+            </div>
+
             <div class="person-art-ring" aria-hidden="true">
-                <svg viewBox="0 0 300 300" fill="none">
-                    <circle cx="150" cy="150" r="120" stroke="currentColor" stroke-width="1" stroke-dasharray="4 8"/>
-                    <circle cx="150" cy="150" r="94" stroke="currentColor" stroke-width="1" opacity=".45"/>
-                    <path d="M150 18V42M150 258V282M18 150H42M258 150H282" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" opacity=".7"/>
+                <svg viewBox="0 0 360 360" fill="none">
+                    <circle cx="180" cy="180" r="151" stroke="currentColor" stroke-width="1" stroke-dasharray="2 9"/>
+                    <circle cx="180" cy="180" r="125" stroke="currentColor" stroke-width="1" opacity=".42"/>
+                    <circle cx="180" cy="180" r="99" stroke="currentColor" stroke-width="1" stroke-dasharray="22 15" opacity=".22"/>
+                    <path d="M180 12v26M180 322v26M12 180h26M322 180h26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <circle cx="180" cy="29" r="3.5" fill="currentColor"/>
+                    <circle cx="331" cy="180" r="3.5" fill="currentColor"/>
                 </svg>
             </div>
 
-            <div class="person-photo-wrap">
-                {{ if .ProfileURL }}
-                    <img class="person-photo" src="{{ .ProfileURL }}" alt="{{ .Name }}">
-                {{ else }}
-                    <div class="person-photo-fallback">MP</div>
-                {{ end }}
-            </div>
+            <div class="person-hero-layout">
+                <div class="person-photo-column">
+                    <div class="person-photo-label">
+                        <span class="person-live-dot" aria-hidden="true"></span>
+                        <span>Talent archive</span>
+                    </div>
+                    <div class="person-photo-stage">
+                      
+                        <div class="person-photo-wrap">
+                            {{ if .ProfileURL }}
+                                <img class="person-photo" src="{{ .ProfileURL }}" alt="Portrait of {{ .Name }}" fetchpriority="high" decoding="async">
+                            {{ else }}
+                                <div class="person-photo-fallback" role="img" aria-label="No portrait available for {{ .Name }}">
+                                    <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                                        <circle cx="32" cy="21" r="11" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M12 54c1.5-11.2 8.3-17 20-17s18.5 5.8 20 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    <span>Portrait unavailable</span>
+                                </div>
+                            {{ end }}
+                            <div class="person-photo-vignette" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                    <p class="person-photo-caption"><span>MP</span> <span>Profile collection</span></p>
+                </div>
 
-            <div class="person-copy">
-                <span class="person-kicker">MOVIPILOT TALENT PROFILE</span>
-                <h1>{{ .Name }}</h1>
-                {{ if .KnownFor }}<p class="person-known-for">Known for {{ .KnownFor }}</p>{{ end }}
-                <div class="person-fact-row">
-                    {{ if .Birthday }}<span><b>Born</b> {{ .Birthday }}</span>{{ end }}
-                    {{ if .Deathday }}<span><b>Died</b> {{ .Deathday }}</span>{{ end }}
-                    {{ if .PlaceOfBirth }}<span><b>From</b> {{ .PlaceOfBirth }}</span>{{ end }}
-                    {{ if .IMDbURL }}<a href="{{ .IMDbURL }}" target="_blank" rel="noopener noreferrer">IMDb profile →</a>{{ end }}
+                <div class="person-copy">
+                    <div class="person-kicker-row">
+                        <span class="person-kicker">MOVIPILOT TALENT PROFILE</span>
+                        <span class="person-profile-id">ID <b>{{ .ID }}</b></span>
+                    </div>
+
+                    <h1 id="personName">{{ .Name }}</h1>
+
+                    <div class="person-role-row">
+                        {{ if .KnownFor }}
+                            <span class="person-role-pill">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                    <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                                </svg>
+                                {{ .KnownFor }}
+                            </span>
+                        {{ end }}
+                        <span class="person-role-context">Featured cast profile</span>
+                    </div>
+
+                    {{ if .Biography }}
+                        <p class="person-hero-summary">{{ .Biography }}</p>
+                    {{ else }}
+                        <p class="person-hero-summary person-muted">Explore the film and television work connected to {{ .Name }}.</p>
+                    {{ end }}
+
+                    <div class="person-fact-row">
+                        {{ if .Birthday }}
+                            <span class="person-fact-chip">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                <b>Born</b> {{ .Birthday }}
+                            </span>
+                        {{ end }}
+                        {{ if .AgeLabel }}
+                            <span class="person-fact-chip">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v5l3.3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                {{ .AgeLabel }}
+                            </span>
+                        {{ end }}
+                        {{ if .Deathday }}
+                            <span class="person-fact-chip"><b>Died</b> {{ .Deathday }}</span>
+                        {{ end }}
+                        {{ if .PlaceOfBirth }}
+                            <span class="person-fact-chip">
+                                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 10.2c0 5-7 10.3-7 10.3S5 15.2 5 10.2a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.5"/></svg>
+                                {{ .PlaceOfBirth }}
+                            </span>
+                        {{ end }}
+                    </div>
+
+                    
+                    <div class="person-hero-stats" aria-label="Career statistics">
+                        <div class="person-stat-item">
+                            <span class="person-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="4" width="17" height="16" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 4v16M16 4v16M3.5 9h4.5M16 9h4.5M3.5 15h4.5M16 15h4.5" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                            <span class="person-stat-value" data-count-value>{{ .CreditCount }}</span>
+                            <span class="person-stat-label">Cast credits</span>
+                        </div>
+                        <div class="person-stat-item">
+                            <span class="person-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="m10 9 5 3-5 3V9Z" fill="currentColor"/></svg></span>
+                            <span class="person-stat-value" data-count-value>{{ .MovieCount }}</span>
+                            <span class="person-stat-label">Movie credits</span>
+                        </div>
+                        <div class="person-stat-item">
+                            <span class="person-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="4.5" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 2.8v3.4M16 2.8v3.4M4 9h16M8 13h3M8 16h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                            <span class="person-stat-value" data-count-value>{{ .SeriesCount }}</span>
+                            <span class="person-stat-label">TV credits</span>
+                        </div>
+                        {{ if .Popularity }}
+                            <div class="person-stat-item person-stat-popularity">
+                                <span class="person-stat-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                                <span class="person-stat-value">{{ printf "%.1f" .Popularity }}</span>
+                                <span class="person-stat-label">TMDB popularity</span>
+                            </div>
+                        {{ end }}
+                    </div>
                 </div>
             </div>
+            <div class="person-hero-bottom-line" aria-hidden="true"><span></span></div>
         </section>
 
-        <section class="person-section reveal-person">
-            <div class="person-section-head">
-                <div>
-                    <span>THE STORY</span>
-                    <h2>Biography</h2>
+        <div class="person-overview-grid">
+            <section class="person-section person-biography-section reveal-person" aria-labelledby="personBiographyHeading">
+                <div class="person-section-head">
+                    <div>
+                        <span class="person-section-eyebrow">THE STORY SO FAR</span>
+                        <h2 id="personBiographyHeading">Biography</h2>
+                    </div>
+                    <span class="person-section-index">01 <i></i> PROFILE</span>
                 </div>
-            </div>
-            <div class="person-bio-card">
-                {{ if .Biography }}
-                    <p>{{ .Biography }}</p>
-                {{ else }}
-                    <p class="muted">No biography is currently available from TMDB.</p>
+                <div class="person-bio-card">
+                    <div class="person-bio-mark" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" fill="none"><path d="M7 9h11v10H7V9Zm15 0h11v10H22V9ZM7 24c0-3 2-5 5-5M22 24c0-3 2-5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    {{ if .Biography }}
+                        <p id="personBioText" class="person-bio-text">{{ .Biography }}</p>
+                        <button id="personBioToggle" class="person-bio-toggle" type="button" aria-expanded="false">
+                            <span>Read full biography</span>
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    {{ else }}
+                        <p class="person-bio-text person-muted">TMDB does not currently have a biography for this profile. The career details and screen credits below are available to explore.</p>
+                    {{ end }}
+                    <div class="person-bio-credit"><span class="person-bio-credit-dot"></span> Biography data provided by TMDB</div>
+                </div>
+            </section>
+
+            <section class="person-section person-glance-section reveal-person" aria-labelledby="personGlanceHeading">
+                <div class="person-section-head">
+                    <div>
+                        <span class="person-section-eyebrow">PROFILE DETAILS</span>
+                        <h2 id="personGlanceHeading">At a glance</h2>
+                    </div>
+                    <span class="person-glance-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12s3.2-6 9-6 9 6 9 6-3.2 6-9 6-9-6-9-6Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg></span>
+                </div>
+                <div class="person-glance-card">
+                    {{ if .KnownFor }}
+                        <div class="person-detail-row">
+                            <span class="person-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.2 5.9-.9L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+                            <div><span>Primary department</span><strong>{{ .KnownFor }}</strong></div>
+                        </div>
+                    {{ end }}
+                    {{ if .Birthday }}
+                        <div class="person-detail-row">
+                            <span class="person-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                            <div><span>Date of birth</span><strong>{{ .Birthday }}</strong></div>
+                        </div>
+                    {{ end }}
+                    {{ if .Deathday }}
+                        <div class="person-detail-row">
+                            <span class="person-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M5 7h14M5 17h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5"/></svg></span>
+                            <div><span>Date of death</span><strong>{{ .Deathday }}</strong></div>
+                        </div>
+                    {{ end }}
+                    {{ if .PlaceOfBirth }}
+                        <div class="person-detail-row">
+                            <span class="person-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M19 10.2c0 5-7 10.3-7 10.3S5 15.2 5 10.2a7 7 0 1 1 14 0Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="10" r="2.3" stroke="currentColor" stroke-width="1.5"/></svg></span>
+                            <div><span>Place of birth</span><strong>{{ .PlaceOfBirth }}</strong></div>
+                        </div>
+                    {{ end }}
+                    {{ if .HomepageURL }}
+                        <a class="person-detail-row person-detail-link" href="{{ .HomepageURL }}" target="_blank" rel="noopener noreferrer">
+                            <span class="person-detail-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 12h17M12 3c2.3 2.5 3.5 5.5 3.5 9S14.3 18.5 12 21c-2.3-2.5-3.5-5.5-3.5-9S9.7 5.5 12 3Z" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                            <div><span>Official website</span><strong>Visit website <b aria-hidden="true">↗</b></strong></div>
+                        </a>
+                    {{ end }}
+                  
+                    {{ if or .TwitterURL .InstagramURL }}
+                        <div class="person-social-row">
+                            <span>Social profiles</span>
+                            <div>
+                                {{ if .TwitterURL }}<a href="{{ .TwitterURL }}" target="_blank" rel="noopener noreferrer" aria-label="Open X or Twitter profile"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.9 5.8 22H2.6l7.3-8.4L1.8 2h6.4l4.5 6.6L18.9 2Zm-1.1 18h1.7L7.3 3.9H5.5L17.8 20Z"/></svg></a>{{ end }}
+                                {{ if .InstagramURL }}<a href="{{ .InstagramURL }}" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram profile"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><circle cx="17.6" cy="6.6" r="1" fill="currentColor"/></svg></a>{{ end }}
+                            </div>
+                        </div>
+                    {{ end }}
+                </div>
+
+                {{ if .AlsoKnownAs }}
+                    <div class="person-aliases">
+                        <span class="person-aliases-label">Also known as</span>
+                        <div class="person-alias-list">
+                            {{ range .AlsoKnownAs }}<span>{{ . }}</span>{{ end }}
+                        </div>
+                    </div>
                 {{ end }}
-            </div>
-        </section>
+            </section>
+        </div>
 
-        <section class="person-section reveal-person">
-            <div class="person-section-head">
+        {{ if .Gallery }}
+            <section class="person-section person-gallery-section reveal-person" aria-labelledby="personGalleryHeading">
+                <div class="person-section-head person-section-head-row">
+                    <div>
+                        <span class="person-section-eyebrow">BEHIND THE CREDITS</span>
+                        <h2 id="personGalleryHeading">On-screen moments</h2>
+                        <p>Selected landscape stills associated with this profile in TMDB.</p>
+                    </div>
+                    <span class="person-section-index">VISUAL ARCHIVE <i></i></span>
+                </div>
+                <div class="person-gallery-grid">
+                    {{ range .Gallery }}
+                        <figure class="person-gallery-card">
+                            <div class="person-gallery-image-wrap">
+                                <img src="{{ .ImageURL }}" alt="{{ .Caption }} still" loading="lazy" decoding="async">
+                                <span class="person-gallery-image-overlay" aria-hidden="true"></span>
+                                <span class="person-gallery-image-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="9" r="1.4" stroke="currentColor" stroke-width="1.3"/><path d="m5 17 5-5 3 3 2-2 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            </div>
+                            <figcaption>
+                                <span class="person-gallery-type">{{ if eq .MediaType "tv" }}SERIES STILL{{ else if eq .MediaType "movie" }}FILM STILL{{ else }}TMDB IMAGE{{ end }}</span>
+                                <span class="person-gallery-caption">{{ .Caption }}</span>
+                            </figcaption>
+                        </figure>
+                    {{ end }}
+                </div>
+            </section>
+        {{ end }}
+
+        <section class="person-section person-filmography-section reveal-person" aria-labelledby="personFilmographyHeading">
+            <div class="person-section-head person-section-head-row">
                 <div>
-                    <span>FILMOGRAPHY</span>
-                    <h2>Movies &amp; series</h2>
+                    <span class="person-section-eyebrow">THE WORK</span>
+                    <h2 id="personFilmographyHeading">Movies &amp; series</h2>
+                    <p>Explore the credits and characters connected to this talent profile.</p>
+                </div>
+                <span class="person-section-count"><b id="personVisibleCreditCount">{{ len .Credits }}</b><span>shown</span></span>
+            </div>
+
+            <div class="person-filmography-tools">
+                <div class="person-credit-filters" role="group" aria-label="Filter credits by media type">
+                    <button type="button" class="person-filter-button is-active" data-credit-filter="all" aria-pressed="true">All credits <span>{{ .CreditCount }}</span></button>
+                    <button type="button" class="person-filter-button" data-credit-filter="movie" aria-pressed="false">Movies <span>{{ .MovieCount }}</span></button>
+                    <button type="button" class="person-filter-button" data-credit-filter="tv" aria-pressed="false">Series <span>{{ .SeriesCount }}</span></button>
+                </div>
+                <div class="person-credit-controls">
+                    <label class="person-credit-search" for="personCreditSearch">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                        <input id="personCreditSearch" type="search" placeholder="Search titles or roles" autocomplete="off">
+                        <kbd>/</kbd>
+                    </label>
+                    <label class="person-sort-control" for="personCreditSort">
+                        <span>Sort</span>
+                        <select id="personCreditSort" class="dropdown">
+                            <option value="recent">Newest first</option>
+                            <option value="rating">Highest rated</option>
+                            <option value="title">Title A–Z</option>
+                        </select>
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </label>
                 </div>
             </div>
 
-            <div class="person-filmography-grid">
+            <div id="personFilmographyGrid" class="person-filmography-grid">
                 {{ if .Credits }}
                     {{ range .Credits }}
-                        <a class="person-credit-card" href="/explore?type={{ .MediaType }}&id={{ .ID }}">
+                        <a class="person-credit-card" href="/explore?type={{ .MediaType }}&amp;id={{ .ID }}" data-credit-card data-media-type="{{ .MediaType }}" data-title="{{ .Title }}" data-character="{{ .Character }}" data-year="{{ .Year }}" data-rating="{{ .Rating }}">
                             <div class="person-credit-poster">
-                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy">{{ end }}
-                                <span class="person-credit-shine"></span>
+                                {{ if .PosterURL }}
+                                    <img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy" decoding="async">
+                                {{ else }}
+                                    <div class="person-poster-fallback" aria-label="Poster unavailable">
+                                        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="5" width="32" height="38" rx="4" stroke="currentColor" stroke-width="1.3"/><path d="M16 5v38M32 5v38M8 14h8M8 24h8M8 34h8M32 14h8M32 24h8M32 34h8" stroke="currentColor" stroke-width="1.2"/></svg>
+                                        <span>No poster</span>
+                                    </div>
+                                {{ end }}
+                                <span class="person-credit-shade" aria-hidden="true"></span>
                                 <span class="person-credit-type">{{ if eq .MediaType "tv" }}Series{{ else }}Movie{{ end }}</span>
+                                <span class="person-credit-open" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                                {{ if .Rating }}<span class="person-credit-rating"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9L12 2.8Z"/></svg>{{ printf "%.1f" .Rating }}</span>{{ end }}
                             </div>
                             <div class="person-credit-copy">
                                 <h3>{{ .Title }}</h3>
-                                <div>
+                                <div class="person-credit-meta">
                                     {{ if .Year }}<span>{{ .Year }}</span>{{ end }}
-                                    {{ if .Character }}<i></i><span>as {{ .Character }}</span>{{ end }}
-                                    {{ if .Rating }}<i></i><span>★ {{ printf "%.1f" .Rating }}</span>{{ end }}
+                                    {{ if and .Year .Character }}<i aria-hidden="true"></i>{{ end }}
+                                    {{ if .Character }}<span class="person-credit-character">as {{ .Character }}</span>{{ end }}
                                 </div>
                             </div>
                         </a>
                     {{ end }}
                 {{ else }}
-                    <div class="person-empty">No credited movies or series were returned by TMDB.</div>
+                    <div class="person-empty">
+                        <span class="person-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 4v16M15 4v16" stroke="currentColor" stroke-width="1.3"/></svg></span>
+                        <strong>No cast credits found</strong>
+                        <span>TMDB did not return movie or television cast credits for this profile.</span>
+                    </div>
                 {{ end }}
+            </div>
+            <div id="personNoCreditsMatch" class="person-no-match" hidden>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.5"/><path d="m16 16 4.5 4.5M8 8l5.5 5.5M13.5 8 8 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <strong>No matching credits</strong>
+                <span>Try another title, character name or filter.</span>
+                <button id="personClearFilters" type="button">Clear search and filters</button>
             </div>
         </section>
 
         <footer class="person-footer">
-            <span>MoviPilot uses TMDB metadata and imagery.</span>
+            <div class="person-footer-brand">
+                <img src="/img/logo favicon.png" alt="" width="23" height="23" loading="lazy">
+                <span>Movi<span>Pilot</span></span>
+            </div>
+            <p>Profile information, filmography and imagery sourced from TMDB.</p>
         </footer>
     </main>
 
-    <script src="/templates/js/person_page.js?v=1" defer></script>
+    <div id="personToast" class="person-toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="/templates/js/person_page.js?v=2" defer></script>
 </body>
 </html>
 {{ end }}

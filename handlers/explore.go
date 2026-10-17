@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -1109,19 +1110,22 @@ func PersonPageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
 	personID, err := strconv.ParseInt(strings.TrimSpace(r.URL.Query().Get("id")), 10, 64)
 	if err != nil || personID <= 0 {
 		http.Error(w, "Invalid person id", http.StatusBadRequest)
 		return
 	}
+
 	client, err := newMovieTMDBClient()
 	if err != nil {
 		http.Error(w, "TMDB is not configured", http.StatusInternalServerError)
 		return
 	}
+
 	person, err := client.GetPersonDetails(personID, map[string]string{
 		"language":           "en-US",
-		"append_to_response": "combined_credits,external_ids,images",
+		"append_to_response": "combined_credits,external_ids,images,tagged_images",
 	})
 	if err != nil || person == nil {
 		http.Error(w, "Could not load person data", http.StatusBadGateway)
@@ -1138,29 +1142,71 @@ func PersonPageHandler(w http.ResponseWriter, r *http.Request) {
 		Rating    float32
 	}
 
-	credits := make([]personCredit, 0, 30)
+	type personMoment struct {
+		ImageURL  string
+		Caption   string
+		MediaType string
+	}
+
+	credits := make([]personCredit, 0, 40)
+	movieCount := 0
+	seriesCount := 0
+	totalCreditCount := 0
+	bestBackdropPath := ""
+	bestBackdropScore := float32(-1)
+
 	if person.PersonCombinedCreditsAppend != nil && person.PersonCombinedCreditsAppend.CombinedCredits != nil {
 		for _, credit := range person.PersonCombinedCreditsAppend.CombinedCredits.Cast {
 			if credit == nil || credit.ID <= 0 {
 				continue
 			}
+
+			mediaType := strings.ToLower(strings.TrimSpace(credit.MediaType))
+			if mediaType != "movie" && mediaType != "tv" {
+				continue
+			}
+
 			title := strings.TrimSpace(credit.Title)
 			year := formatYear(credit.ReleaseDate)
-			if credit.MediaType == "tv" {
+			if mediaType == "tv" {
 				if strings.TrimSpace(credit.Name) != "" {
 					title = strings.TrimSpace(credit.Name)
 				}
 				year = formatYear(credit.FirstAirDate)
 			}
+			if title == "" {
+				continue
+			}
+
+			totalCreditCount++
+			if mediaType == "movie" {
+				movieCount++
+			} else {
+				seriesCount++
+			}
+
 			credits = append(credits, personCredit{
 				ID:        credit.ID,
 				Title:     title,
-				MediaType: credit.MediaType,
+				MediaType: mediaType,
 				Character: strings.TrimSpace(credit.Character),
 				Year:      year,
 				PosterURL: imageURL(credit.PosterPath, tmdb.W342),
 				Rating:    credit.VoteAverage,
 			})
+
+			// The large landscape image behind the portrait comes from a real
+			// title this person is credited in. Prefer a stronger-rated / more
+			// popular title, and fall back to the animated hero background if none
+			// of their returned credits has a backdrop image.
+			backdropPath := strings.TrimSpace(credit.BackdropPath)
+			if backdropPath != "" {
+				score := credit.Popularity + (credit.VoteAverage * 4)
+				if score > bestBackdropScore {
+					bestBackdropScore = score
+					bestBackdropPath = backdropPath
+				}
+			}
 		}
 	}
 
@@ -1171,46 +1217,238 @@ func PersonPageHandler(w http.ResponseWriter, r *http.Request) {
 		credits = credits[:30]
 	}
 
+	// Prefer the main TMDB portrait. If the main path is absent, use the best
+	// available profile image returned by the person's image collection.
+	profilePath := strings.TrimSpace(person.ProfilePath)
+	if profilePath == "" && person.PersonImagesAppend != nil && person.PersonImagesAppend.Images != nil {
+		var bestProfileScore float32 = -1
+		for _, profile := range person.PersonImagesAppend.Images.Profiles {
+			if profile == nil || strings.TrimSpace(profile.FilePath) == "" {
+				continue
+			}
+			if profile.VoteAverage > bestProfileScore {
+				bestProfileScore = profile.VoteAverage
+				profilePath = strings.TrimSpace(profile.FilePath)
+			}
+		}
+	}
+
+	// TMDB's tagged-image endpoint may include landscape stills associated with
+	// a person's credited work. Only display landscape images here; do not infer
+	// personal relationships or identify people as family members.
+	gallery := make([]personMoment, 0, 8)
+	if person.PersonTaggedImagesAppend != nil && person.PersonTaggedImagesAppend.TaggedImages != nil {
+		for _, taggedImage := range person.PersonTaggedImagesAppend.TaggedImages.Results {
+			if taggedImage == nil || strings.TrimSpace(taggedImage.FilePath) == "" {
+				continue
+			}
+			if taggedImage.AspectRatio > 0 && taggedImage.AspectRatio < 1.15 {
+				continue
+			}
+
+			caption := "On-screen moment"
+			mediaType := strings.ToLower(strings.TrimSpace(taggedImage.MediaType))
+			if taggedImage.Media != nil {
+				if title := strings.TrimSpace(taggedImage.Media.Title); title != "" {
+					caption = title
+				} else if title := strings.TrimSpace(taggedImage.Media.OriginalTitle); title != "" {
+					caption = title
+				}
+			}
+			if mediaType != "movie" && mediaType != "tv" {
+				mediaType = ""
+			}
+
+			gallery = append(gallery, personMoment{
+				ImageURL:  imageURL(strings.TrimSpace(taggedImage.FilePath), tmdb.W780),
+				Caption:   caption,
+				MediaType: mediaType,
+			})
+			if len(gallery) >= 8 {
+				break
+			}
+		}
+	}
+
+	alsoKnownAs := make([]string, 0, 6)
+	seenAliases := make(map[string]struct{}, 6)
+	for _, alias := range person.AlsoKnownAs {
+		alias = strings.TrimSpace(alias)
+		if alias == "" || strings.EqualFold(alias, strings.TrimSpace(person.Name)) {
+			continue
+		}
+		key := strings.ToLower(alias)
+		if _, exists := seenAliases[key]; exists {
+			continue
+		}
+		seenAliases[key] = struct{}{}
+		alsoKnownAs = append(alsoKnownAs, alias)
+		if len(alsoKnownAs) >= 6 {
+			break
+		}
+	}
+
+	backdropURL := imageURL(bestBackdropPath, tmdb.W1280)
+	if backdropURL == "" && len(gallery) > 0 {
+		// If no credit has a backdrop, reuse the first landscape tagged still.
+		backdropURL = gallery[0].ImageURL
+	}
+
 	data := struct {
 		ID           int64
 		Name         string
 		Biography    string
 		Birthday     string
 		Deathday     string
+		AgeLabel     string
 		PlaceOfBirth string
 		KnownFor     string
+		Popularity   float32
 		ProfileURL   string
+		BackdropURL  string
 		IMDbURL      string
+		HomepageURL  string
+		TwitterURL   string
+		InstagramURL string
+		AlsoKnownAs  []string
 		Credits      []personCredit
+		CreditCount  int
+		MovieCount   int
+		SeriesCount  int
+		Gallery      []personMoment
 	}{
 		ID:           person.ID,
 		Name:         strings.TrimSpace(person.Name),
 		Biography:    strings.TrimSpace(person.Biography),
 		Birthday:     formatFullDate(person.Birthday),
 		Deathday:     formatFullDate(person.Deathday),
+		AgeLabel:     personAgeLabel(person.Birthday, person.Deathday),
 		PlaceOfBirth: strings.TrimSpace(person.PlaceOfBirth),
 		KnownFor:     strings.TrimSpace(person.KnownForDepartment),
-		ProfileURL:   imageURL(person.ProfilePath, tmdb.W500),
+		Popularity:   person.Popularity,
+		ProfileURL:   imageURL(profilePath, tmdb.W500),
+		BackdropURL:  backdropURL,
+		AlsoKnownAs:  alsoKnownAs,
 		Credits:      credits,
+		CreditCount:  totalCreditCount,
+		MovieCount:   movieCount,
+		SeriesCount:  seriesCount,
+		Gallery:      gallery,
 	}
-	if person.PersonExternalIDsAppend != nil && person.PersonExternalIDsAppend.ExternalIDs != nil && strings.TrimSpace(person.PersonExternalIDsAppend.ExternalIDs.IMDbID) != "" {
-		data.IMDbURL = "https://www.imdb.com/name/" + strings.TrimSpace(person.PersonExternalIDsAppend.ExternalIDs.IMDbID) + "/"
+
+	if person.PersonExternalIDsAppend != nil && person.PersonExternalIDsAppend.ExternalIDs != nil {
+		externalIDs := person.PersonExternalIDsAppend.ExternalIDs
+		imdbID := strings.TrimSpace(externalIDs.IMDbID)
+		if imdbID != "" {
+			data.IMDbURL = "https://www.imdb.com/name/" + url.PathEscape(imdbID) + "/"
+		}
+		data.TwitterURL = personSocialURL("https://x.com/", externalIDs.TwitterID)
+		data.InstagramURL = personSocialURL("https://www.instagram.com/", externalIDs.InstagramID)
 	}
+	data.HomepageURL = personSafeExternalURL(person.Homepage)
 
 	tmpl, err := template.ParseFiles("templates/person_page.html")
 	if err != nil {
-		http.Error(w, "Could not load person page", http.StatusInternalServerError)
+		fmt.Println("[PERSON TEMPLATE PARSE ERROR]", err)
+
+		http.Error(
+			w,
+			"Could not load person page",
+			http.StatusInternalServerError,
+		)
 		return
 	}
+
 	var buffer bytes.Buffer
+
 	if err := tmpl.ExecuteTemplate(&buffer, "person_page", data); err != nil {
-		http.Error(w, "Could not render person page", http.StatusInternalServerError)
+		fmt.Printf(
+			"[PERSON TEMPLATE EXECUTION ERROR] PersonID=%d: %v\n",
+			personID,
+			err,
+		)
+
+		http.Error(
+			w,
+			"Could not render person page",
+			http.StatusInternalServerError,
+		)
 		return
 	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := w.Write(buffer.Bytes()); err != nil {
 		fmt.Println("[PERSON RESPONSE ERROR]", err)
 	}
+}
+
+// personAgeLabel calculates age only when TMDB supplies a complete birth date.
+// A deceased person's age is calculated at death; a living person's age is current.
+func personAgeLabel(birthday, deathday string) string {
+	birthday = strings.TrimSpace(birthday)
+	if birthday == "" {
+		return ""
+	}
+
+	birthDate, err := time.Parse("2006-01-02", birthday)
+	if err != nil {
+		return ""
+	}
+
+	endDate := time.Now()
+	atDeath := false
+	if strings.TrimSpace(deathday) != "" {
+		if parsedDeathday, parseErr := time.Parse("2006-01-02", strings.TrimSpace(deathday)); parseErr == nil {
+			endDate = parsedDeathday
+			atDeath = true
+		}
+	}
+
+	years := endDate.Year() - birthDate.Year()
+	if endDate.Month() < birthDate.Month() || (endDate.Month() == birthDate.Month() && endDate.Day() < birthDate.Day()) {
+		years--
+	}
+	if years < 0 {
+		return ""
+	}
+	if atDeath {
+		return fmt.Sprintf("Age %d at death", years)
+	}
+	return fmt.Sprintf("Age %d", years)
+}
+
+// personSafeExternalURL accepts only absolute HTTP(S) URLs from TMDB metadata.
+func personSafeExternalURL(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Hostname() == "" {
+		return ""
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return ""
+	}
+	return parsed.String()
+}
+
+// personSocialURL creates a public social profile URL from a TMDB username/ID.
+func personSocialURL(baseURL, rawID string) string {
+	rawID = strings.TrimSpace(rawID)
+	if rawID == "" {
+		return ""
+	}
+	if strings.HasPrefix(strings.ToLower(rawID), "https://") || strings.HasPrefix(strings.ToLower(rawID), "http://") {
+		return personSafeExternalURL(rawID)
+	}
+
+	handle := strings.TrimPrefix(rawID, "@")
+	if handle == "" {
+		return ""
+	}
+	return baseURL + url.PathEscape(handle)
 }
 
 func parseExploreQuery(r *http.Request) (string, int64, error) {

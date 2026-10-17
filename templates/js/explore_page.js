@@ -277,7 +277,7 @@
                         body: JSON.stringify(mediaPayload({ rating }))
                     });
                     applyRating(rating);
-                    createSparkBurst(star, { count: 11, className: "rating-spark", area: star });
+                    createSparkBurst(star, { count: 80, className: "rating-spark", area: star });
                     showToast("Your MoviPilot rating was saved.");
                 } catch (error) {
                     showToast(error.message || "Could not save rating.");
@@ -478,7 +478,7 @@
                     likeButton.classList.remove("is-celebrating");
                     void likeButton.offsetWidth;
                     likeButton.classList.add("is-celebrating");
-                    createSparkBurst(likeCard || likeButton, { count: 30, className: "like-spark", area: likeCard || likeButton });
+                    createSparkBurst(likeCard || likeButton, { count: 80, className: "like-spark", area: likeCard || likeButton });
                     setTimeout(() => likeButton.classList.remove("is-celebrating"), 420);
                     showToast("You liked this title. The community pulse just grew.");
                 } else {

@@ -1381,10 +1381,14 @@
                                         </button>
 
 
-                                        <button
+                                        <a
+
+                                            href="/explore?type=movie&id={{ .ID }}"
+                                            data-movie-id="{{ .ID }}"
+                                            aria-label="Explore {{ .Title }}"
+
                                             class="hero-action hero-details-button"
                                             type="button"
-                                            data-movie-id="{{ $movie.ID }}"
                                         >
 
                                             <svg
@@ -1416,7 +1420,7 @@
 
                                             <span>Explore Movie</span>
 
-                                        </button>
+                                        </a>
 
                                     </div>
 

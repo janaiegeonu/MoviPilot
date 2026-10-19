@@ -1,0 +1,227 @@
+{{ define "search_page" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#020713">
+    <meta name="description" content="Discover movies and TV series with MoviPilot smart search.">
+    <title>{{ if eq .Mode "genre" }}{{ if .GenreName }}Explore {{ .GenreName }}{{ else }}Explore by genre{{ end }}{{ else if eq .Mode "year" }}{{ if .Year }}Stories from {{ .Year }}{{ else }}Explore by year{{ end }}{{ else if eq .Mode "keyword" }}{{ if .Keyword }}Explore {{ .Keyword }}{{ else }}Explore by keyword{{ end }}{{ else if .Query }}Search {{ .Query }}{{ else }}Discover films and series{{ end }} — MoviPilot</title>
+    <link rel="icon" href="/img/logo favicon.png">
+    <link rel="preconnect" href="https://image.tmdb.org" crossorigin>
+    <link rel="stylesheet" href="/templates/css/search_page.css?v=2">
+</head>
+<body class="search-page" data-search-mode="{{ .Mode }}">
+    <div class="search-background" aria-hidden="true">
+        <span class="search-background-glow search-background-glow-one"></span>
+        <span class="search-background-glow search-background-glow-two"></span>
+        <span class="search-background-grid"></span>
+        <span class="search-background-dust search-background-dust-one"></span>
+        <span class="search-background-dust search-background-dust-two"></span>
+    </div>
+
+    <header class="search-topbar">
+        <div class="search-topbar-inner">
+            <button class="search-back-button" id="searchBackButton" type="button" aria-label="Go back">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18 5 12l6-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Back</span>
+            </button>
+            <a class="search-brand" href="/dashboard" aria-label="MoviPilot dashboard">
+                <img src="/img/logo favicon.png" alt="" width="32" height="32">
+                <span>Movi<span>Pilot</span></span>
+            </a>
+            <a class="search-dashboard-link" href="/dashboard">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m3.5 10.5 8.5-7 8.5 7M5.7 9.1v10.5h12.6V9.1M9.4 19.6v-6.3h5.2v6.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Dashboard</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="search-shell">
+        <!-- Backdrops are populated from the TMDB images already returned by the handler. -->
+        <section class="search-hero" aria-labelledby="searchHeroTitle">
+            <div class="search-hero-art" aria-hidden="true">
+                {{ range $index, $backdrop := .HeroBackdrops }}
+                    <img class="search-hero-slide{{ if eq $index 0 }} is-active{{ end }}" src="{{ $backdrop }}" alt="" data-hero-slide decoding="async"{{ if eq $index 0 }} fetchpriority="high"{{ else }} loading="lazy"{{ end }}>
+                {{ end }}
+                <span class="search-hero-art-shade"></span>
+                <span class="search-hero-art-glow search-hero-art-glow-one"></span>
+                <span class="search-hero-art-glow search-hero-art-glow-two"></span>
+                <span class="search-art-caption"><i></i> YOUR NEXT STORY STARTS HERE</span>
+            </div>
+
+            <div class="search-hero-content">
+                <div class="search-hero-eyebrow"><span class="search-eyebrow-line"></span> THE MOVIPILOT DISCOVERY ROOM <span class="search-eyebrow-status"><i></i> SMART SEARCH</span></div>
+                <h1 id="searchHeroTitle" class="search-hero-title-rotator" aria-live="polite" aria-atomic="true">
+                    <span class="search-headline-slide is-active" data-title-slide><span>Every great story</span><br><span>starts with <em>a search.</em></span></span>
+                    <span class="search-headline-slide" data-title-slide aria-hidden="true"><span>Your next obsession</span><br><span>starts <em>right here.</em></span></span>
+                    <span class="search-headline-slide" data-title-slide aria-hidden="true"><span>One search.</span><br><span><em>Endless worlds.</em></span></span>
+                </h1>
+                <p class="search-hero-description">Find the film you remember, the series you’ve been meaning to watch, or a whole new world you didn’t know you were looking for.</p>
+
+                <form id="smartSearchForm" class="smart-search-form" action="/search" method="get" autocomplete="off">
+                    <input id="searchModeInput" type="hidden" name="mode" value="{{ .Mode }}">
+                    <input id="searchPageInput" type="hidden" name="page" value="1">
+                    <input id="searchGenreID" type="hidden" name="genre_id" value="{{ .GenreID }}">
+                    <input id="searchYearGenreID" type="hidden" name="year_genre_id" value="{{ .YearGenreID }}">
+                    <input id="searchKeywordID" type="hidden" name="keyword_id" value="{{ .KeywordID }}">
+
+                    <div class="search-mode-row" role="group" aria-label="Choose how to search">
+                        <span class="search-mode-label">I’m looking for</span>
+                        <div class="search-mode-tabs">
+                            <button class="search-mode-tab{{ if eq .Mode "title" }} is-active{{ end }}" type="button" data-search-mode="title" aria-pressed="{{ if eq .Mode "title" }}true{{ else }}false{{ end }}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Title</button>
+                            <button class="search-mode-tab{{ if eq .Mode "genre" }} is-active{{ end }}" type="button" data-search-mode="genre" aria-pressed="{{ if eq .Mode "genre" }}true{{ else }}false{{ end }}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 14.7 9l6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5Z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg> Genre</button>
+                            <button class="search-mode-tab{{ if eq .Mode "year" }} is-active{{ end }}" type="button" data-search-mode="year" aria-pressed="{{ if eq .Mode "year" }}true{{ else }}false{{ end }}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg> Year</button>
+                            <button class="search-mode-tab{{ if eq .Mode "keyword" }} is-active{{ end }}" type="button" data-search-mode="keyword" aria-pressed="{{ if eq .Mode "keyword" }}true{{ else }}false{{ end }}"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 4.5h10M9.5 9.5h10M9.5 14.5h6M4.5 4.5h.01M4.5 9.5h.01M4.5 14.5h.01M4.5 19.5h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg> Keyword</button>
+                        </div>
+                    </div>
+
+                    <div class="search-form-main-row">
+                        <div class="search-input-panels">
+                            <div class="search-input-panel{{ if eq .Mode "title" }} is-active{{ end }}" data-search-panel="title"{{ if ne .Mode "title" }} hidden{{ end }}>
+                                <label class="smart-search-field" for="searchTitleInput">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.6"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                                    <span class="smart-search-field-content"><small>SEARCH BY TITLE</small><input id="searchTitleInput" name="q" type="search" value="{{ .Query }}" placeholder="Search movies, series, or a memorable scene…" maxlength="100" autocomplete="off" aria-autocomplete="list" aria-controls="titleSuggestions" aria-expanded="false"></span>
+                                    <kbd>/</kbd>
+                                </label>
+                                <div class="search-suggestions" id="titleSuggestions" role="listbox" aria-label="Title suggestions" hidden></div>
+                                <div class="search-title-year-filter"><label for="searchTitleYear">Release year <span>(optional)</span></label><select id="searchTitleYear" name="title_year"><option value="">Any year</option>{{ range .YearOptions }}<option value="{{ . }}"{{ if eq $.TitleYear (printf "%d" .) }} selected{{ end }}>{{ . }}</option>{{ end }}</select></div>
+                            </div>
+
+                            <div class="search-input-panel{{ if eq .Mode "genre" }} is-active{{ end }}" data-search-panel="genre"{{ if ne .Mode "genre" }} hidden{{ end }}>
+                                <label class="smart-search-field" for="searchGenreInput">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 14.7 9l6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5Z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+                                    <span class="smart-search-field-content"><small>CHOOSE A GENRE</small><input id="searchGenreInput" name="genre" type="search" value="{{ .GenreName }}" placeholder="Try action, romance, mystery…" maxlength="80" autocomplete="off" aria-autocomplete="list" aria-controls="genreSuggestions" aria-expanded="false"></span>
+                                    <span class="search-field-hint">TYPE TO EXPLORE</span>
+                                </label>
+                                <div class="search-suggestions" id="genreSuggestions" role="listbox" aria-label="Genre suggestions" hidden></div>
+                            </div>
+
+                            <div class="search-input-panel{{ if eq .Mode "year" }} is-active{{ end }}" data-search-panel="year"{{ if ne .Mode "year" }} hidden{{ end }}>
+                                <div class="search-year-filters">
+                                    <label class="smart-search-field search-year-value-field" for="searchYearInput">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M8 13h2M14 13h2M8 16.5h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                                        <span class="smart-search-field-content"><small>RELEASE YEAR</small><input id="searchYearInput" name="year" type="number" min="1000" max="9999" step="1" value="{{ .Year }}" list="searchYearOptions" placeholder="Choose a year…" inputmode="numeric"></span>
+                                    </label>
+                                    <div class="search-year-genre-wrap">
+                                        <label class="smart-search-field search-year-genre-field" for="searchYearGenreInput">
+                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 14.7 9l6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3.5Z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/></svg>
+                                            <span class="smart-search-field-content"><small>GENRE FILTER <span class="search-optional-label">· OPTIONAL</span></small><input id="searchYearGenreInput" name="year_genre" type="search" value="{{ .YearGenreName }}" placeholder="Any genre" maxlength="80" autocomplete="off" aria-autocomplete="list" aria-controls="yearGenreSuggestions" aria-expanded="false"></span>
+                                            <span class="search-field-hint search-year-genre-hint">NARROW IT DOWN</span>
+                                        </label>
+                                        <div class="search-suggestions" id="yearGenreSuggestions" role="listbox" aria-label="Genre filter suggestions" hidden></div>
+                                    </div>
+                                </div>
+                                <datalist id="searchYearOptions">{{ range .YearOptions }}<option value="{{ . }}"></option>{{ end }}</datalist>
+                            </div>
+
+                            <div class="search-input-panel{{ if eq .Mode "keyword" }} is-active{{ end }}" data-search-panel="keyword"{{ if ne .Mode "keyword" }} hidden{{ end }}>
+                                <label class="smart-search-field" for="searchKeywordInput">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.5 4.5h10M9.5 9.5h10M9.5 14.5h6M4.5 4.5h.01M4.5 9.5h.01M4.5 14.5h.01M4.5 19.5h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                                    <span class="smart-search-field-content"><small>FIND A STORY BY THEME</small><input id="searchKeywordInput" name="keyword" type="search" value="{{ .Keyword }}" placeholder="For example: time travel, found family…" maxlength="100" autocomplete="off" aria-autocomplete="list" aria-controls="keywordSuggestions" aria-expanded="false"></span>
+                                    <span class="search-field-hint">SMART KEYWORDS</span>
+                                </label>
+                                <div class="search-suggestions" id="keywordSuggestions" role="listbox" aria-label="Keyword suggestions" hidden></div>
+                            </div>
+                        </div>
+
+                        <label class="search-media-filter" for="searchMediaFilter"><span>SHOW</span><select id="searchMediaFilter" name="media"><option value="all"{{ if eq .MediaFilter "all" }} selected{{ end }}>Movies & series</option><option value="movie"{{ if eq .MediaFilter "movie" }} selected{{ end }}>Movies only</option><option value="tv"{{ if eq .MediaFilter "tv" }} selected{{ end }}>Series only</option></select><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></label>
+
+                        <button class="search-submit-button" type="submit">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                            <span>Discover</span>
+                        </button>
+                    </div>
+
+                    <div class="search-smart-foot"><span><i></i> Powered by TMDB discovery</span><span>Tip: press <kbd>/</kbd> to focus search <span class="search-foot-divider">·</span> <kbd>Enter ↵</kbd> to discover</span></div>
+                </form>
+            </div>
+        </section>
+
+        {{ if .ErrorMessage }}
+            <div class="search-alert" role="status"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 7.5v5M12 16.2h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>{{ .ErrorMessage }}</span></div>
+        {{ end }}
+
+        <section class="search-section search-genre-shortcuts" aria-labelledby="searchGenresHeading">
+            <div class="search-section-heading search-genre-section-heading">
+                <div><span class="search-section-eyebrow">FOLLOW A FEELING</span><h2 id="searchGenresHeading">Explore by genre</h2><p>Browse by mood when you feel like discovering something different.</p></div>
+                <button class="search-genre-toggle" id="searchGenresToggle" type="button" aria-expanded="false" aria-controls="searchGenreChipPanel">
+                    <span>Browse genres</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+            </div>
+            <div class="search-genre-collapsible" id="searchGenreChipPanel" hidden>
+                <div class="search-genre-chip-row">
+                    {{ range .Genres }}<a class="search-genre-chip" href="/search?mode=genre&amp;genre_id={{ .ID }}&amp;genre={{ urlquery .Name }}&amp;media={{ $.MediaFilter }}"><span class="search-chip-spark" aria-hidden="true">✦</span>{{ .Name }}<span class="search-chip-arrow" aria-hidden="true">↗</span></a>{{ end }}
+                </div>
+            </div>
+        </section>
+
+        <section class="search-section search-results-section" aria-labelledby="searchResultsHeading">
+            <div class="search-section-heading search-results-heading-row">
+                <div><span class="search-section-eyebrow">THE DISCOVERY FEED</span><h2 id="searchResultsHeading">{{ .Heading }}</h2><p>{{ .Subheading }}</p></div>
+                <div class="search-results-tools">
+                    <span class="search-results-count"><strong>{{ .TotalResults }}</strong> titles</span>
+                    <label class="search-sort-control" for="searchResultSort"><span>SORT</span><select id="searchResultSort"><option value="popular">Popular</option><option value="rating">Top rated</option><option value="year">Newest</option><option value="title">Title A–Z</option></select><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 10 5 5 5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></label>
+                </div>
+            </div>
+
+            {{ if .Results }}
+                <div class="search-results-grid" id="searchResultsGrid">
+                    {{ range .Results }}
+                        <a class="search-result-card" href="/explore?type={{ .MediaType }}&amp;id={{ .ID }}" data-search-card data-media-type="{{ .MediaType }}" data-title="{{ .Title }}" data-year="{{ .Year }}" data-rating="{{ .Rating }}" data-popularity="{{ .Popularity }}">
+                            <div class="search-result-poster">
+                                {{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy" decoding="async">{{ else }}<div class="search-poster-fallback"><svg viewBox="0 0 48 48" fill="none" aria-hidden="true"><rect x="8" y="5" width="32" height="38" rx="4" stroke="currentColor" stroke-width="1.4"/><path d="M16 5v38M32 5v38M8 14h8M8 24h8M8 34h8M32 14h8M32 24h8M32 34h8" stroke="currentColor" stroke-width="1.2"/></svg><span>Poster unavailable</span></div>{{ end }}
+                                <span class="search-result-shade"></span>
+                                <span class="search-result-type">{{ if eq .MediaType "tv" }}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="m9 2.8 3 2.2 3-2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Series{{ else }}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="3.5" width="16" height="17" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 3.5v17M16 3.5v17M4 8.5h4M4 15.5h4M16 8.5h4M16 15.5h4" stroke="currentColor" stroke-width="1.2"/></svg> Movie{{ end }}</span>
+                                {{ if .Rating }}<span class="search-result-rating"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9L12 2.8Z"/></svg>{{ printf "%.1f" .Rating }}</span>{{ end }}
+                                <span class="search-result-open" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M8 7h9v9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                            </div>
+                            <div class="search-result-copy"><h3>{{ .Title }}</h3><div class="search-result-meta">{{ if .Year }}<span>{{ .Year }}</span>{{ end }}{{ if and .Year .GenreLabels }}<i></i>{{ end }}{{ range $index, $genre := .GenreLabels }}{{ if $index }}<span class="search-meta-comma">·</span>{{ end }}<span>{{ $genre }}</span>{{ end }}</div><p>{{ if .Overview }}{{ .Overview }}{{ else }}Explore this title on MoviPilot.{{ end }}</p></div>
+                        </a>
+                    {{ end }}
+                </div>
+                {{ if or .HasPrevious .HasNext }}
+                    <nav class="search-pagination" aria-label="Search result pages">
+                        <button type="button" data-search-page="{{ .PreviousPage }}"{{ if not .HasPrevious }} disabled{{ end }}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Previous</button>
+                        <span>Page <strong>{{ .Page }}</strong> of <strong>{{ .TotalPages }}</strong></span>
+                        <button type="button" data-search-page="{{ .NextPage }}"{{ if not .HasNext }} disabled{{ end }}>Next <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </nav>
+                {{ end }}
+            {{ else if not .ErrorMessage }}
+                <div class="search-empty-state">
+                    <div class="search-empty-art" aria-hidden="true"><span class="search-empty-orbit"></span><svg viewBox="0 0 100 100" fill="none"><circle cx="42" cy="42" r="24" stroke="currentColor" stroke-width="2"/><path d="m60 60 19 19" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="42" cy="42" r="13" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 5"/><path d="M36 42h12M42 36v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                    {{ if .HasActiveSearch }}<strong>No matching titles yet</strong><p>Try a broader phrase, another genre, or a different year. Discovery works best when a title or filter is selected.</p>{{ else }}<strong>Choose a path into the story</strong><p>Search a title, pick a genre, travel to a year, or explore a keyword to build your own discovery trail.</p>{{ end }}
+                    <button type="button" id="searchClearButton">Reset search</button>
+                </div>
+            {{ end }}
+        </section>
+
+        {{ if .Recommendations }}
+            <section class="search-section search-recommendations-section" aria-labelledby="searchRecommendationsHeading">
+                <div class="search-section-heading"><div><span class="search-section-eyebrow">A FEW MORE WORLDS TO ENTER</span><h2 id="searchRecommendationsHeading">You might also like</h2><p>Stories selected from related titles and matching discovery signals.</p></div><span class="search-recommendation-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="m24 5 5.8 11.7 12.9 1.9-9.3 9.1 2.2 12.8L24 34.4l-11.6 6.1 2.2-12.8-9.3-9.1 12.9-1.9L24 5Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M24 13v18M15 22h18" stroke="currentColor" stroke-width="1" opacity=".6"/></svg></span></div>
+                <div class="search-recommendation-grid">
+                    {{ range .Recommendations }}
+                        <a class="search-recommendation-card" href="/explore?type={{ .MediaType }}&amp;id={{ .ID }}" data-search-card data-media-type="{{ .MediaType }}" data-title="{{ .Title }}" data-year="{{ .Year }}" data-rating="{{ .Rating }}" data-popularity="{{ .Popularity }}">
+                            <div class="search-recommendation-poster">{{ if .PosterURL }}<img src="{{ .PosterURL }}" alt="{{ .Title }} poster" loading="lazy" decoding="async">{{ else }}<div class="search-poster-fallback"><span>MP</span></div>{{ end }}<span class="search-recommendation-shade"></span>{{ if .Rating }}<span class="search-result-rating"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2-4.5-4.4 6.3-.9L12 2.8Z"/></svg>{{ printf "%.1f" .Rating }}</span>{{ end }}</div>
+                            <div class="search-recommendation-copy"><span>{{ if eq .MediaType "tv" }}SERIES{{ else }}FILM{{ end }}{{ if .Year }} <i></i> {{ .Year }}{{ end }}</span><h3>{{ .Title }}</h3><p>{{ if .Overview }}{{ .Overview }}{{ else }}A title to add to your discovery list.{{ end }}</p></div>
+                        </a>
+                    {{ end }}
+                </div>
+            </section>
+        {{ end }}
+
+        {{ if .KeywordPills }}
+            <section class="search-section search-keyword-section" aria-labelledby="searchKeywordsHeading">
+                <div class="search-section-heading"><div><span class="search-section-eyebrow">DISCOVERY SIGNALS</span><h2 id="searchKeywordsHeading">Follow a keyword</h2><p>Explore other movies and series connected to a similar theme.</p></div></div>
+                <div class="search-keyword-chip-row">{{ range .KeywordPills }}<a class="search-keyword-chip" href="/search?mode=keyword&amp;keyword_id={{ .ID }}&amp;keyword={{ urlquery .Name }}&amp;media={{ $.MediaFilter }}"><span>#</span>{{ .Name }}<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{{ end }}</div>
+            </section>
+        {{ end }}
+
+        <footer class="search-footer"><div class="search-footer-brand"><img src="/img/logo favicon.png" alt="" width="24" height="24" loading="lazy"><span>Movi<span>Pilot</span></span></div><p>Metadata, genres, keywords, and imagery powered by TMDB. TMDB does not endorse or certify MoviPilot.</p><a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">Explore TMDB <span aria-hidden="true">↗</span></a></footer>
+    </main>
+
+    <div class="search-toast" id="searchToast" role="status" aria-live="polite"></div>
+    <script src="/templates/js/search_page.js?v=2" defer></script>
+</body>
+</html>
+{{ end }}

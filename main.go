@@ -56,6 +56,8 @@ func main() {
 	http.HandleFunc("/api/explore/keyword-movies", handlers.ExploreKeywordMoviesAPI)
 	http.HandleFunc("/search", handlers.SearchPageHandler)
 	http.HandleFunc("/api/search/suggestions", handlers.SearchSuggestionsHandler)
+	http.HandleFunc("/api/profile", handlers.ProfileCardHandler)
+	http.HandleFunc("/logout", handlers.ProfileLogoutHandler)
 
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))

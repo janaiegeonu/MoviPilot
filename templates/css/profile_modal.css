@@ -1,0 +1,708 @@
+/* ==========================================================================
+   MOVIPILOT PROFILE CARD
+   Self-contained dashboard modal styles. All selectors are scoped to mp-profile.
+   ========================================================================== */
+
+body.mp-profile-open {
+    overflow: hidden;
+}
+
+.mp-profile-overlay,
+.mp-profile-overlay * {
+    box-sizing: border-box;
+}
+
+.mp-profile-overlay[hidden] {
+    display: none !important;
+}
+
+.mp-profile-overlay {
+    --mp-profile-ink: #f1fbff;
+    --mp-profile-muted: rgba(200, 222, 232, .68);
+    --mp-profile-soft: rgba(169, 201, 216, .48);
+    --mp-profile-cyan: #91e9e8;
+    --mp-profile-blue: #83baff;
+    --mp-profile-green: #89f1d1;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: clamp(14px, 3vw, 34px);
+    isolation: isolate;
+    background: rgba(1, 5, 16, .58);
+    -webkit-backdrop-filter: blur(22px) saturate(145%);
+    backdrop-filter: blur(22px) saturate(145%);
+    opacity: 0;
+    transition: opacity .28s ease;
+}
+
+.mp-profile-overlay::before,
+.mp-profile-overlay::after {
+    position: fixed;
+    inset: -25%;
+    z-index: -1;
+    content: "";
+    pointer-events: none;
+}
+
+.mp-profile-overlay::before {
+    background:
+        radial-gradient(ellipse at 18% 35%, rgba(35, 145, 193, .16), transparent 38%),
+        radial-gradient(ellipse at 79% 68%, rgba(23, 182, 151, .13), transparent 35%);
+    filter: blur(25px);
+    animation: mpProfileBackdropDrift 14s ease-in-out infinite alternate;
+}
+
+.mp-profile-overlay::after {
+    background: linear-gradient(118deg, transparent 25%, rgba(129, 226, 226, .035) 50%, transparent 72%);
+    transform: translateX(-20%);
+    animation: mpProfileBackdropSheen 11s ease-in-out infinite;
+}
+
+.mp-profile-overlay.is-open {
+    opacity: 1;
+}
+
+.mp-profile-card {
+    position: relative;
+    width: min(100%, 485px);
+    max-height: min(92vh, 800px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgba(170, 222, 238, .15);
+    border-radius: 27px;
+    background:
+        radial-gradient(ellipse at 50% -12%, rgba(57, 128, 167, .12), transparent 45%),
+        linear-gradient(155deg, #091625 0%, #07121f 55%, #06101b 100%);
+    color: var(--mp-profile-ink);
+    box-shadow: 0 38px 110px rgba(0, 0, 0, .56), 0 8px 30px rgba(0,  0, 0, .24), inset 0 1px rgba(255, 255, 255, .045);
+    opacity: 0;
+    transform: translateY(14px) scale(.975);
+    transition: opacity .32s cubic-bezier(.2, .8, .2, 1), transform .38s cubic-bezier(.2, .8, .2, 1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(105, 190, 202, .28) transparent;
+}
+
+.mp-profile-overlay.is-open .mp-profile-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.mp-profile-card:focus {
+    outline: none;
+}
+
+/* Animated cover artwork */
+.mp-profile-cover {
+    position: relative;
+    height: 178px;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: 26px 26px 0 0;
+    background: #071526;
+}
+
+.mp-profile-aurora {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+}
+
+.mp-profile-cover::before,
+.mp-profile-cover::after {
+    position: absolute;
+    inset: -35%;
+    z-index: 1;
+    content: "";
+    pointer-events: none;
+}
+
+.mp-profile-cover::before {
+    background: conic-gradient(from 15deg at 50% 50%, transparent 0deg, rgba(40, 165, 208, .15) 55deg, transparent 108deg, rgba(51, 219, 178, .16) 195deg, transparent 262deg, rgba(103, 130, 255, .12) 318deg, transparent 360deg);
+    filter: blur(35px);
+    mix-blend-mode: screen;
+    animation: mpProfileCoverFlow 19s linear infinite;
+}
+
+.mp-profile-cover::after {
+    background: radial-gradient(ellipse at 55% 6%, rgba(214, 255, 255, .17), transparent 40%);
+    opacity: .9;
+}
+
+.mp-profile-cover-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(3, 10, 23, .30), transparent 65%), linear-gradient(0deg, rgba(5, 14, 25, .73), transparent 65%);
+}
+
+.mp-profile-cover-content {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 23px 25px 20px;
+    pointer-events: none;
+}
+
+.mp-profile-cover-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(232, 255, 255, .81);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-shadow: 0 1px 15px rgba(0, 0, 0, .25);
+}
+
+.mp-profile-cover-mark > span {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 50%;
+    background: #94f4d9;
+    box-shadow: 0 0 14px rgba(148, 244, 217, .85);
+    animation: mpProfileStatusPulse 2.8s ease-in-out infinite;
+}
+
+.mp-profile-cover-content > p {
+    margin: 10px 0 0;
+    color: #f3ffff;
+    font-size: clamp(23px, 5vw, 31px);
+    font-weight: 630;
+    line-height: 1.1;
+    letter-spacing: -.055em;
+    text-shadow: 0 3px 18px rgba(0, 0, 0, .35);
+}
+
+.mp-profile-cover-caption {
+    position: absolute;
+    top: 55px;
+    right: 24px;
+    bottom: auto;
+    color: rgba(225, 251, 255, .50);
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: .17em;
+}
+
+.mp-profile-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    padding: 0;
+    border: 1px solid rgba(239, 253, 255, .22);
+    border-radius: 50%;
+    background: rgba(3, 13, 26, .37);
+    color: rgba(245, 255, 255, .94);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.mp-profile-close svg {
+    width: 17px;
+    height: 17px;
+}
+
+.mp-profile-close:hover {
+    transform: rotate(90deg);
+    border-color: rgba(223, 255, 255, .46);
+    background: rgba(9, 26, 40, .78);
+}
+
+/* Card header */
+.mp-profile-body {
+    padding: 23px 25px 24px;
+}
+
+.mp-profile-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 18px;
+}
+
+.mp-profile-eyebrow {
+    display: block;
+    color: rgba(130, 221, 222, .72);
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: .19em;
+}
+
+.mp-profile-heading h2 {
+    margin: 6px 0 0;
+    color: #effbff;
+    font-size: 25px;
+    font-weight: 680;
+    line-height: 1.12;
+    letter-spacing: -.05em;
+}
+
+.mp-profile-heading p {
+    margin: 7px 0 0;
+    color: var(--mp-profile-muted);
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.mp-profile-heading-orbit {
+    display: grid;
+    place-items: center;
+    width: 43px;
+    height: 43px;
+    flex: 0 0 43px;
+    border: 1px solid rgba(134, 209, 223, .08);
+    border-radius: 50%;
+    background: rgba(132, 222, 232, .035);
+    color: rgba(135, 224, 222, .63);
+}
+
+.mp-profile-heading-orbit svg {
+    width: 32px;
+    height: 32px;
+    animation: mpProfileOrbit 30s linear infinite;
+}
+
+/* Initials and membership */
+.mp-profile-identity {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-width: 0;
+    padding: 17px 0 18px;
+    border-top: 1px solid rgba(149, 210, 225, .09);
+    border-bottom: 1px solid rgba(149, 210, 225, .09);
+}
+
+.mp-profile-avatar {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 67px;
+    height: 67px;
+    flex: 0 0 67px;
+    overflow: visible;
+    border: 1px solid rgba(171, 242, 233, .48);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 18%, rgba(179, 255, 244, .45), transparent 29%), linear-gradient(145deg, #2a708c 0%, #1c6982 40%, #285b73 70%, #237f72 100%);
+    color: #f1ffff;
+    box-shadow: inset 0 1px rgba(255, 255, 255, .24), 0 7px 22px rgba(11, 133, 147, .18);
+}
+
+.mp-profile-avatar::before {
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(121, 222, 221, .18);
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+}
+
+.mp-profile-avatar > span {
+    font-size: 23px;
+    font-weight: 780;
+    letter-spacing: -.045em;
+}
+
+.mp-profile-avatar > i {
+    position: absolute;
+    right: 2px;
+    bottom: 3px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #091624;
+    border-radius: 50%;
+    background: #87e8c9;
+    box-shadow: 0 0 11px rgba(135, 232, 201, .35);
+}
+
+.mp-profile-identity-copy {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mp-profile-identity-copy h3 {
+    overflow-wrap: anywhere;
+    margin: 0;
+    color: #effbff;
+    font-size: 17px;
+    font-weight: 680;
+    line-height: 1.35;
+    letter-spacing: -.035em;
+}
+
+.mp-profile-identity-copy p {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 6px 0 0;
+    color: var(--mp-profile-muted);
+    font-size: 10px;
+}
+
+.mp-profile-member-dot {
+    width: 5px;
+    height: 5px;
+    flex: 0 0 5px;
+    border-radius: 50%;
+    background: #8ae8cc;
+    box-shadow: 0 0 7px rgba(138, 232, 204, .35);
+}
+
+/* Account ID copy control */
+.mp-profile-id-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    margin-top: 17px;
+    padding: 13px 13px;
+    border: 1px solid rgba(123, 205, 221, .13);
+    border-radius: 14px;
+    background: linear-gradient(115deg, rgba(19, 49, 69, .52), rgba(11, 37, 48, .44));
+    color: #e9fbff;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.mp-profile-id-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgba(126, 226, 219, .31);
+    background: linear-gradient(115deg, rgba(23, 64, 83, .69), rgba(11, 48, 52, .55));
+}
+
+.mp-profile-id-button:disabled {
+    opacity: .65;
+    cursor: progress;
+}
+
+.mp-profile-id-icon {
+    display: grid;
+    place-items: center;
+    width: 35px;
+    height: 35px;
+    flex: 0 0 35px;
+    border: 1px solid rgba(135, 220, 224, .11);
+    border-radius: 10px;
+    background: rgba(110, 201, 213, .07);
+    color: #91e7e2;
+}
+
+.mp-profile-id-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.mp-profile-id-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mp-profile-id-copy small {
+    color: rgba(145, 211, 220, .55);
+    font-size: 7px;
+    font-weight: 850;
+    letter-spacing: .15em;
+}
+
+.mp-profile-id-copy strong {
+    overflow: hidden;
+    color: #eafaff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: .055em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-profile-copy-label {
+    flex: 0 0 auto;
+    color: #8be7d9;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+/* Email and account creation detail rows */
+.mp-profile-details {
+    display: grid;
+    gap: 2px;
+    margin-top: 9px;
+}
+
+.mp-profile-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 11px 1px;
+}
+
+.mp-profile-detail-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border: 1px solid rgba(148, 207, 220, .075);
+    border-radius: 11px;
+    background: rgba(177, 225, 236, .035);
+    color: rgba(157, 220, 225, .77);
+}
+
+.mp-profile-detail-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.mp-profile-detail-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mp-profile-detail-copy small {
+    color: var(--mp-profile-soft);
+    font-size: 9px;
+}
+
+.mp-profile-detail-copy strong {
+    overflow-wrap: anywhere;
+    color: rgba(237, 249, 255, .93);
+    font-size: 11px;
+    font-weight: 620;
+    line-height: 1.45;
+}
+
+.mp-profile-status {
+    margin: 5px 0 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(133, 218, 218, .13);
+    border-radius: 10px;
+    background: rgba(45, 137, 146, .08);
+    color: #b8f2e8;
+    font-size: 9px;
+    line-height: 1.6;
+}
+
+.mp-profile-status.is-error {
+    border-color: rgba(255, 156, 156, .18);
+    background: rgba(151, 48, 66, .10);
+    color: #ffcaca;
+}
+
+/* Actions */
+.mp-profile-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 10px;
+    padding-top: 17px;
+    border-top: 1px solid rgba(149, 210, 225, .09);
+}
+
+.mp-profile-footer > p {
+    margin: 0;
+    color: rgba(163, 203, 214, .43);
+    font-size: 9px;
+    line-height: 1.55;
+}
+
+.mp-profile-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 39px;
+    padding: 0 15px;
+    border: 1px solid rgba(255, 164, 163, .18);
+    border-radius: 11px;
+    background: linear-gradient(135deg, rgba(142, 45, 64, .26), rgba(91, 34, 54, .22));
+    color: #ffc5c8;
+    font-size: 10px;
+    font-weight: 760;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.mp-profile-logout svg {
+    width: 16px;
+    height: 16px;
+}
+
+.mp-profile-logout:hover {
+    transform: translateY(-1px);
+    border-color: rgba(255, 164, 163, .38);
+    background: linear-gradient(135deg, rgba(164, 51, 71, .35), rgba(110, 37, 58, .32));
+}
+
+.mp-profile-close:focus-visible,
+.mp-profile-id-button:focus-visible,
+.mp-profile-logout:focus-visible {
+    outline: 2px solid rgba(145, 233, 232, .85);
+    outline-offset: 3px;
+}
+
+@keyframes mpProfileBackdropDrift {
+    from { transform: translate3d(-2%, -1%, 0) scale(1); }
+    to { transform: translate3d(3%, 2%, 0) scale(1.08); }
+}
+
+@keyframes mpProfileBackdropSheen {
+    0%, 100% { transform: translateX(-22%) rotate(-9deg); opacity: .24; }
+    50% { transform: translateX(22%) rotate(-9deg); opacity: .55; }
+}
+
+@keyframes mpProfileCoverFlow {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes mpProfileStatusPulse {
+    0%, 100% { opacity: .72; transform: scale(.94); }
+    50% { opacity: 1; transform: scale(1.12); }
+}
+
+@keyframes mpProfileOrbit {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 520px) {
+    .mp-profile-overlay {
+        align-items: center;
+        padding: 12px;
+    }
+
+    .mp-profile-card {
+        width: 100%;
+        max-height: 94vh;
+        border-radius: 22px;
+    }
+
+    .mp-profile-cover {
+        height: 157px;
+        border-radius: 21px 21px 0 0;
+    }
+
+    .mp-profile-cover-content {
+        padding: 19px 18px 17px;
+    }
+
+    .mp-profile-cover-content > p {
+        max-width: 260px;
+        font-size: 25px;
+    }
+
+    .mp-profile-cover-caption {
+        top: 52px;
+        right: 17px;
+        bottom: auto;
+        font-size: 6px;
+    }
+
+    .mp-profile-close {
+        top: 11px;
+        right: 11px;
+        width: 33px;
+        height: 33px;
+    }
+
+    .mp-profile-body {
+        padding: 20px 18px 19px;
+    }
+
+    .mp-profile-heading h2 {
+        font-size: 23px;
+    }
+
+    .mp-profile-heading-orbit {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+    }
+
+    .mp-profile-avatar {
+        width: 59px;
+        height: 59px;
+        flex-basis: 59px;
+    }
+
+    .mp-profile-avatar > span {
+        font-size: 21px;
+    }
+
+    .mp-profile-identity-copy h3 {
+        font-size: 15px;
+    }
+
+    .mp-profile-footer > p {
+        max-width: 135px;
+    }
+}
+
+@media (max-width: 360px) {
+    .mp-profile-body {
+        padding-right: 14px;
+        padding-left: 14px;
+    }
+
+    .mp-profile-cover-content > p {
+        font-size: 23px;
+    }
+
+    .mp-profile-id-button {
+        gap: 8px;
+        padding: 11px 9px;
+    }
+
+    .mp-profile-id-copy strong {
+        font-size: 10px;
+    }
+
+    .mp-profile-copy-label {
+        font-size: 8px;
+    }
+
+    .mp-profile-footer > p {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-profile-overlay,
+    .mp-profile-card,
+    .mp-profile-overlay::before,
+    .mp-profile-overlay::after,
+    .mp-profile-cover::before,
+    .mp-profile-heading-orbit svg,
+    .mp-profile-cover-mark > span {
+        animation: none !important;
+        transition-duration: .01ms !important;
+    }
+}

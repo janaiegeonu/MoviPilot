@@ -35,6 +35,8 @@
     href="/templates/css/anime_page.css?v=1"
 >
 
+<link rel="stylesheet" href="/templates/css/profile_modal.css?v=1">
+
 
 </head>
 
@@ -214,10 +216,7 @@
 
             </div>
 
-
-
-            <!-- PROFILE -->
-
+    <!-- PROFILE ICON -->
             <button
                 class="profile-button"
                 id="profileButton"
@@ -1017,71 +1016,6 @@
     </div>
 
 
-    <!-- =====================================================
-         SIDEBAR BOTTOM
-         ===================================================== -->
-
-    <div class="sidebar-bottom">
-
-        <button
-            class="sidebar-item logout-item"
-            id="sidebarLogoutButton"
-            type="button"
-            data-sidebar-action="logout"
-            data-sidebar-label="Logout"
-        >
-
-            <span class="sidebar-icon logout-icon">
-
-                <svg
-                    class="sidebar-icon-svg logout-svg"
-                    viewBox="0 0 48 48"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                >
-
-                    <path
-                        d="M20 10H13C11.34 10 10 11.34 10 13V35C10 36.66 11.34 38 13 38H20"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        stroke-linecap="round"
-                    />
-
-                    <path
-                        class="logout-arrow"
-                        d="M25 17L33 24L25 31"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    />
-
-                    <path
-                        d="M33 24H18"
-                        stroke="currentColor"
-                        stroke-width="2.2"
-                        stroke-linecap="round"
-                    />
-
-                </svg>
-
-            </span>
-
-
-            <span class="sidebar-label">
-                Logout
-            </span>
-
-
-            <span
-                class="sidebar-item-glow"
-                aria-hidden="true"
-            ></span>
-
-        </button>
-
-    </div>
 
 </aside>
 
@@ -1099,6 +1033,116 @@
      MOVIPILOT DASHBOARD HOME
      TRENDING HERO
      ========================================================= -->
+
+
+            <!-- PROFILE -->
+
+
+            <div class="mp-profile-overlay" id="profileOverlay" hidden>
+    <section
+        class="mp-profile-card"
+        id="profileDialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileDialogTitle"
+        aria-describedby="profileDialogDescription"
+        tabindex="-1"
+    >
+        <div class="mp-profile-cover" aria-label="Animated MoviPilot colour artwork">
+            <canvas class="mp-profile-aurora" id="profileAuroraCanvas" aria-hidden="true"></canvas>
+            <div class="mp-profile-cover-vignette" aria-hidden="true"></div>
+            <div class="mp-profile-cover-content">
+                <span class="mp-profile-cover-mark"><span></span> MOVIPILOT MEMBER SPACE</span>
+                <p>Every story has a home.</p>
+                <span class="mp-profile-cover-caption">YOUR WORLD OF STORIES</span>
+            </div>
+            <button
+                class="mp-profile-close"
+                id="profileCloseButton"
+                type="button"
+                aria-label="Close profile"
+                title="Close profile"
+            >
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="mp-profile-body">
+            <header class="mp-profile-heading">
+                <div>
+                    <span class="mp-profile-eyebrow">YOUR ACCOUNT</span>
+                    <h2 id="profileDialogTitle">Your profile</h2>
+                    <p id="profileDialogDescription">A little home for your MoviPilot identity.</p>
+                </div>
+                <span class="mp-profile-heading-orbit" aria-hidden="true">
+                    <svg viewBox="0 0 44 44" fill="none">
+                        <circle cx="22" cy="22" r="16" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 4" />
+                        <circle cx="22" cy="22" r="8" stroke="currentColor" stroke-width="1.2" />
+                        <circle cx="34" cy="10" r="2.2" fill="currentColor" />
+                    </svg>
+                </span>
+            </header>
+
+            <section class="mp-profile-identity" aria-label="Account identity">
+                <div class="mp-profile-avatar" id="profileAvatar" aria-label="Your initials">
+                    <span id="profileInitials">MP</span>
+                    <i aria-hidden="true"></i>
+                </div>
+                <div class="mp-profile-identity-copy">
+                    <h3 id="profileFullName">Loading your profile…</h3>
+                    <p><span class="mp-profile-member-dot" aria-hidden="true"></span> MoviPilot member</p>
+                </div>
+            </section>
+
+            <button class="mp-profile-id-button" id="profileCopyIDButton" type="button" disabled>
+                <span class="mp-profile-id-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="8" y="8" width="11" height="12" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M16 8V5.8A1.8 1.8 0 0 0 14.2 4H6A2 2 0 0 0 4 6v8.2A1.8 1.8 0 0 0 5.8 16H8" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                </span>
+                <span class="mp-profile-id-copy">
+                    <small>YOUR MOVIPILOT ID</small>
+                    <strong id="profileAccountID">Loading account ID…</strong>
+                </span>
+                <span class="mp-profile-copy-label" id="profileCopyLabel">Copy ID</span>
+            </button>
+
+            <div class="mp-profile-details" aria-label="Account details">
+                <div class="mp-profile-detail-row">
+                    <span class="mp-profile-detail-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="m5 7 7 5.5L19 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <span class="mp-profile-detail-copy"><small>Email address</small><strong id="profileEmail">Loading email…</strong></span>
+                </div>
+                <div class="mp-profile-detail-row">
+                    <span class="mp-profile-detail-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="m9 14 2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span>
+                    <span class="mp-profile-detail-copy"><small>Member since</small><strong id="profileJoinedAt">Finding your join date…</strong></span>
+                </div>
+            </div>
+
+            <p class="mp-profile-status" id="profileStatus" role="status" aria-live="polite" hidden></p>
+
+            <footer class="mp-profile-footer">
+                <p>Your next great story is waiting.</p>
+                <form id="profileLogoutForm" action="/logout" method="post">
+                    <button class="mp-profile-logout" id="profileLogoutButton" type="submit">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 5H6.8A1.8 1.8 0 0 0 5 6.8v10.4A1.8 1.8 0 0 0 6.8 19H10M14 8l4 4-4 4M18 12H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                        <span>Log out</span>
+                    </button>
+                </form>
+            </footer>
+        </div>
+    </section>
+</div>
+
+
+<script src="/templates/js/profile_modal.js?v=1" defer></script>
+
 
 <div class="dashboard-home-layout">
 

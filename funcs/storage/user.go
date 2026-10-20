@@ -28,17 +28,23 @@ func CreateUser(user User) error {
 	if err != nil {
 		return fmt.Errorf("generate public account ID: %w", err)
 	}
+	username, err := newUsernameForName(user.FullName)
+	if err != nil {
+		return fmt.Errorf("generate username: %w", err)
+	}
 
 	_, err = DB.Exec(`
-		INSERT INTO users (
-			public_id,
-			full_name,
-			email,
-			password_hash,
-			auth_provider
-		)
-		VALUES (?, ?, ?, ?, 'local')
-	`, publicID, user.FullName, user.Email, user.PasswordHash)
+        INSERT INTO users (
+            public_id,
+            username,
+            full_name,
+            email,
+            password_hash,
+            auth_provider
+        )
+        VALUES (?, ?, ?, ?, ?, 'local')
+    `, publicID, username, user.FullName, user.Email, user.PasswordHash)
+
 	if err != nil {
 		return fmt.Errorf("create local user: %w", err)
 	}
@@ -53,17 +59,23 @@ func CreateGoogleUser(fullName, email, googleID string) error {
 		return fmt.Errorf("generate public account ID: %w", err)
 	}
 
+	username, err := newUsernameForName(fullName)
+	if err != nil {
+		return fmt.Errorf("generate username: %w", err)
+	}
+
 	_, err = DB.Exec(`
-		INSERT INTO users (
-			public_id,
-			full_name,
-			email,
-			password_hash,
-			auth_provider,
-			google_id
-		)
-		VALUES (?, ?, ?, '', 'google', ?)
-	`, publicID, fullName, email, googleID)
+        INSERT INTO users (
+            public_id,
+            username,
+            full_name,
+            email,
+            password_hash,
+            auth_provider,
+            google_id
+        )
+        VALUES (?, ?, ?, ?, '', 'google', ?)
+    `, publicID, username, fullName, email, googleID)
 	if err != nil {
 		return fmt.Errorf("create Google user: %w", err)
 	}

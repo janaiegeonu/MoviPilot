@@ -1,10 +1,12 @@
 /* ==========================================================================
    MOVIPILOT PROFILE CARD
-   Self-contained dashboard modal styles. All selectors are scoped to mp-profile.
+   Self-contained and editable dashboard modal styles. All selectors are scoped to mp-profile.
    ========================================================================== */
 
+html.mp-profile-open,
 body.mp-profile-open {
     overflow: hidden;
+    overscroll-behavior: none;
 }
 
 .mp-profile-overlay,
@@ -28,19 +30,19 @@ body.mp-profile-open {
     z-index: 10000;
     display: grid;
     place-items: center;
-    overflow-y: auto;
-    padding: clamp(14px, 3vw, 34px);
+    overflow: hidden;
+    padding: clamp(10px, 2vh, 24px) clamp(10px, 3vw, 34px);
     isolation: isolate;
-    background: rgba(1, 5, 16, .58);
-    -webkit-backdrop-filter: blur(22px) saturate(145%);
-    backdrop-filter: blur(22px) saturate(145%);
+    background: rgba(1, 5, 16, .43);
+    -webkit-backdrop-filter: blur(8px) saturate(122%);
+    backdrop-filter: blur(8px) saturate(122%);
     opacity: 0;
     transition: opacity .28s ease;
 }
 
 .mp-profile-overlay::before,
 .mp-profile-overlay::after {
-    position: fixed;
+    position: absolute;
     inset: -25%;
     z-index: -1;
     content: "";
@@ -67,10 +69,11 @@ body.mp-profile-open {
 
 .mp-profile-card {
     position: relative;
-    width: min(100%, 485px);
-    max-height: min(92vh, 800px);
-    overflow: auto;
-    overscroll-behavior: contain;
+    width: min(100%, 470px);
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    overscroll-behavior: none;
     border: 1px solid rgba(170, 222, 238, .15);
     border-radius: 27px;
     background:
@@ -81,8 +84,6 @@ body.mp-profile-open {
     opacity: 0;
     transform: translateY(14px) scale(.975);
     transition: opacity .32s cubic-bezier(.2, .8, .2, 1), transform .38s cubic-bezier(.2, .8, .2, 1);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(105, 190, 202, .28) transparent;
 }
 
 .mp-profile-overlay.is-open .mp-profile-card {
@@ -97,7 +98,7 @@ body.mp-profile-open {
 /* Animated cover artwork */
 .mp-profile-cover {
     position: relative;
-    height: 178px;
+    height: clamp(132px, 20vh, 164px);
     overflow: hidden;
     isolation: isolate;
     border-radius: 26px 26px 0 0;
@@ -229,7 +230,7 @@ body.mp-profile-open {
 
 /* Card header */
 .mp-profile-body {
-    padding: 23px 25px 24px;
+    padding: 19px 23px 20px;
 }
 
 .mp-profile-heading {
@@ -237,7 +238,7 @@ body.mp-profile-open {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding-bottom: 18px;
+    padding-bottom: 14px;
 }
 
 .mp-profile-eyebrow {
@@ -288,7 +289,7 @@ body.mp-profile-open {
     align-items: center;
     gap: 15px;
     min-width: 0;
-    padding: 17px 0 18px;
+    padding: 13px 0 14px;
     border-top: 1px solid rgba(149, 210, 225, .09);
     border-bottom: 1px solid rgba(149, 210, 225, .09);
 }
@@ -375,8 +376,8 @@ body.mp-profile-open {
     gap: 12px;
     width: 100%;
     min-width: 0;
-    margin-top: 17px;
-    padding: 13px 13px;
+    margin-top: 13px;
+    padding: 11px 12px;
     border: 1px solid rgba(123, 205, 221, .13);
     border-radius: 14px;
     background: linear-gradient(115deg, rgba(19, 49, 69, .52), rgba(11, 37, 48, .44));
@@ -451,7 +452,7 @@ body.mp-profile-open {
 .mp-profile-details {
     display: grid;
     gap: 2px;
-    margin-top: 9px;
+    margin-top: 6px;
 }
 
 .mp-profile-detail-row {
@@ -459,7 +460,7 @@ body.mp-profile-open {
     align-items: center;
     gap: 12px;
     min-width: 0;
-    padding: 11px 1px;
+    padding: 8px 1px;
 }
 
 .mp-profile-detail-icon {
@@ -501,14 +502,42 @@ body.mp-profile-open {
 }
 
 .mp-profile-status {
-    margin: 5px 0 0;
+    position: absolute;
+    right: 20px;
+    bottom: 75px;
+    left: 20px;
+    z-index: 12;
+    margin: 0;
     padding: 10px 12px;
-    border: 1px solid rgba(133, 218, 218, .13);
-    border-radius: 10px;
-    background: rgba(45, 137, 146, .08);
+    border: 1px solid rgba(133, 218, 218, .20);
+    border-radius: 12px;
+    background: rgba(5, 21, 34, .96);
     color: #b8f2e8;
     font-size: 9px;
     line-height: 1.6;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, .32);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(9px) scale(.985);
+    transition:
+        opacity .26s ease,
+        transform .32s cubic-bezier(.2, .8, .2, 1),
+        visibility 0s linear .32s;
+}
+
+.mp-profile-status.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    transition:
+        opacity .26s ease,
+        transform .32s cubic-bezier(.2, .8, .2, 1),
+        visibility 0s;
+}
+
+.mp-profile-status[hidden] {
+    display: none !important;
 }
 
 .mp-profile-status.is-error {
@@ -523,8 +552,8 @@ body.mp-profile-open {
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    margin-top: 10px;
-    padding-top: 17px;
+    margin-top: 6px;
+    padding-top: 13px;
     border-top: 1px solid rgba(149, 210, 225, .09);
 }
 
@@ -596,17 +625,19 @@ body.mp-profile-open {
 @media (max-width: 520px) {
     .mp-profile-overlay {
         align-items: center;
-        padding: 12px;
+        padding: 10px;
     }
 
     .mp-profile-card {
         width: 100%;
-        max-height: 94vh;
+        max-height: calc(100vh - 20px);
+        max-height: calc(100dvh - 20px);
         border-radius: 22px;
     }
 
     .mp-profile-cover {
-        height: 157px;
+        height: clamp(112px, 18vh, 145px);
+        flex: 0 0 auto;
         border-radius: 21px 21px 0 0;
     }
 
@@ -634,7 +665,43 @@ body.mp-profile-open {
     }
 
     .mp-profile-body {
-        padding: 20px 18px 19px;
+        padding: 15px 18px 15px;
+    }
+
+    .mp-profile-heading {
+        padding-bottom: 11px;
+    }
+
+    .mp-profile-heading p {
+        margin-top: 5px;
+    }
+
+    .mp-profile-identity {
+        padding: 11px 0 12px;
+    }
+
+    .mp-profile-id-button {
+        margin-top: 10px;
+        padding: 9px 10px;
+    }
+
+    .mp-profile-details {
+        margin-top: 3px;
+    }
+
+    .mp-profile-detail-row {
+        padding: 6px 1px;
+    }
+
+    .mp-profile-footer {
+        margin-top: 4px;
+        padding-top: 10px;
+    }
+
+    .mp-profile-status {
+        right: 14px;
+        bottom: 67px;
+        left: 14px;
     }
 
     .mp-profile-heading h2 {
@@ -668,8 +735,36 @@ body.mp-profile-open {
 
 @media (max-width: 360px) {
     .mp-profile-body {
-        padding-right: 14px;
-        padding-left: 14px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .mp-profile-heading h2 {
+        font-size: 21px;
+    }
+
+    .mp-profile-heading-orbit {
+        width: 33px;
+        height: 33px;
+        flex-basis: 33px;
+    }
+
+    .mp-profile-identity {
+        gap: 11px;
+    }
+
+    .mp-profile-identity-copy h3 {
+        font-size: 14px;
+    }
+
+    .mp-profile-detail-copy strong {
+        font-size: 10px;
+    }
+
+    .mp-profile-status {
+        right: 10px;
+        bottom: 62px;
+        left: 10px;
     }
 
     .mp-profile-cover-content > p {
@@ -705,4 +800,159 @@ body.mp-profile-open {
         animation: none !important;
         transition-duration: .01ms !important;
     }
+}
+
+
+/* Short viewport fit: keep the complete card visible without either axis scrolling. */
+@media (max-height: 760px) {
+    .mp-profile-overlay {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .mp-profile-cover {
+        height: clamp(104px, 17vh, 132px);
+    }
+
+    .mp-profile-body {
+        padding-top: 12px;
+        padding-bottom: 13px;
+    }
+
+    .mp-profile-heading {
+        padding-bottom: 9px;
+    }
+
+    .mp-profile-heading h2 {
+        margin-top: 4px;
+        font-size: 22px;
+    }
+
+    .mp-profile-heading p {
+        margin-top: 4px;
+        font-size: 9px;
+    }
+
+    .mp-profile-identity {
+        padding-top: 9px;
+        padding-bottom: 10px;
+    }
+
+    .mp-profile-avatar {
+        width: 55px;
+        height: 55px;
+        flex-basis: 55px;
+    }
+
+    .mp-profile-avatar > span {
+        font-size: 20px;
+    }
+
+    .mp-profile-id-button {
+        margin-top: 9px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .mp-profile-id-icon {
+        width: 31px;
+        height: 31px;
+        flex-basis: 31px;
+    }
+
+    .mp-profile-detail-row {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+
+    .mp-profile-detail-icon {
+        width: 30px;
+        height: 30px;
+        flex-basis: 30px;
+    }
+
+    .mp-profile-footer {
+        margin-top: 2px;
+        padding-top: 8px;
+    }
+
+    .mp-profile-logout {
+        min-height: 34px;
+    }
+
+    .mp-profile-status {
+        bottom: 62px;
+    }
+}
+
+@media (max-height: 600px) {
+    .mp-profile-cover {
+        height: 94px;
+    }
+
+    .mp-profile-cover-content {
+        padding: 12px 17px 12px;
+    }
+
+    .mp-profile-cover-content > p {
+        margin-top: 5px;
+        font-size: 21px;
+    }
+
+    .mp-profile-cover-caption {
+        top: 35px;
+        right: 17px;
+    }
+
+    .mp-profile-heading-orbit {
+        display: none;
+    }
+
+    .mp-profile-heading p {
+        display: none;
+    }
+
+    .mp-profile-identity {
+        padding-top: 7px;
+        padding-bottom: 8px;
+    }
+
+    .mp-profile-avatar {
+        width: 48px;
+        height: 48px;
+        flex-basis: 48px;
+    }
+
+    .mp-profile-detail-row {
+        padding-top: 3px;
+        padding-bottom: 3px;
+    }
+
+    .mp-profile-detail-icon {
+        width: 27px;
+        height: 27px;
+        flex-basis: 27px;
+    }
+
+    .mp-profile-detail-copy {
+        gap: 2px;
+    }
+
+    .mp-profile-footer > p {
+        display: none;
+    }
+}
+
+/* The modal never creates a visible scrollbar, including in WebKit browsers. */
+.mp-profile-overlay,
+.mp-profile-card {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mp-profile-overlay::-webkit-scrollbar,
+.mp-profile-card::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }

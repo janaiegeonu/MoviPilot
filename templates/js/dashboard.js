@@ -637,7 +637,9 @@ const dashboardPageRoutes = {
         "/movies",
 
     anime:
-        "/anime"
+        "/anime",
+
+    community: "/community"
 
 };
 
@@ -986,6 +988,14 @@ async function initializeDashboardPage(
 
         return;
 
+    }
+
+      if (
+        page === "community" &&
+        typeof window.initCommunityPage === "function"
+    ) {
+        window.initCommunityPage();
+        return;
     }
 
 }
@@ -1386,6 +1396,16 @@ async function loadDashboardPage(
 
     }
 
+        if (page === "community") {
+        await loadDashboardHTML(
+            page,
+            dashboardPageRoutes.community,
+            controller,
+            requestID
+        );
+        return;
+    }
+
 }
 
 
@@ -1501,25 +1521,10 @@ searchInput.addEventListener(
 
 
 /* =========================================================
-   PROFILE
+   PROFILE MODAL
+   The profile button and modal live in the persistent dashboard shell.
+   Interaction is initialized by /templates/js/profile_modal.js.
    ========================================================= */
-
-const profileButton =
-    document.getElementById(
-        "profileButton"
-    );
-
-
-profileButton.addEventListener(
-    "click",
-    () => {
-
-        console.log(
-            "Profile clicked"
-        );
-
-    }
-);
 
 
 /* =========================================================

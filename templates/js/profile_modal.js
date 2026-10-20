@@ -25,6 +25,8 @@
         let currentAccountID = "";
         let requestNumber = 0;
         let copyResetTimer = 0;
+        let statusFinalizeTimer = 0;
+        let statusAnimationFrame = 0;
         let auroraFrame = 0;
         let auroraRunning = false;
         let canvasWidth = 0;
@@ -32,11 +34,52 @@
         let pixelRatio = 1;
         let canvasContext = null;
 
+        /*
+         * The status toast is hidden only after its exit transition completes.
+         * Setting the HTML hidden attribute immediately would skip the fade-out.
+         */
+        const hideStatus = () => {
+            if (!statusLine || statusLine.hidden) return;
+
+            if (statusAnimationFrame) {
+                window.cancelAnimationFrame(statusAnimationFrame);
+                statusAnimationFrame = 0;
+            }
+
+            window.clearTimeout(statusFinalizeTimer);
+            statusLine.classList.remove("is-visible");
+            statusLine.setAttribute("aria-hidden", "true");
+            statusFinalizeTimer = window.setTimeout(() => {
+                if (!statusLine.classList.contains("is-visible")) {
+                    statusLine.hidden = true;
+                }
+            }, 350);
+        };
+
         const showStatus = (message, isError = false) => {
             if (!statusLine) return;
+
+            window.clearTimeout(statusFinalizeTimer);
+            if (!message) {
+                hideStatus();
+                return;
+            }
+
+            if (statusAnimationFrame) {
+                window.cancelAnimationFrame(statusAnimationFrame);
+                statusAnimationFrame = 0;
+            }
+
+            statusLine.hidden = false;
             statusLine.textContent = message;
             statusLine.classList.toggle("is-error", isError);
-            statusLine.hidden = !message;
+            statusLine.setAttribute("aria-hidden", "false");
+
+            // Let the unshown state paint first so the entrance animates reliably.
+            statusAnimationFrame = window.requestAnimationFrame(() => {
+                statusLine.classList.add("is-visible");
+                statusAnimationFrame = 0;
+            });
         };
 
         const getInitials = (fullName) => {
@@ -142,6 +185,7 @@
             if (!overlay.hidden) return;
             previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : openButton;
             overlay.hidden = false;
+            document.documentElement.classList.add("mp-profile-open");
             document.body.classList.add("mp-profile-open");
             requestAnimationFrame(() => overlay.classList.add("is-open"));
             closeButton.focus({ preventScroll: true });
@@ -153,9 +197,22 @@
             if (overlay.hidden) return;
             overlay.classList.remove("is-open");
             overlay.hidden = true;
+            document.documentElement.classList.remove("mp-profile-open");
             document.body.classList.remove("mp-profile-open");
             requestNumber += 1;
             stopAurora();
+            window.clearTimeout(copyResetTimer);
+            window.clearTimeout(statusFinalizeTimer);
+            if (statusAnimationFrame) {
+                window.cancelAnimationFrame(statusAnimationFrame);
+                statusAnimationFrame = 0;
+            }
+            if (statusLine) {
+                statusLine.classList.remove("is-visible");
+                statusLine.hidden = true;
+                statusLine.setAttribute("aria-hidden", "true");
+            }
+            if (copyLabel) copyLabel.textContent = "Copy ID";
             if (previousFocus && typeof previousFocus.focus === "function") {
                 previousFocus.focus({ preventScroll: true });
             } else {

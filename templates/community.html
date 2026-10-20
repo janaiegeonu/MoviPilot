@@ -1,0 +1,288 @@
+<!--
+  MoviPilot Community page fragment.
+  This is loaded into #dashboardDynamicPage by the existing dashboard loader.
+  Keep CSS and JavaScript linked from the persistent dashboard shell, not here.
+-->
+<section class="mp-community-page" id="mpCommunityPage" aria-labelledby="mpCommunityTitle">
+    <div class="mp-community-ambient" aria-hidden="true">
+        <span class="mp-community-orb mp-community-orb--one"></span>
+        <span class="mp-community-orb mp-community-orb--two"></span>
+        <span class="mp-community-orb mp-community-orb--three"></span>
+    </div>
+
+    <!-- =====================================================
+         CINEMATIC COMMUNITY HERO
+         Add your video file to the <source> element when ready.
+         Example: src="/templates/video/community-hero.mp4"
+         The layered gradient and motion remain visible without video.
+         ===================================================== -->
+    <section class="mp-community-hero">
+        <div class="mp-community-hero-media" aria-hidden="true">
+            <video class="mp-community-hero-video" id="mpCommunityHeroVideo" autoplay muted loop playsinline preload="none" tabindex="-1">
+                <!-- Add your video backdrop here, for example:
+                <source src="/templates/video/community-hero.mp4" type="video/mp4">
+                -->
+            </video>
+            <div class="mp-community-hero-video-shade"></div>
+            <canvas class="mp-community-flow-canvas" id="mpCommunityFlowCanvas"></canvas>
+            <div class="mp-community-hero-grid"></div>
+        </div>
+
+        <div class="mp-community-hero-content">
+            <div class="mp-community-eyebrow">
+                <span class="mp-community-eyebrow-pulse"></span>
+                THE MOVIPILOT COMMUNITY
+            </div>
+
+            <h1 id="mpCommunityTitle">
+                MoviPilot<br>
+                <span>Community Connect.</span>
+            </h1>
+
+            <p class="mp-community-hero-copy">
+                Every great story starts a conversation. Meet fellow movie lovers,
+                find people who see films the way you do, and share your thoughts,
+                visions, and opinions with the people who make MoviPilot feel alive.
+            </p>
+
+            <div class="mp-community-hero-actions">
+                <button class="mp-community-primary-cta" id="mpCommunityFindPeople" type="button">
+                    <span>Find your people</span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+                <span class="mp-community-hero-note">
+                    <span class="mp-community-note-dot"></span>
+                    A space for every perspective
+                </span>
+            </div>
+        </div>
+
+        <div class="mp-community-hero-footer" aria-hidden="true">
+            <span>DISCOVER <i>·</i> CONNECT <i>·</i> SHARE</span>
+            <span class="mp-community-scroll-cue"><span></span> SCROLL TO EXPLORE</span>
+        </div>
+    </section>
+
+    <!-- =====================================================
+         USER DISCOVERY
+         ===================================================== -->
+    <section class="mp-community-discovery" id="mpCommunityDiscovery" aria-labelledby="mpCommunitySearchTitle">
+        <div class="mp-community-section-heading">
+            <div>
+                <span class="mp-community-section-kicker">YOUR NEXT CONVERSATION STARTS HERE</span>
+                <h2 id="mpCommunitySearchTitle">Find your <span>people.</span></h2>
+                <p>Search MoviPilot members by username or their unique MoviPilot ID.</p>
+            </div>
+            <div class="mp-community-discovery-orbit" aria-hidden="true">
+                <span class="mp-community-orbit-ring mp-community-orbit-ring--outer"></span>
+                <span class="mp-community-orbit-ring mp-community-orbit-ring--inner"></span>
+                <span class="mp-community-orbit-core"></span>
+            </div>
+        </div>
+
+        <div class="mp-community-search-panel">
+            <div class="mp-community-search-topline">
+                <span class="mp-community-search-label">MEMBER LOOKUP</span>
+                <span class="mp-community-private-note">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    Public profile details only
+                </span>
+            </div>
+
+            <div class="mp-community-search-modes" role="group" aria-label="Choose member search method">
+                <button class="mp-community-mode is-active" type="button" data-community-mode="username" aria-pressed="true">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7" />
+                        <path d="M5.2 20c.8-3.4 3.1-5.1 6.8-5.1s6 1.7 6.8 5.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                    </svg>
+                    <span>Username</span>
+                </button>
+                <button class="mp-community-mode" type="button" data-community-mode="id" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <rect x="3.5" y="5" width="17" height="14" rx="3" stroke="currentColor" stroke-width="1.7" />
+                        <path d="M7.5 10h3M7.5 14h6M16 10h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                    </svg>
+                    <span>MoviPilot ID</span>
+                </button>
+            </div>
+
+            <form class="mp-community-search-form" id="mpCommunitySearchForm" role="search">
+                <label class="mp-community-search-input-wrap" for="mpCommunitySearchInput">
+                    <svg class="mp-community-search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8" />
+                        <path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                    <input
+                        id="mpCommunitySearchInput"
+                        name="q"
+                        type="search"
+                        minlength="2"
+                        maxlength="64"
+                        placeholder="Search by username..."
+                        autocomplete="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        aria-describedby="mpCommunitySearchHint"
+                    >
+                    <span class="mp-community-input-shortcut" aria-hidden="true">↵</span>
+                </label>
+                <button class="mp-community-search-submit" type="submit">
+                    <span>Search members</span>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </form>
+
+            <p class="mp-community-search-hint" id="mpCommunitySearchHint">
+                Usernames are searchable. To find someone by ID, switch to MoviPilot ID and enter their full code (for example, MP…); IDs are exact matches.
+            </p>
+        </div>
+
+        <div class="mp-community-results-heading">
+            <div>
+                <span class="mp-community-section-kicker">MEMBER DIRECTORY</span>
+                <h3 id="mpCommunityResultsTitle">People to discover</h3>
+            </div>
+            <span class="mp-community-results-count" id="mpCommunityResultsCount" hidden></span>
+        </div>
+
+        <div class="mp-community-results" id="mpCommunityResults" aria-live="polite" aria-busy="false">
+            <div class="mp-community-results-empty" id="mpCommunityResultsEmpty">
+                <div class="mp-community-empty-symbol" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" fill="none">
+                        <circle cx="26" cy="25" r="13" stroke="currentColor" stroke-width="1.6" />
+                        <path d="m36 35 12 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <circle cx="26" cy="25" r="6" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3" />
+                        <path d="M8 52h22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity=".55" />
+                    </svg>
+                </div>
+                <strong>There’s a whole community to meet.</strong>
+                <p>Enter a username or a MoviPilot ID to discover a member’s public profile.</p>
+            </div>
+        </div>
+    </section>
+
+    <!--
+      Community chat intentionally comes later, as requested.
+      Keep this page focused on hero, member search and public profile cards for now.
+    -->
+
+    <!-- =====================================================
+         PUBLIC MEMBER PROFILE MODAL
+         Only the visible X button closes the modal, matching the dashboard profile.
+         Clicking the blurred backdrop or pressing Escape will not close it.
+         ===================================================== -->
+    <div class="mp-community-modal-layer" id="mpCommunityModalLayer" hidden>
+        <div class="mp-community-modal-backdrop" aria-hidden="true"></div>
+        <section class="mp-community-profile-modal" id="mpCommunityProfileModal" role="dialog" aria-modal="true" aria-labelledby="mpCommunityProfileName" aria-describedby="mpCommunityProfileDescription" tabindex="-1">
+            <div class="mp-community-profile-cover">
+                <div class="mp-community-profile-cover-flow" aria-hidden="true"></div>
+                <div class="mp-community-profile-cover-vignette" aria-hidden="true"></div>
+                <div class="mp-community-profile-cover-content">
+                    <span class="mp-community-profile-cover-mark"><span></span> MOVIPILOT MEMBER SPACE</span>
+                    <p>Stories bring us together.</p>
+                </div>
+                <button class="mp-community-profile-close" id="mpCommunityProfileClose" type="button" aria-label="Close member profile" title="Close profile">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mp-community-profile-body">
+                <header class="mp-community-profile-heading">
+                    <div>
+                        <span class="mp-community-section-kicker">COMMUNITY PROFILE</span>
+                        <h2 id="mpCommunityProfileHeading">Meet a member</h2>
+                        <p id="mpCommunityProfileDescription">A little look at their MoviPilot identity.</p>
+                    </div>
+                    <span class="mp-community-profile-orbit" aria-hidden="true">
+                        <svg viewBox="0 0 44 44" fill="none">
+                            <circle cx="22" cy="22" r="16" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 4" />
+                            <circle cx="22" cy="22" r="8" stroke="currentColor" stroke-width="1.2" />
+                            <circle cx="34" cy="10" r="2.2" fill="currentColor" />
+                        </svg>
+                    </span>
+                </header>
+
+                <section class="mp-community-profile-identity" aria-label="Member identity">
+                    <div class="mp-community-avatar mp-community-avatar--large" id="mpCommunityProfileAvatar" data-avatar-tone="0">
+                        <img id="mpCommunityProfilePhoto" alt="" hidden>
+                        <span id="mpCommunityProfileInitials">MP</span>
+                        <i aria-hidden="true"></i>
+                    </div>
+                    <div class="mp-community-profile-identity-copy">
+                        <h3 id="mpCommunityProfileName">Loading member…</h3>
+                        <p><span class="mp-community-member-dot" aria-hidden="true"></span>MoviPilot member</p>
+                    </div>
+                </section>
+
+                <div class="mp-community-profile-actions">
+                    <button class="mp-community-friend-button" id="mpCommunityFriendButton" type="button" aria-pressed="false" disabled>
+                        <span class="mp-community-friend-button-glass" aria-hidden="true"></span>
+                        <svg class="mp-community-friend-plus" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
+                        <span class="mp-community-friend-button-label">Mark as friend</span>
+                        <svg class="mp-community-friend-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="m5 12.5 4.5 4.5L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="mp-community-mark-summary">
+                    <div class="mp-community-mark-summary-copy">
+                        <span class="mp-community-mark-label">COMMUNITY CONNECTIONS</span>
+                        <strong><span id="mpCommunityFriendCount">0</span> <span id="mpCommunityFriendCountLabel">members</span></strong>
+                        <p>have marked this member as a friend.</p>
+                    </div>
+                    <svg class="mp-community-mark-spark" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                        <path d="M24 4 28.4 18.3 43 24 28.4 29.1 24 44 19 29.1 5 24l14-5.7L24 4Z" stroke="currentColor" stroke-width="1.25" />
+                        <circle cx="24" cy="24" r="4" fill="currentColor" />
+                    </svg>
+                </div>
+
+                <div class="mp-community-profile-handle-row">
+                    <span class="mp-community-profile-handle-icon" aria-hidden="true">@</span>
+                    <span class="mp-community-profile-handle-copy">
+                        <small>USERNAME</small>
+                        <strong id="mpCommunityProfileUsername">@username</strong>
+                    </span>
+                </div>
+
+                <div class="mp-community-public-id-card">
+                    <span class="mp-community-public-id-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="8" y="8" width="11" height="12" rx="2" stroke="currentColor" stroke-width="1.6" />
+                            <path d="M16 8V5.8A1.8 1.8 0 0 0 14.2 4H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span class="mp-community-public-id-copy">
+                        <small>PUBLIC MOVIPILOT ID</small>
+                        <strong id="mpCommunityProfilePublicID">Loading ID…</strong>
+                    </span>
+                    <button class="mp-community-copy-id" id="mpCommunityCopyID" type="button" disabled>Copy ID</button>
+                </div>
+
+                <div class="mp-community-member-since">
+                    <span class="mp-community-member-since-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="4" y="5.5" width="16" height="15" rx="2.2" stroke="currentColor" stroke-width="1.6" />
+                            <path d="M8 3.5v4M16 3.5v4M4 10h16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                        </svg>
+                    </span>
+                    <span><small>MEMBER SINCE</small><strong id="mpCommunityProfileJoined">Loading date…</strong></span>
+                </div>
+
+                <p class="mp-community-profile-status" id="mpCommunityProfileStatus" role="status" aria-live="polite"></p>
+            </div>
+        </section>
+    </div>
+
+    <div class="mp-community-toast" id="mpCommunityToast" role="status" aria-live="polite"></div>
+</section>

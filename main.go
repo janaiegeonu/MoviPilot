@@ -62,6 +62,17 @@ func main() {
 	http.HandleFunc("/api/community/users", handlers.CommunityUsersHandler)
 	http.HandleFunc("/api/community/user", handlers.CommunityUserProfileHandler)
 	http.HandleFunc("/api/community/friend", handlers.CommunityFriendMarkHandler)
+	http.HandleFunc("/api/profile/marks", handlers.ProfileMarksHandler)
+
+	http.HandleFunc("/community/chat", handlers.CommunityChatFragmentHandler)
+
+	http.HandleFunc("/api/community/chat/messages", handlers.CommunityChatMessagesHandler)
+	http.HandleFunc("/api/community/chat/events", handlers.CommunityChatEventsHandler)
+	http.HandleFunc("/api/community/chat/reaction", handlers.CommunityChatReactionHandler)
+	http.HandleFunc("/api/community/chat/upload", handlers.CommunityChatUploadHandler)
+	http.HandleFunc("/api/community/chat/movies", handlers.CommunityChatMovieSearchHandler)
+
+	http.HandleFunc("/community-media/", handlers.CommunityChatMediaHandler)
 
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))

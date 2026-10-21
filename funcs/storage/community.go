@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ type CommunityMember struct {
 	CreatedAt   string
 	FriendCount int64
 	MarkedByMe  bool
+	IsSelf      bool // True only when this result is the authenticated viewer.
 }
 
 // EnsureCommunitySchema safely adds the username field to older MoviPilot
@@ -221,8 +223,9 @@ func backfillCommunityUsernames() error {
 	return nil
 }
 
-// SearchCommunityMembers searches by exact public ID or username substring.
-// Search results deliberately exclude the currently signed-in user.
+// SearchCommunityMembers searches by exact public ID or username/full-name substring.
+// The current viewer is included in matching results and is flagged with IsSelf.
+// In username mode, the reserved query "ME" returns only the authenticated viewer.
 func SearchCommunityMembers(viewerID int64, mode, query string, limit int) ([]CommunityMember, error) {
 	if DB == nil {
 		return nil, fmt.Errorf("database is not initialized")
@@ -238,13 +241,23 @@ func SearchCommunityMembers(viewerID int64, mode, query string, limit int) ([]Co
 	if mode == "id" {
 		member, err := GetCommunityMemberByPublicID(viewerID, query)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				return []CommunityMember{}, nil
 			}
 			return nil, err
 		}
-		if member.ID == viewerID {
-			return []CommunityMember{}, nil
+		member.IsSelf = member.ID == viewerID
+		return []CommunityMember{member}, nil
+	}
+
+	// "ME" is a reserved self-discovery shortcut, not a public username query.
+	if strings.EqualFold(query, "ME") {
+		member, err := GetCommunityMemberByUserID(viewerID, viewerID)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return []CommunityMember{}, nil
+			}
+			return nil, err
 		}
 		return []CommunityMember{member}, nil
 	}
@@ -259,12 +272,15 @@ func SearchCommunityMembers(viewerID int64, mode, query string, limit int) ([]Co
 			(SELECT COUNT(*) FROM community_friend_marks fm WHERE fm.target_user_id = u.id) AS friend_count,
 			EXISTS(SELECT 1 FROM community_friend_marks mine WHERE mine.user_id = ? AND mine.target_user_id = u.id) AS marked_by_me
 		FROM users u
-		WHERE u.id <> ?
-		  AND (instr(lower(u.username), lower(?)) > 0 OR instr(lower(u.full_name), lower(?)) > 0)
-		ORDER BY CASE WHEN lower(u.username) = lower(?) THEN 0 ELSE 1 END,
+		WHERE (instr(lower(u.username), lower(?)) > 0 OR instr(lower(u.full_name), lower(?)) > 0)
+		ORDER BY CASE
+		           WHEN lower(u.username) = lower(?) THEN 0
+		           WHEN lower(u.full_name) = lower(?) THEN 1
+		           ELSE 2
+		         END,
 		         lower(u.username), u.id
 		LIMIT ?
-	`, viewerID, viewerID, query, query, query, limit)
+	`, viewerID, query, query, query, query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("search community members: %w", err)
 	}
@@ -276,6 +292,7 @@ func SearchCommunityMembers(viewerID int64, mode, query string, limit int) ([]Co
 		if err != nil {
 			return nil, fmt.Errorf("scan community search result: %w", err)
 		}
+		member.IsSelf = member.ID == viewerID
 		members = append(members, member)
 	}
 	if err := rows.Err(); err != nil {
@@ -318,6 +335,37 @@ func GetCommunityMemberByPublicID(viewerID int64, publicID string) (CommunityMem
 		member.CreatedAt = createdAt.String
 	}
 	member.MarkedByMe = markedByMe != 0
+	member.IsSelf = member.ID == viewerID
+	return member, nil
+}
+
+// GetCommunityMemberByUserID is used for the authenticated "ME" shortcut.
+// Internal numeric IDs are accepted only inside the Go storage layer and are
+// never serialized to Community API responses.
+func GetCommunityMemberByUserID(viewerID, targetID int64) (CommunityMember, error) {
+	if DB == nil {
+		return CommunityMember{}, fmt.Errorf("database is not initialized")
+	}
+	if viewerID <= 0 || targetID <= 0 {
+		return CommunityMember{}, fmt.Errorf("invalid account ID")
+	}
+	member, err := scanCommunityMember(DB.QueryRow(`
+		SELECT
+			u.id,
+			u.public_id,
+			u.username,
+			u.full_name,
+			CAST(u.created_at AS TEXT),
+			(SELECT COUNT(*) FROM community_friend_marks fm WHERE fm.target_user_id = u.id),
+			EXISTS(SELECT 1 FROM community_friend_marks mine WHERE mine.user_id = ? AND mine.target_user_id = u.id)
+		FROM users u
+		WHERE u.id = ?
+		LIMIT 1
+	`, viewerID, targetID))
+	if err != nil {
+		return CommunityMember{}, err
+	}
+	member.IsSelf = member.ID == viewerID
 	return member, nil
 }
 

@@ -1,0 +1,676 @@
+/* =====================================================================
+   MOVIPILOT PROFILE MARKS
+   Append this file's contents to the existing profile modal CSS.
+   All selectors are scoped to the existing mp-profile visual language.
+   ===================================================================== */
+
+/* Let the profile body accommodate an expanded member list on short screens. */
+.mp-profile-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-profile-cover {
+    flex: 0 0 auto;
+}
+
+.mp-profile-body {
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mp-profile-body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.mp-profile-marks,
+.mp-profile-marks * {
+    box-sizing: border-box;
+}
+
+.mp-profile-marks {
+    margin-top: 11px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(149, 210, 225, .09);
+}
+
+.mp-profile-marks-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+}
+
+.mp-profile-marks-heading p {
+    margin: 5px 0 0;
+    color: rgba(200, 222, 232, .56);
+    font-size: 9px;
+    line-height: 1.45;
+}
+
+.mp-profile-marks-symbol {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 27px;
+    border: 1px solid rgba(130, 221, 222, .13);
+    border-radius: 9px;
+    background: rgba(108, 201, 213, .055);
+    color: #8be7d9;
+    font-size: 14px;
+}
+
+.mp-profile-mark-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mp-profile-mark-tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    min-height: 59px;
+    padding: 9px 10px;
+    overflow: hidden;
+    border: 1px solid rgba(123, 205, 221, .13);
+    border-radius: 13px;
+    background: linear-gradient(125deg, rgba(18, 50, 70, .57), rgba(10, 35, 46, .43));
+    color: #ecfbff;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.mp-profile-mark-tab::before {
+    position: absolute;
+    inset: -80% -30%;
+    content: "";
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(110deg, transparent 38%, rgba(140, 244, 231, .12) 50%, transparent 62%);
+    transform: translateX(-35%);
+    transition: opacity .2s ease, transform .45s ease;
+}
+
+.mp-profile-mark-tab:hover,
+.mp-profile-mark-tab.is-active {
+    transform: translateY(-1px);
+    border-color: rgba(126, 226, 219, .36);
+    background: linear-gradient(125deg, rgba(23, 68, 85, .72), rgba(10, 50, 54, .58));
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12), inset 0 1px rgba(255,255,255,.035);
+}
+
+.mp-profile-mark-tab:hover::before,
+.mp-profile-mark-tab.is-active::before {
+    opacity: 1;
+    transform: translateX(35%);
+}
+
+.mp-profile-mark-tab:focus-visible,
+.mp-profile-marks-refresh:focus-visible,
+.mp-profile-mark-member:focus-visible,
+.mp-profile-mark-detail-close:focus-visible,
+.mp-profile-mark-detail-copy:focus-visible,
+.mp-profile-mark-friend:focus-visible {
+    outline: 2px solid rgba(145, 233, 232, .85);
+    outline-offset: 3px;
+}
+
+.mp-profile-mark-tab-icon {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    border: 1px solid rgba(135, 220, 224, .12);
+    border-radius: 10px;
+    background: rgba(110, 201, 213, .075);
+    color: #8ee8e2;
+}
+
+.mp-profile-mark-tab-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.mp-profile-mark-tab-copy {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mp-profile-mark-tab-copy strong {
+    color: #f0fcff;
+    font-size: 17px;
+    font-weight: 780;
+    line-height: 1;
+    letter-spacing: -.035em;
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-profile-mark-tab-copy small {
+    overflow: hidden;
+    color: rgba(190, 222, 231, .72);
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-profile-mark-tab-arrow {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    color: rgba(135, 226, 222, .65);
+    font-size: 11px;
+    transition: transform .2s ease;
+}
+
+.mp-profile-mark-tab:hover .mp-profile-mark-tab-arrow,
+.mp-profile-mark-tab.is-active .mp-profile-mark-tab-arrow {
+    transform: translate(2px, -2px);
+    color: #a4f4e7;
+}
+
+.mp-profile-marks-panel {
+    margin-top: 9px;
+    padding: 10px;
+    border: 1px solid rgba(126, 205, 221, .13);
+    border-radius: 14px;
+    background: linear-gradient(155deg, rgba(10, 29, 43, .78), rgba(5, 18, 29, .76));
+    animation: mpProfileMarksReveal .22s ease both;
+}
+
+.mp-profile-marks-panel[hidden] {
+    display: none !important;
+}
+
+.mp-profile-marks-panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 7px;
+}
+
+.mp-profile-marks-panel-heading > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mp-profile-marks-panel-heading strong {
+    color: #effcff;
+    font-size: 11px;
+    font-weight: 760;
+}
+
+.mp-profile-marks-panel-heading small {
+    color: rgba(181, 211, 222, .55);
+    font-size: 8px;
+}
+
+.mp-profile-marks-refresh {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    flex: 0 0 29px;
+    border: 1px solid rgba(123, 205, 221, .14);
+    border-radius: 9px;
+    background: rgba(94, 172, 190, .07);
+    color: #9be9e7;
+    cursor: pointer;
+    transition: transform .2s ease, background .2s ease;
+}
+
+.mp-profile-marks-refresh:hover {
+    transform: rotate(25deg);
+    background: rgba(94, 172, 190, .15);
+}
+
+.mp-profile-marks-refresh svg {
+    width: 16px;
+    height: 16px;
+}
+
+.mp-profile-marks-list-status {
+    margin: 7px 0;
+    color: rgba(186, 215, 225, .64);
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.mp-profile-marks-list-status:empty {
+    display: none;
+}
+
+.mp-profile-marks-list-status.is-error {
+    color: #ffcaca;
+}
+
+.mp-profile-marks-list {
+    display: grid;
+    gap: 5px;
+    max-height: 174px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(125, 214, 218, .23) transparent;
+}
+
+.mp-profile-marks-list:empty {
+    display: none;
+}
+
+.mp-profile-mark-member {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: rgba(132, 206, 223, .035);
+    color: #effaff;
+    text-align: left;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.mp-profile-mark-member:hover {
+    transform: translateX(2px);
+    border-color: rgba(125, 219, 221, .18);
+    background: rgba(104, 196, 206, .085);
+}
+
+.mp-profile-mark-member-avatar {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border: 1px solid rgba(171, 242, 233, .34);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 18%, rgba(179, 255, 244, .35), transparent 30%), linear-gradient(145deg, #2a708c, #1c6982 43%, #237f72);
+    color: #f1ffff;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: inset 0 1px rgba(255,255,255,.18);
+}
+
+.mp-profile-mark-member-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mp-profile-mark-member-copy strong {
+    overflow: hidden;
+    color: #edfaff;
+    font-size: 10px;
+    font-weight: 730;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-profile-mark-member-copy small {
+    overflow: hidden;
+    color: rgba(179, 211, 221, .62);
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-profile-mark-member-chevron {
+    color: rgba(141, 225, 222, .72);
+    font-size: 15px;
+}
+
+/* Small public member card opened by clicking an account in either list. */
+.mp-profile-mark-detail-overlay,
+.mp-profile-mark-detail-overlay * {
+    box-sizing: border-box;
+}
+
+.mp-profile-mark-detail-overlay[hidden] {
+    display: none !important;
+}
+
+.mp-profile-mark-detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10030;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(1, 6, 17, .58);
+    -webkit-backdrop-filter: blur(12px) saturate(125%);
+    backdrop-filter: blur(12px) saturate(125%);
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+
+.mp-profile-mark-detail-overlay.is-open {
+    opacity: 1;
+}
+
+.mp-profile-mark-detail-card {
+    position: relative;
+    width: min(100%, 360px);
+    max-height: min(620px, calc(100dvh - 32px));
+    overflow-y: auto;
+    border: 1px solid rgba(170, 222, 238, .17);
+    border-radius: 22px;
+    background: radial-gradient(ellipse at 50% -12%, rgba(57,128,167,.17), transparent 48%), linear-gradient(155deg, #091625, #06101b);
+    color: #f1fbff;
+    box-shadow: 0 32px 90px rgba(0,0,0,.58), inset 0 1px rgba(255,255,255,.045);
+    opacity: 0;
+    transform: translateY(10px) scale(.98);
+    transition: opacity .24s ease, transform .28s cubic-bezier(.2,.8,.2,1);
+    scrollbar-width: none;
+}
+
+.mp-profile-mark-detail-overlay.is-open .mp-profile-mark-detail-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.mp-profile-mark-detail-card::-webkit-scrollbar {
+    display: none;
+    width: 0;
+}
+
+.mp-profile-mark-detail-cover {
+    position: relative;
+    min-height: 95px;
+    padding: 20px;
+    overflow: hidden;
+    border-radius: 21px 21px 0 0;
+    background: radial-gradient(ellipse at 75% 0%, rgba(52,181,209,.6), transparent 50%), radial-gradient(ellipse at 18% 30%, rgba(27,129,194,.5), transparent 56%), linear-gradient(130deg, #10283d, #071625 72%);
+}
+
+.mp-profile-mark-detail-cover::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: linear-gradient(0deg, rgba(5,14,25,.66), transparent 80%);
+}
+
+.mp-profile-mark-detail-kicker,
+.mp-profile-mark-detail-name {
+    position: relative;
+    z-index: 1;
+}
+
+.mp-profile-mark-detail-kicker {
+    color: rgba(223,251,255,.78);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: .17em;
+}
+
+.mp-profile-mark-detail-name {
+    margin: 9px 36px 0 0;
+    color: #f2ffff;
+    font-size: 24px;
+    font-weight: 720;
+    line-height: 1.1;
+    letter-spacing: -.05em;
+    overflow-wrap: anywhere;
+}
+
+.mp-profile-mark-detail-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 33px;
+    height: 33px;
+    border: 1px solid rgba(239,253,255,.23);
+    border-radius: 50%;
+    background: rgba(3,13,26,.44);
+    color: #f5ffff;
+    cursor: pointer;
+}
+
+.mp-profile-mark-detail-close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.mp-profile-mark-detail-body {
+    padding: 16px 19px 19px;
+}
+
+.mp-profile-mark-detail-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(149,210,225,.10);
+}
+
+.mp-profile-mark-detail-avatar {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    border: 1px solid rgba(171,242,233,.48);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 18%, rgba(179,255,244,.42), transparent 29%), linear-gradient(145deg,#2a708c,#1c6982 45%,#237f72);
+    color: #f1ffff;
+    font-size: 20px;
+    font-weight: 800;
+    box-shadow: inset 0 1px rgba(255,255,255,.22), 0 7px 22px rgba(11,133,147,.16);
+}
+
+.mp-profile-mark-detail-identity-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.mp-profile-mark-detail-identity-copy strong {
+    color: #effbff;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.mp-profile-mark-detail-identity-copy small {
+    color: rgba(200,222,232,.66);
+    font-size: 10px;
+    overflow-wrap: anywhere;
+}
+
+.mp-profile-mark-detail-copy {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px;
+    border: 1px solid rgba(123,205,221,.14);
+    border-radius: 12px;
+    background: rgba(19,49,69,.48);
+    color: #e9fbff;
+    cursor: pointer;
+}
+
+.mp-profile-mark-detail-copy span:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: .035em;
+}
+
+.mp-profile-mark-detail-copy span:last-child {
+    flex: 0 0 auto;
+    color: #8be7d9;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.mp-profile-mark-detail-stats {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.mp-profile-mark-detail-stat {
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid rgba(123,205,221,.10);
+    border-radius: 11px;
+    background: rgba(132,206,223,.035);
+}
+
+.mp-profile-mark-detail-stat small,
+.mp-profile-mark-detail-stat strong {
+    display: block;
+}
+
+.mp-profile-mark-detail-stat small {
+    color: rgba(181,211,222,.59);
+    font-size: 8px;
+}
+
+.mp-profile-mark-detail-stat strong {
+    margin-top: 5px;
+    color: #f0fcff;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.mp-profile-mark-friend {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 43px;
+    margin-top: 13px;
+    overflow: hidden;
+    border: 1px solid rgba(119,233,222,.37);
+    border-radius: 12px;
+    background: linear-gradient(110deg, #1d7392 0%, #208f94 45%, #247e72 100%);
+    color: #f1ffff;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: inset 0 1px rgba(255,255,255,.17), 0 8px 24px rgba(17,141,148,.13);
+    transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+
+.mp-profile-mark-friend::before {
+    position: absolute;
+    z-index: -1;
+    inset: -50% -80%;
+    content: "";
+    background: linear-gradient(100deg, transparent 42%, rgba(255,255,255,.22) 50%, transparent 58%);
+    transform: translateX(-42%);
+    transition: transform .55s ease;
+}
+
+.mp-profile-mark-friend:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: saturate(1.15) brightness(1.08);
+    box-shadow: inset 0 1px rgba(255,255,255,.20), 0 10px 28px rgba(17,141,148,.22);
+}
+
+.mp-profile-mark-friend:hover::before {
+    transform: translateX(42%);
+}
+
+.mp-profile-mark-friend.is-marked {
+    border-color: rgba(141,231,205,.24);
+    background: linear-gradient(110deg, rgba(26,91,91,.75), rgba(22,77,69,.75));
+    color: #a8f0d9;
+}
+
+.mp-profile-mark-friend:disabled {
+    opacity: .65;
+    cursor: progress;
+}
+
+.mp-profile-mark-detail-status {
+    min-height: 1.2em;
+    margin: 9px 0 0;
+    color: rgba(183,226,227,.76);
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+@keyframes mpProfileMarksReveal {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 360px) {
+    .mp-profile-mark-tab {
+        gap: 7px;
+        padding: 8px 7px;
+    }
+    .mp-profile-mark-tab-icon {
+        width: 28px;
+        height: 28px;
+        flex-basis: 28px;
+    }
+    .mp-profile-mark-tab-copy strong {
+        font-size: 15px;
+    }
+    .mp-profile-mark-tab-copy small {
+        font-size: 7px;
+    }
+    .mp-profile-mark-detail-body {
+        padding-right: 13px;
+        padding-left: 13px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-profile-mark-tab,
+    .mp-profile-mark-tab::before,
+    .mp-profile-mark-tab-arrow,
+    .mp-profile-marks-panel,
+    .mp-profile-mark-member,
+    .mp-profile-mark-detail-overlay,
+    .mp-profile-mark-detail-card,
+    .mp-profile-mark-friend,
+    .mp-profile-mark-friend::before {
+        animation: none !important;
+        transition-duration: .01ms !important;
+    }
+}

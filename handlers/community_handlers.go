@@ -26,6 +26,7 @@ type communityMemberDTO struct {
 	CreatedAt   string `json:"createdAt"`
 	FriendCount int64  `json:"friendCount"`
 	MarkedByMe  bool   `json:"markedByMe"`
+	IsSelf      bool   `json:"isSelf"`
 	AvatarURL   string `json:"avatarUrl,omitempty"`
 }
 
@@ -37,6 +38,7 @@ func toCommunityMemberDTO(member storage.CommunityMember) communityMemberDTO {
 		CreatedAt:   normalizeCommunityDate(member.CreatedAt),
 		FriendCount: member.FriendCount,
 		MarkedByMe:  member.MarkedByMe,
+		IsSelf:      member.IsSelf,
 		// The current users schema has no avatar column. The UI uses a polished
 		// initials avatar with a deterministic gradient until photo support exists.
 		AvatarURL: "",

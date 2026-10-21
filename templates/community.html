@@ -19,9 +19,7 @@
     <section class="mp-community-hero">
         <div class="mp-community-hero-media" aria-hidden="true">
             <video class="mp-community-hero-video" id="mpCommunityHeroVideo" autoplay muted loop playsinline preload="none" tabindex="-1">
-              
-                <source src="/templates/vid/community-backdrop.mp4" type="video/mp4">
-              
+                <source src="/home/student/MoviPilot/templates/vid/community-backdrop.mp4" type="video/mp4">
             </video>
             <div class="mp-community-hero-video-shade"></div>
             <canvas class="mp-community-flow-canvas" id="mpCommunityFlowCanvas"></canvas>
@@ -139,7 +137,7 @@
             </form>
 
             <p class="mp-community-search-hint" id="mpCommunitySearchHint">
-                Usernames are searchable. To find someone by ID, switch to MoviPilot ID and enter their full code (for example, MP…); IDs are exact matches.
+                Search a username or full name, or type ME to open your own profile card. To find someone by ID, switch to MoviPilot ID and enter their full code (for example, MP…); IDs are exact matches.
             </p>
         </div>
 
@@ -167,10 +165,37 @@
         </div>
     </section>
 
-    <!--
-      Community chat intentionally comes later, as requested.
-      Keep this page focused on hero, member search and public profile cards for now.
-    -->
+    <!-- =====================================================
+         GLOBAL COMMUNITY CHAT ENTRY
+         The room itself is fetched as a separate HTML fragment only when opened.
+         This keeps Community search and chat code independently maintainable.
+         ===================================================== -->
+    <section class="mp-community-chat-entry" id="mpCommunityChatEntry" aria-labelledby="mpCommunityChatEntryTitle">
+        <div class="mp-community-chat-entry-art" aria-hidden="true">
+            <span class="mp-community-chat-entry-orb mp-community-chat-entry-orb--one"></span>
+            <span class="mp-community-chat-entry-orb mp-community-chat-entry-orb--two"></span>
+            <div class="mp-community-chat-entry-logo">
+                <svg viewBox="0 0 52 52" fill="none">
+                    <path d="M8 14.5A5.5 5.5 0 0 1 13.5 9h25A5.5 5.5 0 0 1 44 14.5v18a5.5 5.5 0 0 1-5.5 5.5H23l-10 6v-6.7A5.5 5.5 0 0 1 8 32V14.5Z" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M16 19h20M16 25h15M16 31h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="mp-community-chat-entry-copy">
+            <span class="mp-community-section-kicker">ONE ROOM. EVERY STORY.</span>
+            <h2 id="mpCommunityChatEntryTitle">The conversation is <span>yours.</span></h2>
+            <p>Join the global MoviPilot room to share movie moments, swap recommendations, react to messages, and meet the people behind the profiles.</p>
+            <div class="mp-community-chat-entry-meta"><span class="mp-community-note-dot"></span> A shared room for the whole MoviPilot community</div>
+        </div>
+        <button class="mp-community-chat-entry-button" id="mpCommunityOpenChat" type="button" aria-expanded="false" aria-controls="mpCommunityChatMount">
+            <span class="mp-community-chat-entry-button-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 5.8A2.8 2.8 0 0 1 6.8 3h10.4A2.8 2.8 0 0 1 20 5.8v8.4a2.8 2.8 0 0 1-2.8 2.8H11l-5.5 3v-3.5A2.8 2.8 0 0 1 4 13.8V5.8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 8h8M8 11.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            <span class="mp-community-chat-entry-button-copy"><strong>Enter community chat</strong><small>Open the global room</small></span>
+            <svg class="mp-community-chat-entry-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+    </section>
+    <div class="mp-community-chat-mount" id="mpCommunityChatMount" hidden></div>
 
     <!-- =====================================================
          PUBLIC MEMBER PROFILE MODAL

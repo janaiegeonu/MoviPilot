@@ -1,0 +1,106 @@
+<!-- MoviPilot global chat fragment. Injected into #mpCommunityChatMount on demand. -->
+<section class="mp-chat-room" id="mpCommunityChatRoot" aria-labelledby="mpChatRoomTitle">
+    <div class="mp-chat-room-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+    <!-- A low-contrast repeating cinema doodle wallpaper, including a personal JANAI signature. -->
+    <div class="mp-chat-doodles" aria-hidden="true">
+        <svg class="mp-chat-doodle-wallpaper" viewBox="0 0 840 760" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <pattern id="mpChatDoodlePattern" width="210" height="190" patternUnits="userSpaceOnUse">
+                    <g fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round">
+                        <g transform="translate(20 18) rotate(-8 26 22)"><rect x="2" y="13" width="52" height="31" rx="4"/><path d="m2 14 5-10 51 2-6 10H2Z"/><path d="m15 6 7 8m8-7 7 8m8-7 7 8"/></g>
+                        <path d="m154 16 4.8 12.3L172 33l-13.2 5.2L154 51l-5.3-12.8L136 33l12.7-4.7L154 16Z"/>
+                        <g transform="translate(128 78) rotate(6 28 20)"><path d="M3 4h50v8a5 5 0 0 0 0 10v8H3v-8a5 5 0 0 0 0-10V4Z" stroke-dasharray="3 4"/><path d="M16 10v14m8-14v14m8-14v14m8-14v14"/></g>
+                        <g transform="translate(20 105)"><circle cx="23" cy="23" r="19"/><circle cx="23" cy="23" r="7"/><path d="M23 4v12m19 7H30M23 42V30M4 23h12"/></g>
+                        <g transform="translate(84 65)"><path d="M18 0v36M0 18h36M5 5l26 26M31 5 5 31"/></g>
+                        <g transform="translate(74 150)"><path d="M4 6h34v25H4zM4 12h34M13 6l6 6m5-6 6 6"/><path d="m14 18 9 5-9 5v-10Z"/></g>
+                    </g>
+                    <text x="102" y="55" fill="currentColor" stroke="none" font-family="ui-sans-serif,system-ui,sans-serif" font-size="10" font-weight="800" letter-spacing="3" transform="rotate(-13 102 55)">JANAI</text>
+                    <text x="151" y="176" fill="currentColor" stroke="none" font-family="ui-sans-serif,system-ui,sans-serif" font-size="8" font-weight="800" letter-spacing="2" transform="rotate(8 151 176)">MOVIPILOT</text>
+                </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#mpChatDoodlePattern)"/>
+        </svg>
+    </div>
+
+    <header class="mp-chat-header">
+        <button class="mp-chat-back-button" id="mpChatCloseButton" type="button" aria-label="Return to Community" data-chat-tooltip="Back to Community">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Community</span>
+        </button>
+        <div class="mp-chat-brand-mark" aria-hidden="true">
+            <img src="/img/logo favicon.png" alt="" width="32" height="32" decoding="async">
+        </div>
+        <div class="mp-chat-header-copy">
+            <span class="mp-chat-overline">MOVIPILOT COMMUNITY</span>
+            <h2 id="mpChatRoomTitle">Community Chatroom</h2>
+            <p><span class="mp-chat-live-pulse" aria-hidden="true"></span><span id="mpChatConnectionLabel">Connecting to the room…</span></p>
+        </div>
+        <div class="mp-chat-sound-status" data-chat-tooltip="Sound alerts are always on" aria-label="Sound alerts are always on">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 9a4 4 0 0 1 0 6m2.5-8.5a7 7 0 0 1 0 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span>Sound alerts on</span>
+        </div>
+    </header>
+
+    <div class="mp-chat-notice" id="mpChatNotice" role="status" aria-live="polite" hidden></div>
+    <div class="mp-chat-history" id="mpChatHistory" aria-label="Community messages" tabindex="0">
+        <button class="mp-chat-load-older" id="mpChatLoadOlder" type="button" hidden>Load earlier messages</button>
+        <div class="mp-chat-messages" id="mpChatMessages" role="log" aria-live="polite" aria-relevant="additions text">
+            <div class="mp-chat-welcome" id="mpChatWelcome">
+                <div class="mp-chat-welcome-symbol" aria-hidden="true"><span></span><span></span><span></span></div>
+                <span class="mp-chat-welcome-kicker">YOU'RE IN THE ROOM</span>
+                <h3>Every story has a voice.</h3>
+                <p>Say hello, share a recommendation, or start a conversation. Keep it kind, keep it cinematic.</p>
+            </div>
+        </div>
+        <div class="mp-chat-bottom-anchor" id="mpChatBottomAnchor" aria-hidden="true"></div>
+    </div>
+
+    <div class="mp-chat-compose-wrap">
+        <div class="mp-chat-context-bar" id="mpChatComposerContext" hidden>
+            <div><span id="mpChatComposerContextLabel">Replying to a message</span><strong id="mpChatComposerContextText"></strong></div>
+            <button id="mpChatCancelContext" type="button" aria-label="Cancel reply or edit"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="mp-chat-pending-attachment" id="mpChatPendingAttachment" hidden>
+            <div class="mp-chat-pending-attachment-icon" id="mpChatPendingAttachmentIcon" aria-hidden="true"></div>
+            <div><strong id="mpChatPendingAttachmentName">Attachment ready</strong><small id="mpChatPendingAttachmentMeta">Ready to send with your message</small></div>
+            <button id="mpChatRemoveAttachment" type="button" aria-label="Remove attachment">×</button>
+        </div>
+        <div class="mp-chat-upload-progress" id="mpChatUploadProgress" hidden><span></span><small id="mpChatUploadProgressLabel">Preparing attachment…</small></div>
+        <form class="mp-chat-composer" id="mpChatComposerForm">
+            <button class="mp-chat-voice-button" id="mpChatVoiceButton" type="button" aria-label="Record a voice note" data-chat-tooltip="Record a voice note">
+                <svg class="mp-chat-mic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <span class="mp-chat-record-orb" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            </button>
+            <span class="mp-chat-record-time" id="mpChatRecordTime" hidden>00:00</span>
+            <div class="mp-chat-attach-wrap">
+                <button class="mp-chat-attach-button" id="mpChatAttachButton" type="button" aria-label="Add attachment" aria-expanded="false" data-chat-tooltip="Photo, video, or movie">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                </button>
+                <div class="mp-chat-attach-menu" id="mpChatAttachMenu" hidden>
+                    <button type="button" data-chat-attach="image"><span class="mp-chat-attach-menu-icon mp-chat-attach-menu-icon--photo"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><circle cx="8.5" cy="9" r="1.5" stroke="currentColor" stroke-width="1.4"/><path d="m4 17 5-5 3.5 3 2.5-2 5 5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span><strong>Photo</strong><small>Share an image</small></span></button>
+                    <button type="button" data-chat-attach="video"><span class="mp-chat-attach-menu-icon mp-chat-attach-menu-icon--video"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="m16 10 5-3v10l-5-3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span><strong>Video</strong><small>Share a short clip</small></span></button>
+                    <button type="button" data-chat-attach="movie"><span class="mp-chat-attach-menu-icon mp-chat-attach-menu-icon--movie"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="m8 4 4 5m2-5 4 5M8 20l4-5m2 5 4-5M3 10h18" stroke="currentColor" stroke-width="1.4"/><path d="m11 12 4 2-4 2v-4Z" fill="currentColor"/></svg></span><span><strong>Movie card</strong><small>Find a title on TMDB</small></span></button>
+                </div>
+            </div>
+            <label class="mp-chat-input-shell" for="mpChatComposerInput">
+                <textarea id="mpChatComposerInput" name="message" rows="1" maxlength="3000" placeholder="Message the community…" aria-label="Write a community message"></textarea>
+                <span class="mp-chat-char-count" id="mpChatCharCount">0/3000</span>
+            </label>
+            <button class="mp-chat-send-button" id="mpChatSendButton" type="submit" aria-label="Send message" data-chat-tooltip="Send message">
+                <svg class="mp-chat-send-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 5 16 7-16 7 3-7-3-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M7 12h13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                <span class="mp-chat-send-label">Send</span>
+            </button>
+        </form>
+        <div class="mp-chat-compose-footnote"><span>Be thoughtful. Be welcoming.</span><span id="mpChatComposerHint">Enter to send · Shift + Enter for a new line</span></div>
+    </div>
+
+    <input class="mp-chat-hidden-input" id="mpChatImageInput" type="file" accept="image/jpeg,image/png,image/gif,image/webp" aria-label="Choose an image">
+    <input class="mp-chat-hidden-input" id="mpChatVideoInput" type="file" accept="video/mp4,video/webm" aria-label="Choose a video">
+
+    <section class="mp-chat-movie-picker" id="mpChatMoviePicker" aria-label="Find a movie to share" hidden>
+        <div class="mp-chat-movie-picker-header"><div><span class="mp-chat-overline">SHARE THE SCREEN</span><h3>Find a movie</h3></div><button id="mpChatMoviePickerClose" type="button" aria-label="Close movie search"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div>
+        <form id="mpChatMovieSearchForm" class="mp-chat-movie-search"><input id="mpChatMovieSearchInput" type="search" maxlength="100" placeholder="Search a film title…" autocomplete="off" aria-label="Search a movie title"><button type="submit">Search</button></form>
+        <div class="mp-chat-movie-results" id="mpChatMovieResults" aria-live="polite"><p class="mp-chat-picker-hint">Find a title, choose its card, and send it to the room.</p></div>
+    </section>
+    <div class="mp-chat-global-toast" id="mpChatToast" role="status" aria-live="polite"></div>
+</section>

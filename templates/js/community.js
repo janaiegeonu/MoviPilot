@@ -174,8 +174,15 @@
         const button = document.createElement("button");
         button.type = "button";
         button.className = "mp-community-result-card";
+        if (user.isSelf) button.classList.add("mp-community-result-card--self");
         button.dataset.publicId = safeText(user.publicId);
-        button.setAttribute("aria-label", `Open public profile for ${safeText(user.fullName, "MoviPilot member")}`);
+        button.dataset.isSelf = String(Boolean(user.isSelf));
+        button.setAttribute(
+            "aria-label",
+            user.isSelf
+                ? "Open your existing MoviPilot profile card"
+                : `Open public profile for ${safeText(user.fullName, "MoviPilot member")}`
+        );
 
         const avatar = document.createElement("span");
         avatar.className = "mp-community-avatar";
@@ -188,9 +195,19 @@
 
         const copy = document.createElement("span");
         copy.className = "mp-community-result-copy";
+        const nameRow = document.createElement("span");
+        nameRow.className = "mp-community-result-name-row";
         const name = document.createElement("strong");
         name.className = "mp-community-result-name";
         name.textContent = safeText(user.fullName, "MoviPilot member");
+        nameRow.appendChild(name);
+        if (user.isSelf) {
+            const selfBadge = document.createElement("span");
+            selfBadge.className = "mp-community-self-badge";
+            selfBadge.textContent = "ME";
+            selfBadge.setAttribute("aria-label", "This is your account");
+            nameRow.appendChild(selfBadge);
+        }
         const username = document.createElement("span");
         username.className = "mp-community-result-username";
         username.textContent = `@${safeText(user.username, "member")}`;
@@ -199,13 +216,13 @@
         meta.appendChild(makeSVG("", "M12 8v4l2.5 1.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"));
         const markCount = Number(user.friendCount || 0);
         meta.appendChild(document.createTextNode(`${markCount} ${markCount === 1 ? "friend mark" : "friend marks"}`));
-        copy.append(name, username, meta);
+        copy.append(nameRow, username, meta);
 
         const arrow = document.createElement("span");
         arrow.className = "mp-community-result-arrow";
         arrow.appendChild(makeSVG("", "M5 12h13M13 6l6 6-6 6"));
         button.append(avatar, copy, arrow);
-        button.addEventListener("click", () => openProfile(user.publicId));
+        button.addEventListener("click", () => openProfile(user));
         return button;
     };
 
@@ -220,18 +237,32 @@
 
         if (!Array.isArray(users) || users.length === 0) {
             const byID = mode === "id";
+            const isSelfShortcut = mode === "username" && query.trim().toLocaleLowerCase() === "me";
             renderEmptyState(
                 root,
-                byID ? "No member matched that ID." : "No members found for that username.",
-                byID
-                    ? "Check the full MoviPilot ID and try again. IDs are matched exactly."
-                    : `We could not find a username matching “${query}”. Check the spelling or try another search.`
+                isSelfShortcut
+                    ? "Your account could not be found."
+                    : byID
+                        ? "No member matched that ID."
+                        : "No members found for that username.",
+                isSelfShortcut
+                    ? "We could not load the account connected to your current session. Refresh the page and try again."
+                    : byID
+                        ? "Check the full MoviPilot ID and try again. IDs are matched exactly."
+                        : `We could not find a username matching “${query}”. Check the spelling or try another search.`
             );
-            if (title) title.textContent = "Search results";
+            if (title) title.textContent = isSelfShortcut ? "Your account" : "Search results";
             return;
         }
 
-        if (title) title.textContent = mode === "id" ? "Member matching this ID" : "Matching members";
+        if (title) {
+            const isSelfShortcut = mode === "username" && query.trim().toLocaleLowerCase() === "me";
+            title.textContent = isSelfShortcut
+                ? "Your account"
+                : mode === "id"
+                    ? "Member matching this ID"
+                    : "Matching members";
+        }
         if (count) {
             count.hidden = false;
             count.textContent = `${users.length} ${users.length === 1 ? "member" : "members"}`;
@@ -381,6 +412,8 @@
         const friendButton = root.querySelector("#mpCommunityFriendButton");
         const copyButton = root.querySelector("#mpCommunityCopyID");
         const heroCTA = root.querySelector("#mpCommunityFindPeople");
+        const openChatButton = root.querySelector("#mpCommunityOpenChat");
+        const chatMount = root.querySelector("#mpCommunityChatMount");
 
         let currentMode = "username";
         let latestSearchSerial = 0;
@@ -388,6 +421,26 @@
         let activeProfile = null;
         let previousFocus = null;
         let profileLoading = false;
+
+        // Self results should use the dashboard's existing profile modal rather
+        // than opening a duplicate public Community profile card.
+        const openOwnDashboardProfile = () => {
+            const profileButton = document.getElementById("profileButton");
+            const profileOverlay = document.getElementById("profileOverlay");
+            if (!profileButton || !profileOverlay) {
+                showCommunityToast(root, "Your dashboard profile card is unavailable on this page.", true);
+                return;
+            }
+            if (profileOverlay.hidden) profileButton.click();
+        };
+
+        const openSelectedCommunityProfile = (user) => {
+            if (user && user.isSelf) {
+                openOwnDashboardProfile();
+                return;
+            }
+            openMemberProfile(user && user.publicId);
+        };
 
         initializeFlowCanvas(root, signal);
 
@@ -403,7 +456,7 @@
                 searchInput.value = "";
                 searchInput.placeholder = currentMode === "id"
                     ? "Enter the full MoviPilot ID (MP…)"
-                    : "Search by username or name…";
+                    : "Search name, username, or type ME…";
                 searchInput.setAttribute("minlength", currentMode === "id" ? "4" : "2");
                 searchInput.setAttribute("maxlength", currentMode === "id" ? "22" : "64");
             }
@@ -420,7 +473,7 @@
                 "There’s a whole community to meet.",
                 currentMode === "id"
                     ? "Enter someone’s full MoviPilot ID to open their public profile."
-                    : "Enter a username to discover a member’s public profile."
+                    : "Search a username or full name, or type ME to open your own profile card."
             );
             const title = root.querySelector("#mpCommunityResultsTitle");
             if (title) title.textContent = "People to discover";
@@ -461,7 +514,7 @@
                 const payload = await requestJSON(url.toString(), { signal });
                 if (requestNumber !== latestSearchSerial || signal.aborted) return;
 
-                renderSearchResults(root, payload.users || [], openMemberProfile, currentMode, query);
+                renderSearchResults(root, payload.users || [], openSelectedCommunityProfile, currentMode, query);
             } catch (error) {
                 if (signal.aborted || requestNumber !== latestSearchSerial) return;
                 renderEmptyState(
@@ -599,6 +652,78 @@
             }
         }
 
+        // Expose the existing Community public-profile modal to chat message names.
+        // The chat script calls this function instead of creating a second profile UI.
+        window.openMoviPilotCommunityMemberProfile = (publicID) => openMemberProfile(publicID);
+
+        const openOrToggleCommunityChat = async () => {
+            if (!openChatButton || !chatMount) return;
+
+            if (!chatMount.hidden) {
+                chatMount.hidden = true;
+                chatMount.classList.remove("is-fullpage");
+                root.classList.remove("is-chat-expanded");
+                document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
+                document.body.classList.remove("mp-community-chat-fullscreen-open");
+                openChatButton.setAttribute("aria-expanded", "false");
+                window.destroyCommunityChat?.();
+                openChatButton.focus({ preventScroll: true });
+                return;
+            }
+
+            openChatButton.disabled = true;
+            const buttonTitle = openChatButton.querySelector(".mp-community-chat-entry-button-copy strong");
+            const originalTitle = buttonTitle?.textContent || "Enter community chat";
+            if (buttonTitle) buttonTitle.textContent = "Opening the room…";
+
+            try {
+                // The chatroom HTML is a standalone fragment and is only fetched on demand.
+                if (!chatMount.querySelector("#mpCommunityChatRoot")) {
+                    const response = await fetch("/community/chat", {
+                        method: "GET",
+                        credentials: "same-origin",
+                        cache: "no-store",
+                        signal,
+                        headers: { "X-Requested-With": "XMLHttpRequest" }
+                    });
+                    if (!response.ok) {
+                        let message = "The community chatroom could not be opened.";
+                        try { const text = await response.text(); if (text) message = text.slice(0, 240); } catch (_) {}
+                        throw new Error(message);
+                    }
+                    chatMount.innerHTML = await response.text();
+                }
+
+                if (signal.aborted) return;
+                chatMount.hidden = false;
+                chatMount.classList.add("is-fullpage");
+                root.classList.add("is-chat-expanded");
+                document.documentElement.classList.add("mp-community-chat-fullscreen-open");
+                document.body.classList.add("mp-community-chat-fullscreen-open");
+                openChatButton.setAttribute("aria-expanded", "true");
+                if (typeof window.initCommunityChat !== "function") {
+                    throw new Error("The chatroom script has not loaded. Add community_chat.js to the persistent dashboard shell.");
+                }
+                await window.initCommunityChat(chatMount);
+                // Consume an Explore return request only after the full chat view is restored.
+                try { if (sessionStorage.getItem("movipilotCommunityChatReturn") === "1") sessionStorage.removeItem("movipilotCommunityChatReturn"); } catch (_) {}
+                chatMount.scrollIntoView({ behavior: reducedMotionQuery.matches ? "auto" : "smooth", block: "start" });
+            } catch (error) {
+                if (!signal.aborted) {
+                    showCommunityToast(root, error.message || "Could not open the community chatroom.", true);
+                    chatMount.hidden = true;
+                    chatMount.classList.remove("is-fullpage");
+                    root.classList.remove("is-chat-expanded");
+                    document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
+                    document.body.classList.remove("mp-community-chat-fullscreen-open");
+                    openChatButton.setAttribute("aria-expanded", "false");
+                }
+            } finally {
+                if (openChatButton) openChatButton.disabled = false;
+                if (buttonTitle) buttonTitle.textContent = originalTitle;
+            }
+        };
+
         const closeMemberProfile = () => {
             if (!modalLayer || modalLayer.hidden) return;
             activeProfileRequest += 1;
@@ -659,7 +784,7 @@
             const query = searchInput.value.trim();
             if (query.length < 2) {
                 if (!query) {
-                    renderEmptyState(root, "There’s a whole community to meet.", "Enter a username to discover a member’s public profile.");
+                    renderEmptyState(root, "There’s a whole community to meet.", "Search a username or full name, or type ME to open your own profile card.");
                     const title = root.querySelector("#mpCommunityResultsTitle");
                     if (title) title.textContent = "People to discover";
                 }
@@ -672,6 +797,7 @@
             root.querySelector("#mpCommunityDiscovery")?.scrollIntoView({ behavior: reducedMotionQuery.matches ? "auto" : "smooth", block: "start" });
             window.setTimeout(() => searchInput?.focus({ preventScroll: true }), reducedMotionQuery.matches ? 0 : 250);
         }, { signal });
+        openChatButton?.addEventListener("click", () => { void openOrToggleCommunityChat(); }, { signal });
 
         modalClose?.addEventListener("click", closeMemberProfile, { signal });
         // Keep keyboard focus inside the open card. Escape intentionally does not close it.
@@ -723,13 +849,45 @@
         signal.addEventListener("abort", () => {
             window.clearTimeout(searchTimer);
             window.clearTimeout(communityToastTimer);
+            window.destroyCommunityChat?.();
+            window.openMoviPilotCommunityMemberProfile = null;
             if (modalLayer) modalLayer.hidden = true;
+            if (chatMount) { chatMount.hidden = true; chatMount.classList.remove("is-fullpage"); }
+            root.classList.remove("is-chat-expanded");
+            document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
+            document.body.classList.remove("mp-community-chat-fullscreen-open");
+            if (openChatButton) openChatButton.setAttribute("aria-expanded", "false");
             document.body.classList.remove("mp-community-modal-open");
         }, { once: true });
 
         updateSearchMode("username");
         console.log("[MOVIPILOT] Community page initialized.");
+
+        // A movie card can return the browser directly to /dashboard. If that
+        // happens, the session flag restores the user to the same chatroom.
+        try {
+            if (sessionStorage.getItem("movipilotCommunityChatReturn") === "1") {
+                window.setTimeout(() => {
+                    if (!signal.aborted && openChatButton && chatMount?.hidden) void openOrToggleCommunityChat();
+                }, 80);
+            }
+        } catch (_) { /* Private browsing may deny sessionStorage; normal back navigation still works. */ }
     };
 
     window.initCommunityPage = initializeCommunityPage;
+
+    window.addEventListener("pageshow", () => {
+        try {
+            if (sessionStorage.getItem("movipilotCommunityChatReturn") !== "1") return;
+            const mount = document.getElementById("mpCommunityChatMount");
+            if (mount && !mount.hidden && document.getElementById("mpCommunityChatRoot")) {
+                sessionStorage.removeItem("movipilotCommunityChatReturn");
+                return;
+            }
+            // This is the direct-/dashboard fallback. The initializer above
+            // will consume the flag after the Community fragment is loaded.
+            const communityButton = document.querySelector('.nav-link[data-page="community"]');
+            if (communityButton && !document.getElementById("mpCommunityPage")) communityButton.click();
+        } catch (_) { /* A normal history.back() restore remains the fallback. */ }
+    });
 })();

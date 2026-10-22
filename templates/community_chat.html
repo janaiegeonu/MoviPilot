@@ -30,7 +30,6 @@
     <header class="mp-chat-header">
         <button class="mp-chat-back-button" id="mpChatCloseButton" type="button" aria-label="Return to Community" data-chat-tooltip="Back to Community">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Community</span>
         </button>
         <div class="mp-chat-brand-mark" aria-hidden="true">
             <img src="/img/logo favicon.png" alt="" width="32" height="32" decoding="async">
@@ -107,5 +106,66 @@
         <form id="mpChatMovieSearchForm" class="mp-chat-movie-search"><input id="mpChatMovieSearchInput" type="search" maxlength="100" placeholder="Search a film title…" autocomplete="off" aria-label="Search a movie title"><button type="submit">Search</button></form>
         <div class="mp-chat-movie-results" id="mpChatMovieResults" aria-live="polite"><p class="mp-chat-picker-hint">Find a title, choose its card, and send it to the room.</p></div>
     </section>
+    <!-- Same-room media lightbox: images and videos never navigate away from the chat. -->
+    <section class="mp-chat-media-viewer" id="mpChatMediaViewer" role="dialog" aria-modal="true" aria-labelledby="mpChatMediaViewerTitle" aria-describedby="mpChatMediaViewerCaption" hidden>
+        <button class="mp-chat-media-viewer-backdrop" type="button" tabindex="-1" data-media-viewer-close="true" aria-label="Close media preview"></button>
+        <div class="mp-chat-media-viewer-panel" role="document">
+            <header class="mp-chat-media-viewer-toolbar">
+                <div class="mp-chat-media-viewer-title-block">
+                    <span class="mp-chat-media-viewer-kicker">MOVIPILOT · SHARED MEDIA</span>
+                    <h3 id="mpChatMediaViewerTitle">Media preview</h3>
+                    <p id="mpChatMediaViewerMeta">Photo · Community member</p>
+                </div>
+                <div class="mp-chat-media-viewer-actions" aria-label="Media actions">
+                    <div class="mp-chat-media-viewer-nav" aria-label="Navigate shared media">
+                        <button id="mpChatMediaViewerPrevious" class="mp-chat-media-action" type="button" aria-label="Previous media" data-chat-tooltip="Previous media">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <span id="mpChatMediaViewerCounter" class="mp-chat-media-viewer-counter">1 / 1</span>
+                        <button id="mpChatMediaViewerNext" class="mp-chat-media-action" type="button" aria-label="Next media" data-chat-tooltip="Next media">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                    </div>
+                    <span class="mp-chat-media-action-divider" aria-hidden="true"></span>
+                    <div id="mpChatMediaViewerImageTools" class="mp-chat-media-image-tools">
+                        <button id="mpChatMediaViewerZoomOut" class="mp-chat-media-action" type="button" aria-label="Zoom out" data-chat-tooltip="Zoom out">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"/><path d="M6.9 10.8h7.8M16 16l4.3 4.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                        </button>
+                        <button id="mpChatMediaViewerFit" class="mp-chat-media-action mp-chat-media-fit" type="button" aria-label="Reset image zoom" data-chat-tooltip="Fit to screen">Fit</button>
+                        <button id="mpChatMediaViewerZoomIn" class="mp-chat-media-action" type="button" aria-label="Zoom in" data-chat-tooltip="Zoom in">
+                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"/><path d="M6.9 10.8h7.8m-3.9-3.9v7.8M16 16l4.3 4.3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                        </button>
+                    </div>
+                    <button id="mpChatMediaViewerCopy" class="mp-chat-media-action" type="button" aria-label="Copy media link" data-chat-tooltip="Copy media link">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 13.5a4 4 0 0 0 5.8.2l3-3a4 4 0 0 0-5.7-5.7l-1.7 1.7M14 10.5a4 4 0 0 0-5.8-.2l-3 3a4 4 0 0 0 5.7 5.7l1.7-1.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+                    </button>
+                    <button id="mpChatMediaViewerFullscreen" class="mp-chat-media-action" type="button" aria-label="Enter full screen" data-chat-tooltip="Full screen">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button id="mpChatMediaViewerDownload" class="mp-chat-media-action mp-chat-media-download" type="button" aria-label="Download media" data-chat-tooltip="Save to device">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5v11m-4-4 4 4 4-4M4.5 16.5v3h15v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                    <button id="mpChatMediaViewerClose" class="mp-chat-media-action mp-chat-media-close" type="button" aria-label="Close media preview" data-chat-tooltip="Close preview">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            </header>
+            <div class="mp-chat-media-viewer-stage" id="mpChatMediaViewerStage" tabindex="0" aria-label="Media viewing area">
+                <div class="mp-chat-media-image-wrap" id="mpChatMediaImageWrap" hidden>
+                    <img id="mpChatMediaViewerImage" class="mp-chat-media-viewer-image" alt="" draggable="false">
+                </div>
+                <video id="mpChatMediaViewerVideo" class="mp-chat-media-viewer-video" controls playsinline preload="metadata" hidden aria-label="Community shared video"></video>
+                <div id="mpChatMediaViewerLoading" class="mp-chat-media-viewer-loading" hidden><span></span><span></span><span></span><small>Loading shared media…</small></div>
+            </div>
+            <footer class="mp-chat-media-viewer-footer">
+                <div class="mp-chat-media-viewer-caption-wrap">
+                    <strong id="mpChatMediaViewerSender">Community member</strong>
+                    <p id="mpChatMediaViewerCaption">Shared media</p>
+                </div>
+                <span id="mpChatMediaViewerInfo" class="mp-chat-media-viewer-info">Image preview</span>
+            </footer>
+        </div>
+    </section>
+
     <div class="mp-chat-global-toast" id="mpChatToast" role="status" aria-live="polite"></div>
 </section>

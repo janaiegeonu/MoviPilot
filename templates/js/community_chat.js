@@ -237,6 +237,29 @@
         const uploadProgress = byID("mpChatUploadProgress");
         const uploadProgressLabel = byID("mpChatUploadProgressLabel");
         const toast = byID("mpChatToast");
+        const mediaViewer = byID("mpChatMediaViewer");
+        const mediaViewerPanel = mediaViewer?.querySelector(".mp-chat-media-viewer-panel");
+        const mediaViewerTitle = byID("mpChatMediaViewerTitle");
+        const mediaViewerMeta = byID("mpChatMediaViewerMeta");
+        const mediaViewerCounter = byID("mpChatMediaViewerCounter");
+        const mediaViewerImageTools = byID("mpChatMediaViewerImageTools");
+        const mediaViewerImageWrap = byID("mpChatMediaImageWrap");
+        const mediaViewerImage = byID("mpChatMediaViewerImage");
+        const mediaViewerVideo = byID("mpChatMediaViewerVideo");
+        const mediaViewerStage = byID("mpChatMediaViewerStage");
+        const mediaViewerLoading = byID("mpChatMediaViewerLoading");
+        const mediaViewerSender = byID("mpChatMediaViewerSender");
+        const mediaViewerCaption = byID("mpChatMediaViewerCaption");
+        const mediaViewerInfo = byID("mpChatMediaViewerInfo");
+        const mediaViewerPrevious = byID("mpChatMediaViewerPrevious");
+        const mediaViewerNext = byID("mpChatMediaViewerNext");
+        const mediaViewerZoomOut = byID("mpChatMediaViewerZoomOut");
+        const mediaViewerZoomIn = byID("mpChatMediaViewerZoomIn");
+        const mediaViewerFit = byID("mpChatMediaViewerFit");
+        const mediaViewerCopy = byID("mpChatMediaViewerCopy");
+        const mediaViewerFullscreen = byID("mpChatMediaViewerFullscreen");
+        const mediaViewerDownload = byID("mpChatMediaViewerDownload");
+        const mediaViewerClose = byID("mpChatMediaViewerClose");
 
         const state = {
             messages: new Map(),
@@ -262,6 +285,19 @@
             destroyed: false
         };
         const pointerTimers = new Set();
+        let mediaViewerMessageID = 0;
+        let mediaViewerReturnFocus = null;
+        let mediaViewerZoom = 1;
+        let mediaViewerPanX = 0;
+        let mediaViewerPanY = 0;
+        let mediaViewerPanning = false;
+        let mediaViewerPanPointer = 0;
+        let mediaViewerPanStartX = 0;
+        let mediaViewerPanStartY = 0;
+        let mediaViewerPanOriginX = 0;
+        let mediaViewerPanOriginY = 0;
+        let mediaViewerCurrentURL = "";
+        let mediaViewerStatusTimer = 0;
         const observer = new MutationObserver(() => {
             if (!document.contains(root)) cleanup();
         });
@@ -587,6 +623,258 @@
             menu.style.visibility = "visible";
         };
 
+        const resolvedMediaURL = (value) => {
+            try {
+                const parsed = new URL(String(value || ""), window.location.href);
+                return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+            } catch (_) { return ""; }
+        };
+
+        const getViewerMediaItems = () => [...state.messages.values()]
+            .filter((message) => message && !message.deleted && ["image", "video"].includes(message.kind) && resolvedMediaURL(message.attachmentUrl))
+            .sort((a, b) => Number(a.id) - Number(b.id));
+
+        const activeViewerMessage = () => getViewerMediaItems().find((message) => Number(message.id) === mediaViewerMessageID) || null;
+
+        const setViewerInfo = (message) => {
+            if (!mediaViewerInfo) return;
+            window.clearTimeout(mediaViewerStatusTimer);
+            if (!message) { mediaViewerInfo.textContent = "Media preview"; return; }
+            const type = message.kind === "video" ? "Video" : "Image";
+            if (message.kind === "image" && mediaViewerImage?.naturalWidth && mediaViewerImage?.naturalHeight) {
+                mediaViewerInfo.textContent = `${mediaViewerImage.naturalWidth} × ${mediaViewerImage.naturalHeight} · ${Math.round(mediaViewerZoom * 100)}% zoom`;
+            } else {
+                mediaViewerInfo.textContent = message.kind === "image" ? `${type} · ${Math.round(mediaViewerZoom * 100)}% zoom` : `${type} · Use the player controls to seek`;
+            }
+        };
+
+        const applyViewerImageTransform = () => {
+            if (!mediaViewerImage) return;
+            mediaViewerImage.style.transform = `translate3d(${mediaViewerPanX}px, ${mediaViewerPanY}px, 0) scale(${mediaViewerZoom})`;
+            mediaViewerImage.classList.toggle("is-zoomed", mediaViewerZoom > 1.01);
+            mediaViewerImage.style.cursor = mediaViewerPanning ? "grabbing" : mediaViewerZoom > 1.01 ? "grab" : "zoom-in";
+            if (mediaViewerFit) mediaViewerFit.setAttribute("data-chat-tooltip", `Fit to screen · ${Math.round(mediaViewerZoom * 100)}%`);
+            setViewerInfo(activeViewerMessage());
+        };
+
+        const setViewerZoom = (nextZoom, resetPan = false) => {
+            mediaViewerZoom = Math.max(0.5, Math.min(4, Math.round(nextZoom * 100) / 100));
+            if (resetPan || mediaViewerZoom <= 1) { mediaViewerPanX = 0; mediaViewerPanY = 0; }
+            applyViewerImageTransform();
+        };
+
+        const safeMediaFileName = (message) => {
+            let name = String(message?.attachmentName || "").replace(/[<>:"/\\|?*\x00-\x1f]/g, "-").trim().slice(0, 120);
+            if (name) return name;
+            const url = resolvedMediaURL(message?.attachmentUrl);
+            let extension = "";
+            try { extension = new URL(url).pathname.match(/\.[a-z0-9]{2,5}$/i)?.[0] || ""; } catch (_) {}
+            if (!extension) extension = message?.kind === "video" ? ".mp4" : ".jpg";
+            return `movipilot-${message?.kind === "video" ? "video" : "photo"}-${Number(message?.id) || Date.now()}${extension}`;
+        };
+
+        const updateViewerNavigation = () => {
+            const items = getViewerMediaItems();
+            const index = items.findIndex((message) => Number(message.id) === mediaViewerMessageID);
+            if (mediaViewerCounter) mediaViewerCounter.textContent = index >= 0 ? `${index + 1} / ${items.length}` : `0 / ${items.length}`;
+            if (mediaViewerPrevious) mediaViewerPrevious.disabled = index <= 0;
+            if (mediaViewerNext) mediaViewerNext.disabled = index < 0 || index >= items.length - 1;
+        };
+
+        const renderMediaViewer = (message) => {
+            if (!mediaViewer || !message || !["image", "video"].includes(message.kind)) return;
+            const url = resolvedMediaURL(message.attachmentUrl);
+            if (!url) { announce("This attachment does not have a valid media URL.", true); return; }
+            mediaViewerMessageID = Number(message.id);
+            mediaViewerCurrentURL = url;
+            mediaViewerZoom = 1;
+            mediaViewerPanX = 0;
+            mediaViewerPanY = 0;
+            mediaViewerPanning = false;
+            if (mediaViewerVideo) { mediaViewerVideo.pause(); mediaViewerVideo.removeAttribute("src"); mediaViewerVideo.load(); }
+            if (mediaViewerImage) {
+                mediaViewerImage.onload = null;
+                mediaViewerImage.onerror = null;
+                mediaViewerImage.removeAttribute("src");
+                mediaViewerImage.alt = safeString(message.attachmentName, message.kind === "image" ? "Shared community photo" : "Shared community video poster");
+                mediaViewerImage.style.opacity = "0";
+            }
+            const isImage = message.kind === "image";
+            if (mediaViewerTitle) mediaViewerTitle.textContent = safeString(message.attachmentName, isImage ? "Shared photo" : "Shared video");
+            if (mediaViewerMeta) mediaViewerMeta.textContent = `${isImage ? "Photo" : "Video"} · ${formatTime(message.createdAt)}`;
+            if (mediaViewerSender) mediaViewerSender.textContent = safeString(message.sender?.fullName, "Community member");
+            if (mediaViewerCaption) mediaViewerCaption.textContent = safeString(message.body, isImage ? "Shared a photo with the community." : "Shared a video with the community.");
+            if (mediaViewerImageTools) mediaViewerImageTools.hidden = !isImage;
+            if (mediaViewerImageWrap) mediaViewerImageWrap.hidden = !isImage;
+            if (mediaViewerImage) mediaViewerImage.hidden = !isImage;
+            if (mediaViewerVideo) mediaViewerVideo.hidden = isImage;
+            if (mediaViewerLoading) {
+                mediaViewerLoading.hidden = false;
+                const loadingText = mediaViewerLoading.querySelector("small");
+                if (loadingText) loadingText.textContent = isImage ? "Loading photo…" : "Loading video…";
+            }
+            if (isImage && mediaViewerImage) {
+                mediaViewerImage.onload = () => {
+                    if (mediaViewerMessageID !== Number(message.id)) return;
+                    if (mediaViewerLoading) mediaViewerLoading.hidden = true;
+                    mediaViewerImage.style.opacity = "1";
+                    if (mediaViewerInfo) mediaViewerInfo.textContent = mediaViewerImage.naturalWidth && mediaViewerImage.naturalHeight
+                        ? `${mediaViewerImage.naturalWidth} × ${mediaViewerImage.naturalHeight} · 100%` : "Image preview";
+                    applyViewerImageTransform();
+                };
+                mediaViewerImage.onerror = () => {
+                    if (mediaViewerMessageID !== Number(message.id)) return;
+                    if (mediaViewerLoading) {
+                        mediaViewerLoading.hidden = false;
+                        const text = mediaViewerLoading.querySelector("small");
+                        if (text) text.textContent = "This image could not be loaded.";
+                    }
+                    mediaViewerImage.style.opacity = "0";
+                };
+                mediaViewerImage.src = url;
+                // Cached images may complete before the onload handler paints a fresh frame.
+                if (mediaViewerImage.complete && mediaViewerImage.naturalWidth > 0) mediaViewerImage.onload();
+            } else if (mediaViewerVideo) {
+                mediaViewerVideo.onloadedmetadata = () => {
+                    if (mediaViewerMessageID !== Number(message.id)) return;
+                    if (mediaViewerLoading) mediaViewerLoading.hidden = true;
+                    if (mediaViewerInfo) {
+                        const dimensions = mediaViewerVideo.videoWidth && mediaViewerVideo.videoHeight ? ` · ${mediaViewerVideo.videoWidth} × ${mediaViewerVideo.videoHeight}` : "";
+                        mediaViewerInfo.textContent = `Video${dimensions} · ${formatAudioTime(mediaViewerVideo.duration)} available`;
+                    }
+                };
+                mediaViewerVideo.onerror = () => {
+                    if (mediaViewerMessageID !== Number(message.id)) return;
+                    if (mediaViewerLoading) {
+                        mediaViewerLoading.hidden = false;
+                        const text = mediaViewerLoading.querySelector("small");
+                        if (text) text.textContent = "This video could not be loaded.";
+                    }
+                };
+                mediaViewerVideo.src = url;
+                mediaViewerVideo.load();
+            }
+            applyViewerImageTransform();
+            updateViewerNavigation();
+        };
+
+        const openMediaViewer = (message) => {
+            if (!mediaViewer || !message) return;
+            if (mediaViewer.hidden) mediaViewerReturnFocus = document.activeElement;
+            renderMediaViewer(message);
+            mediaViewer.hidden = false;
+            root.classList.add("is-media-viewer-open");
+            document.documentElement.classList.add("mp-chat-media-viewer-open");
+            if (mediaViewerClose) mediaViewerClose.focus({ preventScroll: true });
+        };
+
+        const closeMediaViewer = (restoreFocus = true) => {
+            if (!mediaViewer || mediaViewer.hidden) return;
+            if (mediaViewerVideo) { mediaViewerVideo.pause(); mediaViewerVideo.removeAttribute("src"); mediaViewerVideo.load(); mediaViewerVideo.onloadedmetadata = null; mediaViewerVideo.onerror = null; }
+            if (mediaViewerImage) { mediaViewerImage.onload = null; mediaViewerImage.onerror = null; mediaViewerImage.removeAttribute("src"); }
+            mediaViewer.hidden = true;
+            root.classList.remove("is-media-viewer-open");
+            document.documentElement.classList.remove("mp-chat-media-viewer-open");
+            mediaViewerMessageID = 0;
+            mediaViewerCurrentURL = "";
+            mediaViewerZoom = 1;
+            mediaViewerPanX = 0;
+            mediaViewerPanY = 0;
+            mediaViewerPanning = false;
+            window.clearTimeout(mediaViewerStatusTimer);
+            if (document.fullscreenElement === mediaViewerPanel && document.exitFullscreen) {
+                void document.exitFullscreen().catch(() => {});
+            }
+            if (restoreFocus && mediaViewerReturnFocus?.isConnected) mediaViewerReturnFocus.focus({ preventScroll: true });
+            mediaViewerReturnFocus = null;
+        };
+
+        const navigateViewerMedia = (direction) => {
+            const items = getViewerMediaItems();
+            const index = items.findIndex((message) => Number(message.id) === mediaViewerMessageID);
+            const nextIndex = index + direction;
+            if (nextIndex < 0 || nextIndex >= items.length) return;
+            renderMediaViewer(items[nextIndex]);
+        };
+
+        const downloadViewerMedia = async () => {
+            const message = activeViewerMessage();
+            const url = resolvedMediaURL(message?.attachmentUrl);
+            if (!message || !url || !mediaViewerDownload) return;
+            const fileName = safeMediaFileName(message);
+            mediaViewerDownload.disabled = true;
+            mediaViewerDownload.setAttribute("aria-busy", "true");
+            try {
+                const response = await fetch(url, { credentials: "same-origin", cache: "no-store" });
+                if (!response.ok) throw new Error(`Download failed (${response.status}).`);
+                const blob = await response.blob();
+                if (!blob.size || blob.type === "text/html") throw new Error("The server did not return a media file.");
+                const objectURL = URL.createObjectURL(blob);
+                const link = makeElement("a");
+                link.href = objectURL;
+                link.download = fileName;
+                link.rel = "noopener";
+                link.style.display = "none";
+                document.body.append(link);
+                link.click();
+                link.remove();
+                window.setTimeout(() => URL.revokeObjectURL(objectURL), 30000);
+                if (mediaViewerInfo) mediaViewerInfo.textContent = `Saved ${fileName}`;
+            } catch (error) {
+                // A same-origin anchor is a safe fallback when streaming the response to a Blob is unavailable.
+                if (new URL(url).origin === window.location.origin) {
+                    const link = makeElement("a");
+                    link.href = url;
+                    link.download = fileName;
+                    link.rel = "noopener noreferrer";
+                    link.style.display = "none";
+                    document.body.append(link);
+                    link.click();
+                    link.remove();
+                    if (mediaViewerInfo) mediaViewerInfo.textContent = `Download requested · ${fileName}`;
+                } else {
+                    announce(error?.message || "The browser could not download this media.", true);
+                }
+            } finally {
+                mediaViewerDownload.disabled = false;
+                mediaViewerDownload.removeAttribute("aria-busy");
+            }
+        };
+
+        const copyViewerMediaLink = async () => {
+            const url = mediaViewerCurrentURL;
+            if (!url) return;
+            try {
+                if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(url);
+                else {
+                    const temporary = makeElement("textarea");
+                    temporary.value = url;
+                    temporary.setAttribute("readonly", "");
+                    temporary.style.position = "fixed";
+                    temporary.style.opacity = "0";
+                    document.body.append(temporary);
+                    temporary.select();
+                    const copied = document.execCommand("copy");
+                    temporary.remove();
+                    if (!copied) throw new Error("Clipboard unavailable");
+                }
+                if (mediaViewerInfo) mediaViewerInfo.textContent = "Media link copied to clipboard";
+                window.clearTimeout(mediaViewerStatusTimer);
+                mediaViewerStatusTimer = window.setTimeout(() => setViewerInfo(activeViewerMessage()), 2200);
+            } catch (_) { announce("This browser blocked copying the media link.", true); }
+        };
+
+        const toggleViewerFullscreen = async () => {
+            try {
+                if (document.fullscreenElement === mediaViewerPanel) await document.exitFullscreen();
+                else if (mediaViewerPanel?.requestFullscreen) await mediaViewerPanel.requestFullscreen();
+                else { if (mediaViewerInfo) mediaViewerInfo.textContent = "Full screen is not supported in this browser."; return; }
+                const isFullscreen = document.fullscreenElement === mediaViewerPanel;
+                mediaViewerFullscreen?.setAttribute("aria-label", isFullscreen ? "Exit full screen" : "Enter full screen");
+                mediaViewerFullscreen?.setAttribute("data-chat-tooltip", isFullscreen ? "Exit full screen" : "Full screen");
+            } catch (_) { announce("The browser could not enter full-screen mode.", true); }
+        };
+
         const createMessageRow = (message) => {
             const row = makeElement("article", `mp-chat-message-row${message.isMine ? " is-mine" : ""}`);
             row.dataset.messageId = String(message.id);
@@ -627,14 +915,44 @@
                 bubble.append(makeElement("p", "mp-chat-deleted-bubble", "This message was deleted"));
             } else {
                 if (message.kind === "image" && message.attachmentUrl) {
+                    const trigger = makeElement("button", "mp-chat-media-trigger mp-chat-media-trigger--image");
+                    trigger.type = "button";
+                    trigger.setAttribute("aria-label", `View photo ${message.attachmentName || "shared in chat"} at full size`);
+                    trigger.dataset.chatTooltip = "Open full-size photo";
                     const image = makeElement("img", "mp-chat-attachment-image");
-                    image.src = message.attachmentUrl; image.alt = message.attachmentName || "Community image"; image.loading = "lazy";
-                    image.addEventListener("click", () => window.open(message.attachmentUrl, "_blank", "noopener,noreferrer"), { signal });
-                    bubble.append(image);
+                    image.src = message.attachmentUrl;
+                    image.alt = message.attachmentName || "Community image";
+                    image.loading = "lazy";
+                    image.decoding = "async";
+                    image.referrerPolicy = "strict-origin-when-cross-origin";
+                    image.addEventListener("error", () => trigger.classList.add("is-media-unavailable"), { signal });
+                    trigger.append(image);
+                    const badge = makeElement("span", "mp-chat-media-trigger-badge");
+                    badge.append(icon("external"), makeElement("span", "", "View photo"));
+                    trigger.append(badge);
+                    trigger.addEventListener("click", () => openMediaViewer(message), { signal });
+                    bubble.append(trigger);
                 } else if (message.kind === "video" && message.attachmentUrl) {
+                    const trigger = makeElement("button", "mp-chat-media-trigger mp-chat-media-trigger--video");
+                    trigger.type = "button";
+                    trigger.setAttribute("aria-label", `Preview video ${message.attachmentName || "shared in chat"}`);
+                    trigger.dataset.chatTooltip = "Play video in the preview";
                     const video = makeElement("video", "mp-chat-attachment-video");
-                    video.src = message.attachmentUrl; video.controls = true; video.playsInline = true; video.preload = "metadata"; video.setAttribute("aria-label", message.attachmentName || "Community video");
-                    bubble.append(video);
+                    video.src = message.attachmentUrl;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.preload = "metadata";
+                    video.setAttribute("aria-label", message.attachmentName || "Community video preview");
+                    video.setAttribute("tabindex", "-1");
+                    video.addEventListener("error", () => trigger.classList.add("is-media-unavailable"), { signal });
+                    trigger.append(video);
+                    const shade = makeElement("span", "mp-chat-media-trigger-shade");
+                    const badge = makeElement("span", "mp-chat-media-trigger-badge mp-chat-media-trigger-badge--play");
+                    badge.append(icon("play"), makeElement("span", "", "Play video"));
+                    shade.append(badge);
+                    trigger.append(shade);
+                    trigger.addEventListener("click", () => openMediaViewer(message), { signal });
+                    bubble.append(trigger);
                 } else if (message.kind === "voice" && message.attachmentUrl) {
                     const player = makeElement("div", "mp-chat-voice-player");
                     const playButton = makeElement("button", "mp-chat-voice-play");
@@ -654,6 +972,7 @@
                     const voiceSeed = Number(message.id) || 1;
                     for (let index = 0; index < 38; index += 1) {
                         const bar = makeElement("span", "mp-chat-voice-wave-bar");
+                        bar.style.setProperty("--wave-index", String(index % 9));
                         const mix = Math.abs(Math.sin((index + 3) * (voiceSeed % 17 + 3)) * 0.55 + Math.cos(index * 0.77 + voiceSeed) * 0.45);
                         bar.style.height = `${Math.round(19 + mix * 76)}%`;
                         waveBars.push(bar);
@@ -669,17 +988,29 @@
                     const updateVoiceUI = () => {
                         const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
                         const progress = duration > 0 ? Math.max(0, Math.min(1, audio.currentTime / duration)) : 0;
-                        waveBars.forEach((bar, index) => bar.classList.toggle("is-played", index / waveBars.length <= progress));
+                        const isPlaying = !audio.paused && !audio.ended;
+                        const currentBar = Math.min(waveBars.length - 1, Math.floor(progress * waveBars.length));
+                        waveform.style.setProperty("--voice-progress", `${(progress * 100).toFixed(2)}%`);
+                        waveBars.forEach((bar, index) => {
+                            bar.classList.toggle("is-played", index < progress * waveBars.length || audio.ended);
+                            bar.classList.toggle("is-current", isPlaying && Math.abs(index - currentBar) <= 2);
+                        });
                         waveform.setAttribute("aria-valuenow", String(Math.round(progress * 100)));
                         timeLabel.textContent = `${formatAudioTime(audio.currentTime)} / ${formatAudioTime(duration)}`;
-                        playButton.replaceChildren(icon(audio.paused ? "play" : "pause"));
-                        playButton.setAttribute("aria-label", audio.paused ? "Play voice note" : "Pause voice note");
-                        playButton.dataset.chatTooltip = audio.paused ? "Play voice note" : "Pause voice note";
-                        player.classList.toggle("is-playing", !audio.paused);
+                        playButton.replaceChildren(icon(isPlaying ? "pause" : "play"));
+                        playButton.setAttribute("aria-label", isPlaying ? "Pause voice note" : "Play voice note");
+                        playButton.dataset.chatTooltip = isPlaying ? "Pause voice note" : "Play voice note";
+                        player.classList.toggle("is-playing", isPlaying);
+                        player.classList.toggle("is-ended", Boolean(audio.ended));
                     };
                     playButton.addEventListener("click", async () => {
                         await unlockChatAudio();
-                        if (audio.paused) {
+                        if (audio.paused || audio.ended) {
+                            // Keep playback single-voice-at-a-time, as users expect in a chatroom.
+                            root.querySelectorAll(".mp-chat-attachment-audio").forEach((otherAudio) => {
+                                if (otherAudio !== audio) otherAudio.pause();
+                            });
+                            if (audio.ended) audio.currentTime = 0;
                             try { await audio.play(); } catch (_) { announce("This voice note could not be played by your browser.", true); }
                         } else audio.pause();
                         updateVoiceUI();
@@ -701,7 +1032,11 @@
                         else audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + (event.key === "ArrowRight" ? 5 : -5)));
                         updateVoiceUI();
                     }, { signal });
-                    ["loadedmetadata", "durationchange", "timeupdate", "play", "pause", "ended"].forEach((name) => audio.addEventListener(name, updateVoiceUI, { signal }));
+                    ["loadedmetadata", "durationchange", "timeupdate", "play", "playing", "pause", "ended", "seeking", "seeked"].forEach((name) => audio.addEventListener(name, updateVoiceUI, { signal }));
+                    audio.addEventListener("error", () => announce("This voice note is unavailable or uses an unsupported audio format.", true), { signal });
+                    waveform.addEventListener("pointerdown", (event) => {
+                        if (event.pointerType === "touch") waveform.setPointerCapture?.(event.pointerId);
+                    }, { signal });
                     player.append(playButton, waveform, timeLabel);
                     bubble.append(player, audio);
                 } else if (message.kind === "movie" && message.movie) {
@@ -725,6 +1060,8 @@
                     event.stopPropagation();
                     const previous = tools.querySelector(".mp-chat-reaction-picker");
                     if (previous) { previous.remove(); return; }
+                    // Only one message popup should be open at a time.
+                    closeAllMenus();
                     const picker = makeReactionButtons(message, "mp-chat-reaction-picker");
                     tools.append(picker);
                 }, { signal });
@@ -829,8 +1166,11 @@
             state.oldestID = state.oldestID ? Math.min(state.oldestID, id) : id;
             const existing = root.querySelector(`[data-message-id="${id}"]`);
             const row = createMessageRow(message);
-            if (existing) existing.replaceWith(row);
-            else {
+            if (existing) {
+                // Background refreshes should not replay the message entrance animation.
+                if (options.silentUpdate) row.classList.add("is-chat-silent-refresh");
+                existing.replaceWith(row);
+            } else {
                 const welcome = byID("mpChatWelcome");
                 if (welcome) welcome.remove();
                 messageHost?.append(row);
@@ -889,12 +1229,23 @@
                 const messages = await fetchMessages({ limit: 60 });
                 if (signal.aborted) return;
                 if (silent) {
-                    // Edits/reactions refresh quietly; fallback polling still notifies
-                    // once when it discovers a newer message during an SSE outage.
+                    // Polling/SSE refreshes must never clear and rebuild the message list.
+                    // Reconcile only new or changed records so the conversation does not blink.
                     if (notifyNew && messages.some((message) => Number(message.id) > knownLatestID && !message.isMine)) {
                         void playTone("incoming");
                     }
-                    renderFullWindow(messages, { preserveScroll });
+                    const orderedMessages = [...messages].sort((a, b) => Number(a.id) - Number(b.id));
+                    for (const message of orderedMessages) {
+                        const id = Number(message?.id);
+                        if (!id) continue;
+                        const current = state.messages.get(id);
+                        if (!current || JSON.stringify(current) !== JSON.stringify(message)) {
+                            upsertMessage(message, {
+                                playIncoming: false,
+                                silentUpdate: Boolean(current)
+                            });
+                        }
+                    }
                 } else {
                     for (const message of messages) upsertMessage(message, { playIncoming: true });
                 }
@@ -1142,6 +1493,8 @@
         const cleanup = () => {
             if (state.destroyed) return;
             state.destroyed = true;
+            closeMediaViewer(false);
+            window.clearTimeout(mediaViewerStatusTimer);
             observer.disconnect();
             if (viewportResizeObserver) viewportResizeObserver.disconnect();
             if (viewportClassObserver) viewportClassObserver.disconnect();
@@ -1230,12 +1583,107 @@
             if (state.recorder && state.recorder.state === "recording") stopRecording();
             else if (!state.mediaBusy) void startRecording();
         }, { signal });
+        mediaViewerClose?.addEventListener("click", () => closeMediaViewer(), { signal });
+        mediaViewer?.querySelectorAll("[data-media-viewer-close='true']").forEach((button) => button.addEventListener("click", () => closeMediaViewer(), { signal }));
+        mediaViewerPrevious?.addEventListener("click", () => navigateViewerMedia(-1), { signal });
+        mediaViewerNext?.addEventListener("click", () => navigateViewerMedia(1), { signal });
+        mediaViewerZoomOut?.addEventListener("click", () => setViewerZoom(mediaViewerZoom - 0.25), { signal });
+        mediaViewerZoomIn?.addEventListener("click", () => setViewerZoom(mediaViewerZoom + 0.25), { signal });
+        mediaViewerFit?.addEventListener("click", () => setViewerZoom(1, true), { signal });
+        mediaViewerCopy?.addEventListener("click", () => void copyViewerMediaLink(), { signal });
+        mediaViewerDownload?.addEventListener("click", () => void downloadViewerMedia(), { signal });
+        mediaViewerFullscreen?.addEventListener("click", () => void toggleViewerFullscreen(), { signal });
+        mediaViewerImage?.addEventListener("dblclick", (event) => {
+            event.preventDefault();
+            setViewerZoom(mediaViewerZoom > 1.01 ? 1 : 2, true);
+        }, { signal });
+        mediaViewerImage?.addEventListener("pointerdown", (event) => {
+            if (mediaViewerZoom <= 1.01 || event.button !== 0) return;
+            mediaViewerPanning = true;
+            mediaViewerPanPointer = event.pointerId;
+            mediaViewerPanStartX = event.clientX;
+            mediaViewerPanStartY = event.clientY;
+            mediaViewerPanOriginX = mediaViewerPanX;
+            mediaViewerPanOriginY = mediaViewerPanY;
+            mediaViewerImage.classList.add("is-panning");
+            mediaViewerImage.setPointerCapture?.(event.pointerId);
+            event.preventDefault();
+        }, { signal });
+        mediaViewerImage?.addEventListener("pointermove", (event) => {
+            if (!mediaViewerPanning || event.pointerId !== mediaViewerPanPointer) return;
+            mediaViewerPanX = mediaViewerPanOriginX + event.clientX - mediaViewerPanStartX;
+            mediaViewerPanY = mediaViewerPanOriginY + event.clientY - mediaViewerPanStartY;
+            applyViewerImageTransform();
+        }, { signal });
+        const endViewerPan = (event) => {
+            if (event.pointerId !== mediaViewerPanPointer) return;
+            mediaViewerPanning = false;
+            mediaViewerImage?.classList.remove("is-panning");
+            applyViewerImageTransform();
+        };
+        mediaViewerImage?.addEventListener("pointerup", endViewerPan, { signal });
+        mediaViewerImage?.addEventListener("pointercancel", endViewerPan, { signal });
+        mediaViewerStage?.addEventListener("wheel", (event) => {
+            if (mediaViewer.hidden || mediaViewerImageWrap?.hidden || !event.ctrlKey) return;
+            event.preventDefault();
+            setViewerZoom(mediaViewerZoom + (event.deltaY < 0 ? 0.15 : -0.15));
+        }, { passive: false, signal });
+        mediaViewer?.addEventListener("keydown", (event) => {
+            if (event.key === "Tab") {
+                const focusable = [...mediaViewer.querySelectorAll("button:not([disabled]):not([hidden]), video:not([hidden])")]
+                    .filter((element) => !element.classList.contains("mp-chat-media-viewer-backdrop") && element.getClientRects().length > 0);
+                if (!focusable.length) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && (document.activeElement === first || document.activeElement === mediaViewer)) {
+                    event.preventDefault(); last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault(); first.focus();
+                }
+                return;
+            }
+            if ((event.key === "ArrowLeft" || event.key === "ArrowRight") && event.target === mediaViewerStage && mediaViewerImageWrap && !mediaViewerImageWrap.hidden) {
+                event.preventDefault(); navigateViewerMedia(event.key === "ArrowRight" ? 1 : -1);
+            } else if ((event.key === "+" || event.key === "=") && mediaViewerImageWrap && !mediaViewerImageWrap.hidden) {
+                event.preventDefault(); setViewerZoom(mediaViewerZoom + 0.25);
+            } else if (event.key === "-" && mediaViewerImageWrap && !mediaViewerImageWrap.hidden) {
+                event.preventDefault(); setViewerZoom(mediaViewerZoom - 0.25);
+            }
+        }, { signal });
+        document.addEventListener("fullscreenchange", () => {
+            const isFullscreen = document.fullscreenElement === mediaViewerPanel;
+            mediaViewerFullscreen?.setAttribute("aria-label", isFullscreen ? "Exit full screen" : "Enter full screen");
+            mediaViewerFullscreen?.setAttribute("data-chat-tooltip", isFullscreen ? "Exit full screen" : "Full screen");
+        }, { signal });
+
+        const isMessagePopupOrTrigger = (target) => {
+            if (!(target instanceof Element)) return false;
+            return Boolean(target.closest(
+                ".mp-chat-context-menu[data-chat-context-menu='true'], " +
+                ".mp-chat-reaction-picker, .mp-chat-context-reactions, " +
+                ".mp-chat-more-button, .mp-chat-tool-button[aria-label='React to message']"
+            ));
+        };
+
+        // Pointer-down closes message actions immediately when the user taps/clicks
+        // anywhere outside the popup and its trigger, including elsewhere in a row.
+        document.addEventListener("pointerdown", (event) => {
+            if (isMessagePopupOrTrigger(event.target)) return;
+            closeAllMenus();
+        }, { capture: true, signal });
+
         document.addEventListener("click", (event) => {
             if (attachMenu && !attachMenu.hidden && !attachMenu.contains(event.target) && !attachButton?.contains(event.target)) closeAttachMenu();
             if (moviePicker && !moviePicker.hidden && !moviePicker.contains(event.target) && !event.target.closest("[data-chat-attach='movie']")) moviePicker.hidden = true;
-            if (!event.target.closest(".mp-chat-message-row")) closeAllMenus();
+            // Keyboard-activated clicks do not necessarily emit pointerdown.
+            if (event.detail === 0 && !isMessagePopupOrTrigger(event.target)) closeAllMenus();
         }, { signal });
         document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && mediaViewer && !mediaViewer.hidden) {
+                event.preventDefault();
+                closeMediaViewer();
+                return;
+            }
             if (event.key === "Escape") {
                 closeAttachMenu();
                 if (moviePicker) moviePicker.hidden = true;

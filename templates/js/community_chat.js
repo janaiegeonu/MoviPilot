@@ -128,6 +128,91 @@
         if (!root) return;
         root.classList.add("is-fullpage");
 
+        // Keep the room aligned to the dashboard's actual content column.
+        // This leaves the dashboard navbar/sidebar usable and tracks sidebar
+        // width changes instead of hard-coding a 100vw overlay.
+        let viewportResizeObserver = null;
+        let viewportClassObserver = null;
+        let viewportAnimationFrame = 0;
+        let viewportSyncUntil = 0;
+        const dashboardMain = document.getElementById("dashboardMain");
+        const dashboardSidebar = document.getElementById("dashboardSidebar");
+        const dashboardLayout = document.querySelector(".dashboard-layout");
+        const dashboardNavbar = document.querySelector(".dashboard-navbar");
+        const sidebarToggle = document.getElementById("sidebarToggle");
+
+        const clampViewport = (value, minimum, maximum) => {
+            const safeMaximum = Math.max(minimum, maximum);
+            return Math.min(Math.max(Number(value) || 0, minimum), safeMaximum);
+        };
+
+        const syncChatViewportBounds = () => {
+            if (!mount || !mount.classList.contains("is-fullpage")) return;
+            const viewportWidth = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+            const viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+            let top = 0;
+            let left = 0;
+            let width = viewportWidth;
+            let height = viewportHeight;
+            const navbarRect = dashboardNavbar?.getBoundingClientRect();
+            const navbarBottom = clampViewport(navbarRect?.bottom || 0, 0, viewportHeight - 1);
+
+            // Keep the global navbar visible on both desktop and mobile. On
+            // mobile the sidebar is an overlay menu, not a content column.
+            // Desktop uses #dashboardMain's live box so its width follows the
+            // expanded/collapsed sidebar exactly.
+            if (window.matchMedia("(min-width: 721px)").matches) {
+                const mainRect = dashboardMain?.getBoundingClientRect();
+
+                if (mainRect && mainRect.width > 0) {
+                    left = clampViewport(mainRect.left, 0, viewportWidth - 1);
+                    const right = clampViewport(mainRect.right, left + 1, viewportWidth);
+                    width = Math.max(1, right - left);
+                    top = clampViewport(Math.max(navbarBottom, mainRect.top || 0), 0, viewportHeight - 80);
+                    height = Math.max(80, viewportHeight - top);
+                } else {
+                    const sidebarRect = dashboardSidebar?.getBoundingClientRect();
+                    left = clampViewport(sidebarRect?.right || 0, 0, viewportWidth - 1);
+                    width = Math.max(1, viewportWidth - left);
+                    top = clampViewport(navbarBottom, 0, viewportHeight - 80);
+                    height = Math.max(80, viewportHeight - top);
+                }
+            } else {
+                top = clampViewport(navbarBottom, 0, viewportHeight - 80);
+                height = Math.max(80, viewportHeight - top);
+            }
+
+            mount.style.setProperty("--mp-chat-viewport-top", `${Math.round(top)}px`);
+            mount.style.setProperty("--mp-chat-viewport-left", `${Math.round(left)}px`);
+            mount.style.setProperty("--mp-chat-viewport-width", `${Math.round(width)}px`);
+            mount.style.setProperty("--mp-chat-viewport-height", `${Math.round(height)}px`);
+        };
+
+        const scheduleChatViewportSync = () => {
+            syncChatViewportBounds();
+            viewportSyncUntil = Math.max(viewportSyncUntil, performance.now() + 650);
+            if (viewportAnimationFrame) return;
+            const followLayoutTransition = () => {
+                syncChatViewportBounds();
+                if (performance.now() < viewportSyncUntil) {
+                    viewportAnimationFrame = window.requestAnimationFrame(followLayoutTransition);
+                } else {
+                    viewportAnimationFrame = 0;
+                }
+            };
+            viewportAnimationFrame = window.requestAnimationFrame(followLayoutTransition);
+        };
+
+        syncChatViewportBounds();
+        if (typeof ResizeObserver === "function") {
+            viewportResizeObserver = new ResizeObserver(scheduleChatViewportSync);
+            [dashboardMain, dashboardSidebar, dashboardLayout].filter(Boolean).forEach((element) => viewportResizeObserver.observe(element));
+        }
+        if (dashboardSidebar && typeof MutationObserver === "function") {
+            viewportClassObserver = new MutationObserver(scheduleChatViewportSync);
+            viewportClassObserver.observe(dashboardSidebar, { attributes: true, attributeFilter: ["class", "style"] });
+        }
+
         const byID = (id) => root.querySelector(`#${id}`);
         const history = byID("mpChatHistory");
         const messageHost = byID("mpChatMessages");
@@ -306,11 +391,22 @@
             return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
         };
 
-        const avatarToneFor = (seed) => {
+        // Produce a stable multi-hue gradient from the member's public identity.
+        // Using a full 0-359° hue range avoids the old eight-colour avatar limit.
+        const avatarColorsFor = (seed) => {
             const value = String(seed || "MoviPilot member");
-            let hash = 0;
-            for (let index = 0; index < value.length; index += 1) hash = ((hash << 5) - hash + value.charCodeAt(index)) | 0;
-            return Math.abs(hash) % 8;
+            let hash = 2166136261;
+            for (let index = 0; index < value.length; index += 1) {
+                hash ^= value.charCodeAt(index);
+                hash = Math.imul(hash, 16777619);
+            }
+            const stableHash = hash >>> 0;
+            const primary = stableHash % 360;
+            // Independent hash slices give every user a varied colour pairing,
+            // while the final stop stays close to hue two for a cleaner gradient.
+            const secondary = (stableHash >>> 8) % 360;
+            const tertiary = (secondary + 18 + ((stableHash >>> 16) % 12)) % 360;
+            return { primary, secondary, tertiary };
         };
 
         const unlockChatAudio = async () => {
@@ -496,7 +592,11 @@
             row.dataset.messageId = String(message.id);
             const avatar = makeElement("button", "mp-chat-avatar-button", initials(message.sender?.fullName));
             avatar.type = "button";
-            avatar.dataset.avatarTone = String(avatarToneFor(message.sender?.publicId || message.sender?.username || message.sender?.fullName));
+            const avatarColors = avatarColorsFor(message.sender?.publicId || message.sender?.username || message.sender?.fullName);
+            avatar.style.setProperty("--mp-avatar-hue", String(avatarColors.primary));
+            avatar.style.setProperty("--mp-avatar-hue-two", String(avatarColors.secondary));
+            avatar.style.setProperty("--mp-avatar-hue-three", String(avatarColors.tertiary));
+            avatar.dataset.avatarTone = String(avatarColors.primary);
             avatar.dataset.chatTooltip = `View ${safeString(message.sender?.fullName, "member")}'s profile`;
             avatar.setAttribute("aria-label", `View ${safeString(message.sender?.fullName, "member")}'s profile`);
             avatar.addEventListener("click", () => openSenderProfile(message), { signal });
@@ -1043,6 +1143,15 @@
             if (state.destroyed) return;
             state.destroyed = true;
             observer.disconnect();
+            if (viewportResizeObserver) viewportResizeObserver.disconnect();
+            if (viewportClassObserver) viewportClassObserver.disconnect();
+            if (viewportAnimationFrame) window.cancelAnimationFrame(viewportAnimationFrame);
+            if (mount) {
+                mount.style.removeProperty("--mp-chat-viewport-top");
+                mount.style.removeProperty("--mp-chat-viewport-left");
+                mount.style.removeProperty("--mp-chat-viewport-width");
+                mount.style.removeProperty("--mp-chat-viewport-height");
+            }
             if (state.eventSource) state.eventSource.close();
             if (state.pollTimer) window.clearInterval(state.pollTimer);
             if (state.toastTimer) window.clearTimeout(state.toastTimer);
@@ -1065,7 +1174,14 @@
         root.addEventListener("pointerdown", () => { void unlockChatAudio(); }, { once: true, signal });
         root.addEventListener("keydown", () => { void unlockChatAudio(); }, { once: true, signal });
         window.addEventListener("resize", closeAllMenus, { passive: true, signal });
+        window.addEventListener("resize", scheduleChatViewportSync, { passive: true, signal });
+        window.addEventListener("orientationchange", scheduleChatViewportSync, { passive: true, signal });
         window.addEventListener("scroll", closeAllMenus, { passive: true, capture: true, signal });
+        sidebarToggle?.addEventListener("click", scheduleChatViewportSync, { signal });
+        dashboardSidebar?.addEventListener("transitionrun", scheduleChatViewportSync, { signal });
+        dashboardSidebar?.addEventListener("transitionend", scheduleChatViewportSync, { signal });
+        dashboardMain?.addEventListener("transitionrun", scheduleChatViewportSync, { signal });
+        dashboardMain?.addEventListener("transitionend", scheduleChatViewportSync, { signal });
 
         form?.addEventListener("submit", (event) => { event.preventDefault(); void sendMessage(); }, { signal });
         input?.addEventListener("input", adjustTextarea, { signal });

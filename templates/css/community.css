@@ -1555,14 +1555,24 @@ body.mp-community-chat-fullscreen-open {
 
 .mp-community-page.is-chat-expanded #mpCommunityChatMount,
 .mp-community-chat-mount.is-fullpage {
+    /*
+       The chat fills the dashboard content column, not the whole browser.
+       community_chat.js measures #dashboardMain and refreshes these values
+       when the sidebar opens, collapses, or the viewport changes.
+    */
     position: fixed !important;
-    inset: 0 !important;
+    top: var(--mp-chat-viewport-top, 0px) !important;
+    left: var(--mp-chat-viewport-left, 0px) !important;
+    right: auto !important;
+    bottom: auto !important;
     z-index: 15000 !important;
     display: block;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
+    width: var(--mp-chat-viewport-width, 100vw) !important;
+    height: var(--mp-chat-viewport-height, 100vh) !important;
+    height: var(--mp-chat-viewport-height, 100dvh) !important;
+    min-width: 0 !important;
     min-height: 0 !important;
+    max-width: none !important;
     max-height: none !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -1583,6 +1593,7 @@ body.mp-community-chat-fullscreen-open {
     border-radius: 0;
     background: #020713;
     box-shadow: none;
+    container-type: inline-size;
 }
 
 .mp-chat-room {
@@ -1611,10 +1622,11 @@ body.mp-community-chat-fullscreen-open {
     inset: 0;
     z-index: -1;
     overflow: hidden;
-    color: rgba(118, 171, 220, .16);
-    opacity: .50;
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 8%, #000 91%, transparent 100%);
-    mask-image: linear-gradient(180deg, transparent 0%, #000 8%, #000 91%, transparent 100%);
+    color: rgba(118, 171, 220, .15);
+    opacity: .58;
+    /* Let the repeating wallpaper fill the entire conversation canvas. */
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
 .mp-chat-doodle-wallpaper {
@@ -1629,7 +1641,7 @@ body.mp-community-chat-fullscreen-open {
     z-index: 20;
     gap: 15px;
     min-height: 88px;
-    padding: 16px clamp(14px, 3vw, 34px);
+    padding: 14px clamp(14px, 2.1cqw, 26px);
     border-bottom-color: rgba(115, 184, 224, .12);
     background: linear-gradient(112deg, rgba(4, 16, 35, .97), rgba(5, 23, 43, .94) 50%, rgba(4, 21, 36, .96));
     box-shadow: 0 12px 38px rgba(0, 0, 0, .18), inset 0 1px rgba(255,255,255,.035);
@@ -1665,24 +1677,32 @@ body.mp-community-chat-fullscreen-open {
 
 /* Rounded, user-specific profile colours are deterministic across reloads. */
 .mp-chat-avatar-button {
-    width: 40px;
-    height: 40px;
-    flex-basis: 40px;
+    --mp-avatar-hue: 207;
+    --mp-avatar-hue-two: 244;
+    --mp-avatar-hue-three: 302;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+    border: 1px solid hsl(var(--mp-avatar-hue) 66% 72% / .43);
     border-radius: 50%;
-    border-width: 1px;
-    font-size: 11px;
-    font-weight: 680;
+    background:
+        radial-gradient(circle at 28% 16%, rgba(255,255,255,.16), transparent 34%),
+        linear-gradient(145deg,
+            hsl(var(--mp-avatar-hue) 70% 49%),
+            hsl(var(--mp-avatar-hue-two) 66% 39%) 58%,
+            hsl(var(--mp-avatar-hue-three) 62% 31%));
+    color: #f4fbff;
+    font-size: 10px;
+    font-weight: 690;
     letter-spacing: -.035em;
-    box-shadow: inset 0 1px rgba(255,255,255,.22), 0 7px 18px rgba(0,0,0,.24);
+    box-shadow: inset 0 1px rgba(255,255,255,.16), 0 3px 9px rgba(0,0,0,.17);
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
-.mp-chat-avatar-button[data-avatar-tone="0"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #2b7eb0, #2448a1 55%, #422d92); border-color: rgba(130,190,255,.48); }
-.mp-chat-avatar-button[data-avatar-tone="1"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #b65c98, #7f3d96 58%, #3d478e); border-color: rgba(241,160,225,.45); }
-.mp-chat-avatar-button[data-avatar-tone="2"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #168f8b, #116e83 55%, #255c9d); border-color: rgba(134,239,219,.45); }
-.mp-chat-avatar-button[data-avatar-tone="3"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #b98038, #98583a 55%, #75456d); border-color: rgba(255,207,145,.45); }
-.mp-chat-avatar-button[data-avatar-tone="4"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #4c82b9, #3763a0 52%, #286e86); border-color: rgba(158,210,255,.45); }
-.mp-chat-avatar-button[data-avatar-tone="5"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #a95b6f, #854460 53%, #60428f); border-color: rgba(255,165,192,.45); }
-.mp-chat-avatar-button[data-avatar-tone="6"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #509a5c, #237d77 57%, #265c9b); border-color: rgba(168,244,184,.44); }
-.mp-chat-avatar-button[data-avatar-tone="7"] { background: radial-gradient(circle at 27% 15%, rgba(255,255,255,.35), transparent 31%), linear-gradient(145deg, #7762bd, #524b9f 55%, #215d8c); border-color: rgba(191,178,255,.45); }
+.mp-chat-avatar-button:hover {
+    transform: translateY(-1px);
+    border-color: hsl(var(--mp-avatar-hue) 78% 79% / .68);
+    box-shadow: inset 0 1px rgba(255,255,255,.19), 0 5px 13px rgba(0,0,0,.21);
+}
 
 .mp-chat-message-stack { max-width: min(80%, 760px); gap: 7px; }
 .mp-chat-message-meta { gap: 8px; padding: 0 4px; }
@@ -1912,7 +1932,7 @@ body.mp-community-chat-fullscreen-open {
 /* The composer is a floating glass capsule; each control gets a consistent target. */
 .mp-chat-compose-wrap {
     z-index: 18;
-    padding: 15px clamp(12px, 2.4vw, 30px) 16px;
+    padding: 13px clamp(12px, 2.1cqw, 26px) 14px;
     border-top: 1px solid rgba(110, 176, 215, .11);
     background: linear-gradient(180deg, rgba(3, 13, 29, .72), rgba(2, 10, 23, .97));
     -webkit-backdrop-filter: blur(22px);
@@ -1929,9 +1949,9 @@ body.mp-community-chat-fullscreen-open {
     transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
 }
 .mp-chat-composer:focus-within {
-    border-color: rgba(120, 245, 229, .48);
-    background: linear-gradient(112deg, rgba(8, 37, 64, .99), rgba(6, 45, 58, .99) 56%, rgba(8, 32, 59, .99));
-    box-shadow: 0 15px 45px rgba(0,0,0,.30), 0 0 0 3px rgba(87,216,219,.06), 0 0 28px rgba(46,182,200,.08), inset 0 1px rgba(255,255,255,.09);
+    border-color: rgba(121, 178, 205, .29);
+    background: linear-gradient(112deg, rgba(8, 34, 57, .98), rgba(6, 39, 51, .98) 56%, rgba(7, 29, 49, .98));
+    box-shadow: 0 13px 36px rgba(0,0,0,.27), 0 0 0 1px rgba(63, 124, 155, .07), inset 0 1px rgba(255,255,255,.075);
 }
 .mp-chat-voice-button, .mp-chat-attach-button {
     width: 44px;
@@ -1947,13 +1967,27 @@ body.mp-community-chat-fullscreen-open {
 .mp-chat-input-shell {
     min-height: 46px;
     padding: 11px 13px 8px;
-    border-color: rgba(109, 183, 218, .08);
+    border: 1px solid rgba(109, 157, 191, .11);
     border-radius: 17px;
-    background: rgba(2, 14, 28, .48);
+    background: linear-gradient(145deg, rgba(3, 17, 32, .61), rgba(3, 20, 33, .46));
+    box-shadow: inset 0 1px rgba(255,255,255,.018);
+    transition: border-color .22s ease, background .22s ease, box-shadow .22s ease;
 }
-.mp-chat-input-shell:focus-within { border-color: rgba(115, 224, 226, .19); background: rgba(2, 15, 29, .76); }
+.mp-chat-input-shell:focus-within {
+    border-color: rgba(117, 190, 207, .30);
+    background: linear-gradient(145deg, rgba(5, 23, 40, .88), rgba(4, 26, 39, .75));
+    box-shadow: inset 0 1px rgba(255,255,255,.035), 0 0 0 1px rgba(61, 127, 160, .08), 0 7px 23px rgba(0,0,0,.13);
+}
+/* The focused textarea must not inherit the global bright-cyan rectangle. */
+.mp-chat-room .mp-chat-input-shell textarea:focus,
+.mp-chat-room .mp-chat-input-shell textarea:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    caret-color: #91dfd5;
+}
 .mp-chat-input-shell textarea { font-size: 13px; line-height: 1.65; }
 .mp-chat-input-shell textarea::placeholder { color: #7895b2; }
+.mp-chat-input-shell textarea::selection { background: rgba(84, 160, 181, .28); color: #f1fbff; }
 .mp-chat-send-button {
     min-width: 48px;
     height: 45px;
@@ -2019,7 +2053,7 @@ body.mp-community-chat-fullscreen-open {
     .mp-chat-context-menu { width: min(248px, calc(100vw - 18px)); max-width: min(248px, calc(100vw - 18px)); max-height: 58dvh; }
     .mp-chat-context-menu .mp-chat-context-reactions { grid-template-columns: repeat(5, minmax(0,1fr)); }
     .mp-chat-reaction-picker { max-width: calc(100vw - 18px); }
-    .mp-chat-doodles { opacity: .38; }
+    .mp-chat-doodles { opacity: .52; }
     .mp-chat-movie-picker { right: 8px; bottom: 100px; width: calc(100% - 16px); max-height: 64dvh; }
 }
 
@@ -2100,4 +2134,50 @@ body.mp-community-chat-fullscreen-open {
     visibility: visible;
     transform: translate(-50%, 0);
     transition-delay: .18s, .18s, 0s;
+}
+
+
+/* ========================================================================
+   CONTENT-COLUMN RESPONSIVENESS
+   Sidebar width changes affect the chat panel's own width. These container
+   queries keep the head and composer tidy even on a wide monitor with an
+   expanded sidebar or a narrow dashboard content column.
+   ======================================================================== */
+@container (max-width: 760px) {
+    .mp-chat-header { min-height: 74px; gap: 10px; padding: 10px 12px; }
+    .mp-chat-back-button { min-height: 38px; gap: 0; padding: 0 10px; border-radius: 13px; }
+    .mp-chat-back-button span { display: none; }
+    .mp-chat-brand-mark { width: 40px; height: 40px; flex-basis: 40px; border-radius: 13px; }
+    .mp-chat-brand-mark img { width: 26px; height: 26px; }
+    .mp-chat-header h2 { font-size: clamp(15px, 3cqw, 19px); }
+    .mp-chat-sound-status { gap: 5px; padding: 7px 8px; font-size: 8px; white-space: nowrap; }
+    .mp-chat-sound-status svg { width: 14px; height: 14px; }
+    .mp-chat-history { min-height: 0; padding: 13px 11px 10px; }
+    .mp-chat-message-stack { max-width: min(86%, 700px); }
+    .mp-chat-compose-wrap { padding: 10px 10px max(10px, env(safe-area-inset-bottom)); }
+    .mp-chat-composer { gap: 6px; padding: 6px; border-radius: 20px; }
+    .mp-chat-voice-button, .mp-chat-attach-button { width: 38px; height: 41px; flex-basis: 38px; border-radius: 13px; }
+    .mp-chat-input-shell { min-height: 41px; padding: 8px 9px 5px; border-radius: 14px; }
+    .mp-chat-input-shell textarea { min-height: 24px; max-height: 96px; font-size: 12px; }
+    .mp-chat-send-button { width: 41px; min-width: 41px; height: 41px; padding: 0; border-radius: 13px; }
+    .mp-chat-send-label, .mp-chat-char-count { display: none; }
+    .mp-chat-send-button svg { width: 18px; height: 18px; }
+    .mp-chat-compose-footnote { gap: 8px; font-size: 7px; }
+}
+
+@container (max-width: 520px) {
+    .mp-chat-header { gap: 7px; padding-inline: 8px; }
+    .mp-chat-back-button { width: 36px; min-width: 36px; padding: 0; }
+    .mp-chat-brand-mark { width: 34px; height: 34px; flex-basis: 34px; }
+    .mp-chat-brand-mark img { width: 23px; height: 23px; }
+    .mp-chat-header h2 { font-size: 14px; }
+    .mp-chat-overline { font-size: 7px; letter-spacing: .13em; }
+    .mp-chat-header-copy p { margin-top: 3px; font-size: 8px; }
+    .mp-chat-sound-status { width: 34px; height: 34px; padding: 0; border-radius: 11px; }
+    .mp-chat-sound-status span { display: none; }
+    .mp-chat-message-row { gap: 7px; }
+    .mp-chat-avatar-button { width: 31px; height: 31px; flex-basis: 31px; }
+    .mp-chat-message-stack { max-width: calc(100% - 38px); }
+    .mp-chat-compose-footnote span:first-child { display: none; }
+    .mp-chat-compose-footnote { justify-content: flex-end; }
 }

@@ -22,64 +22,69 @@ type User struct {
 	CreatedAt    time.Time
 }
 
-// CreateUser inserts a local account with a generated public MoviPilot ID.
+// CreateUser inserts a local account with a generated public MoviPilot ID and
+// a unique Community username. InitDatabase initializes EnsureCommunitySchema
+// before authentication handlers are allowed to create accounts.
 func CreateUser(user User) error {
+	if DB == nil {
+		return fmt.Errorf("database is not initialized")
+	}
 	publicID, err := newPublicAccountID()
 	if err != nil {
 		return fmt.Errorf("generate public account ID: %w", err)
 	}
 	username, err := newUsernameForName(user.FullName)
 	if err != nil {
-		return fmt.Errorf("generate username: %w", err)
+		return fmt.Errorf("generate community username: %w", err)
 	}
 
 	_, err = DB.Exec(`
-        INSERT INTO users (
-            public_id,
-            username,
-            full_name,
-            email,
-            password_hash,
-            auth_provider
-        )
-        VALUES (?, ?, ?, ?, ?, 'local')
-    `, publicID, username, user.FullName, user.Email, user.PasswordHash)
-
+		INSERT INTO users (
+			public_id,
+			username,
+			full_name,
+			email,
+			password_hash,
+			auth_provider
+		)
+		VALUES (?, ?, ?, ?, ?, 'local')
+	`, publicID, username, strings.TrimSpace(user.FullName), strings.TrimSpace(user.Email), user.PasswordHash)
 	if err != nil {
 		return fmt.Errorf("create local user: %w", err)
 	}
-
 	return nil
 }
 
-// CreateGoogleUser inserts a Google-authenticated account with a public ID.
+// CreateGoogleUser inserts a Google-authenticated account with a public ID and
+// a unique Community username.
 func CreateGoogleUser(fullName, email, googleID string) error {
+	if DB == nil {
+		return fmt.Errorf("database is not initialized")
+	}
 	publicID, err := newPublicAccountID()
 	if err != nil {
 		return fmt.Errorf("generate public account ID: %w", err)
 	}
-
 	username, err := newUsernameForName(fullName)
 	if err != nil {
-		return fmt.Errorf("generate username: %w", err)
+		return fmt.Errorf("generate community username: %w", err)
 	}
 
 	_, err = DB.Exec(`
-        INSERT INTO users (
-            public_id,
-            username,
-            full_name,
-            email,
-            password_hash,
-            auth_provider,
-            google_id
-        )
-        VALUES (?, ?, ?, ?, '', 'google', ?)
-    `, publicID, username, fullName, email, googleID)
+		INSERT INTO users (
+			public_id,
+			username,
+			full_name,
+			email,
+			password_hash,
+			auth_provider,
+			google_id
+		)
+		VALUES (?, ?, ?, ?, '', 'google', ?)
+	`, publicID, username, strings.TrimSpace(fullName), strings.TrimSpace(email), strings.TrimSpace(googleID))
 	if err != nil {
 		return fmt.Errorf("create Google user: %w", err)
 	}
-
 	return nil
 }
 

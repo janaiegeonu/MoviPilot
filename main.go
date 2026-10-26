@@ -78,6 +78,16 @@ func main() {
 	http.HandleFunc("/api/explore/personal/history", handlers.ExplorePersonalHistoryAPI)
 	http.HandleFunc("/api/explore/personal/ratings", handlers.ExplorePersonalRatingsAPI)
 
+	//collection template routes
+
+	http.HandleFunc("/api/explore/collection-hub", handlers.ExploreCommunityCollectionHubAPI)
+	http.HandleFunc("/api/explore/collection-hub/folder", handlers.ExploreCommunityCollectionFolderAPI)
+	http.HandleFunc("/api/explore/collection-hub/item", handlers.ExploreCommunityCollectionItemAPI)
+	http.HandleFunc("/api/explore/collection-hub/friends", handlers.ExploreCommunityCollectionFriendsAPI)
+	http.HandleFunc("/api/explore/collection-hub/share", handlers.ExploreCommunityCollectionShareAPI)
+	http.HandleFunc("/api/explore/collection-hub/respond", handlers.ExploreCommunityCollectionRespondAPI)
+	http.HandleFunc("/api/explore/collection-hub/shared-items", handlers.ExploreCommunityCollectionSharedItemsAPI)
+
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)

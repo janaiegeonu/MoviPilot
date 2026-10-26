@@ -40,12 +40,15 @@
 
     <link rel="stylesheet" href="/templates/css/community.css?v=1">
 
+    <link rel="stylesheet" href="/templates/css/community_collections.css?v=2">
+
       <link rel="stylesheet" href="/templates/css/my_movipilot_library.css?v=1">
+
+    <script src="/templates/js/dashboard_search_redirect.js?v=1" defer></script>
 
 </head>
 
-<script src="/templates/js/dashboard_search_redirect.js?v=1" defer></script>
-    <script src="/templates/js/community.js?v=1" defer></script>
+
 
 
 <body>
@@ -675,107 +678,23 @@
 
            
 
-            <!-- MOOD PICKER -->
-
+            <!-- COMMUNITY CHATROOM -->
             <button
                 class="sidebar-item"
                 type="button"
-                data-sidebar-action="mood"
-                data-sidebar-label="Mood Picker"
+                data-sidebar-action="chatroom"
+                data-sidebar-label="Community Chatroom"
+                aria-label="Open Community Chatroom"
             >
-
-                <span class="sidebar-icon mood-icon">
-
-                    <svg
-                        class="sidebar-icon-svg"
-                        viewBox="0 0 48 48"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                    >
-
-                        <!-- Mood dial -->
-
-                        <circle
-                            class="mood-face"
-                            cx="24"
-                            cy="24"
-                            r="14.5"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        />
-
-
-                        <!-- Eyes -->
-
-                        <circle
-                            class="mood-eye mood-eye-left"
-                            cx="19"
-                            cy="21"
-                            r="1.7"
-                            fill="currentColor"
-                        />
-
-                        <circle
-                            class="mood-eye mood-eye-right"
-                            cx="29"
-                            cy="21"
-                            r="1.7"
-                            fill="currentColor"
-                        />
-
-
-                        <!-- Smile -->
-
-                        <path
-                            class="mood-smile"
-                            d="M17.5 27C19.2 30.2 21.5 31.7 24 31.7C26.5 31.7 28.8 30.2 30.5 27"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                        />
-
-
-                        <!-- Floating mood particles -->
-
-                        <circle
-                            class="mood-particle mood-particle-one"
-                            cx="39"
-                            cy="12"
-                            r="2"
-                            fill="currentColor"
-                        />
-
-                        <circle
-                            class="mood-particle mood-particle-two"
-                            cx="10"
-                            cy="10"
-                            r="1.5"
-                            fill="currentColor"
-                        />
-
-                        <circle
-                            class="mood-particle mood-particle-three"
-                            cx="38"
-                            cy="36"
-                            r="1.6"
-                            fill="currentColor"
-                        />
-
+                <span class="sidebar-icon chatroom-icon">
+                    <svg class="sidebar-icon-svg" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M8 12.5A5.5 5.5 0 0 1 13.5 7h21A5.5 5.5 0 0 1 40 12.5v15a5.5 5.5 0 0 1-5.5 5.5H22l-9 6v-7.1A5.5 5.5 0 0 1 8 26.5v-14Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M16 16h16M16 22h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="35.5" cy="36" r="4" fill="currentColor" opacity=".95"/>
                     </svg>
-
                 </span>
-
-
-                <span class="sidebar-label">
-                    Chatroom
-                </span>
-
-                <span
-                    class="sidebar-item-glow"
-                    aria-hidden="true"
-                ></span>
-
+                <span class="sidebar-label">Chatroom</span>
+                <span class="sidebar-item-glow" aria-hidden="true"></span>
             </button>
 
         </section>
@@ -914,6 +833,7 @@
                 <span class="sidebar-label">
                     My Collection
                 </span>
+                <span class="mp-sidebar-collection-pending-badge" id="mpSidebarCollectionPendingBadge" hidden aria-label="Pending incoming collections">0</span>
 
                 <span
                     class="sidebar-item-glow"
@@ -2663,12 +2583,93 @@
     </section>
 </div>
 
+
+<!-- Persistent dashboard toast used by sidebar-level Community actions. -->
+<div class="mp-dashboard-feature-toast" id="mpDashboardFeatureToast" role="status" aria-live="polite" hidden></div>
+
+<!-- My Collection is a standalone dashboard modal. Keep it outside #dashboardDynamicPage and outside #mpCommunityPage. -->
+<div class="mp-collection-hub-overlay" id="mpCommunityCollectionOverlay" hidden>
+        <section class="mp-collection-hub-dialog" id="mpCommunityCollectionDialog" role="dialog" aria-modal="true" aria-labelledby="mpCollectionHeroTitle" aria-describedby="mpCollectionHeroDescription" tabindex="-1">
+            <header class="mp-collection-hero">
+                <canvas id="mpCollectionHeroCanvas" class="mp-collection-hero-canvas" aria-hidden="true"></canvas>
+                <div class="mp-collection-hero-aurora" aria-hidden="true"></div>
+                <div class="mp-collection-hero-vignette" aria-hidden="true"></div>
+                <div class="mp-collection-hero-content">
+                    <span class="mp-collection-hero-eyebrow"><span></span> YOUR PERSONAL STORY LIBRARY</span>
+                    <h2 id="mpCollectionHeroTitle">My <span>Collection</span></h2>
+                    <p id="mpCollectionHeroDescription">Gather the films and series you want to remember. Build named folders, keep track of when a title was added, and share a curated collection with the people you have marked as friends.</p>
+                    <div class="mp-collection-hero-stats" aria-label="Collection summary">
+                        <span><strong id="mpCollectionFolderCount">—</strong><small>folders</small></span>
+                        <span class="mp-collection-hero-stat-divider" aria-hidden="true"></span>
+                        <span><strong id="mpCollectionPendingCountHero">—</strong><small>incoming</small></span>
+                        <span class="mp-collection-hero-stat-divider" aria-hidden="true"></span>
+                        <span><strong id="mpCollectionSharedCountHero">—</strong><small>shared with me</small></span>
+                    </div>
+                </div>
+                <button class="mp-collection-hub-close" id="mpCommunityCollectionClose" type="button" aria-label="Close My Collection" title="Close My Collection"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+                <div class="mp-collection-hero-foot" aria-hidden="true"><span>CURATE <i>·</i> KEEP <i>·</i> SHARE</span><span>STORIES WORTH SAVING</span></div>
+            </header>
+
+            <div class="mp-collection-hub-body">
+                <p class="mp-collection-hub-status" id="mpCollectionHubStatus" role="status" aria-live="polite"></p>
+                <nav class="mp-collection-tabs" role="tablist" aria-label="Collection areas">
+                    <button class="mp-collection-tab is-active" id="mpCollectionTabMine" type="button" role="tab" aria-selected="true" aria-controls="mpCollectionPanelMine" data-collection-tab="mine"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h4l2 2h6A2.5 2.5 0 0 1 20.5 9.5v8A2.5 2.5 0 0 1 18 20H6a2.5 2.5 0 0 1-2.5-2.5v-10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>My folders</span><b id="mpCollectionMineBadge">0</b></button>
+                    <button class="mp-collection-tab" id="mpCollectionTabPending" type="button" role="tab" aria-selected="false" aria-controls="mpCollectionPanelPending" data-collection-tab="pending"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 20 7v5.3c0 4.5-3.3 7.4-8 8.7-4.7-1.3-8-4.2-8-8.7V7l8-3.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 8v4.5M12 16h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Pending incoming</span><b class="mp-collection-tab-badge" id="mpCollectionPendingBadge">0</b></button>
+                    <button class="mp-collection-tab" id="mpCollectionTabShared" type="button" role="tab" aria-selected="false" aria-controls="mpCollectionPanelShared" data-collection-tab="shared"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="9" r="2.3" stroke="currentColor" stroke-width="1.5"/><path d="M2.8 19c.4-3.3 2.1-5 5.2-5s4.8 1.7 5.2 5M14.5 14.7c2.8-.2 4.4 1.2 4.9 3.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Shared with me</span><b id="mpCollectionSharedBadge">0</b></button>
+                </nav>
+
+                <section class="mp-collection-panel" id="mpCollectionPanelMine" role="tabpanel" aria-labelledby="mpCollectionTabMine" data-collection-panel="mine">
+                    <div class="mp-collection-panel-heading"><div><span class="mp-collection-section-kicker">YOUR PRIVATE LIBRARY</span><h3>Your folders, your taste.</h3><p>Collections you create here are the same folders available from the Explore page.</p></div><span class="mp-collection-count-chip" id="mpCollectionOwnedTitleCount">0 titles saved</span></div>
+                    <form class="mp-collection-create-form" id="mpCollectionCreateForm">
+                        <span class="mp-collection-create-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h4l2 2h6A2.5 2.5 0 0 1 20.5 9.5v8A2.5 2.5 0 0 1 18 20H6a2.5 2.5 0 0 1-2.5-2.5v-10Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M12 10v6M9 13h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                        <label class="mp-collection-create-field"><span>Start a new collection</span><input id="mpCollectionCreateName" name="name" type="text" maxlength="80" autocomplete="off" placeholder="e.g. Weekend thrillers" aria-label="New collection folder name" required></label>
+                        <button class="mp-collection-create-button" type="submit"><span>Create folder</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </form>
+                    <div class="mp-collection-folder-grid" id="mpCollectionFolderGrid" aria-live="polite"><div class="mp-collection-loading"><span class="mp-collection-spinner"></span><span>Opening your library…</span></div></div>
+                    <div class="mp-collection-folder-detail" id="mpCollectionFolderDetail" hidden>
+                        <div class="mp-collection-detail-heading"><button type="button" class="mp-collection-back-button" id="mpCollectionBackToFolders"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m6 7-7-7 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All folders</span></button><div class="mp-collection-detail-title"><span class="mp-collection-section-kicker">COLLECTION FOLDER</span><h3 id="mpCollectionDetailTitle">Collection name</h3><p id="mpCollectionDetailMeta">Created — · 0 titles</p></div><div class="mp-collection-detail-actions"><button class="mp-collection-secondary-button" id="mpCollectionDetailShare" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="6" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="19" r="3" stroke="currentColor" stroke-width="1.5"/><path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" stroke="currentColor" stroke-width="1.5"/></svg>Share</button><button class="mp-collection-danger-button" id="mpCollectionDetailDelete" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5M14 11v5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Delete folder</button></div></div>
+                        <div class="mp-collection-title-grid" id="mpCollectionDetailItems" aria-live="polite"></div>
+                    </div>
+                </section>
+
+                <section class="mp-collection-panel" id="mpCollectionPanelPending" role="tabpanel" aria-labelledby="mpCollectionTabPending" data-collection-panel="pending" hidden>
+                    <div class="mp-collection-panel-heading"><div><span class="mp-collection-section-kicker">WAITING FOR YOU</span><h3>Incoming collections</h3><p>Collections people have sent you stay here until you accept or decline them.</p></div><span class="mp-collection-count-chip mp-collection-count-chip--alert" id="mpCollectionPendingHint">0 awaiting a decision</span></div>
+                    <div class="mp-collection-share-grid" id="mpCollectionPendingGrid" aria-live="polite"></div>
+                </section>
+
+                <section class="mp-collection-panel" id="mpCollectionPanelShared" role="tabpanel" aria-labelledby="mpCollectionTabShared" data-collection-panel="shared" hidden>
+                    <div class="mp-collection-panel-heading"><div><span class="mp-collection-section-kicker">GOOD TASTE, PASSED ALONG</span><h3>Shared with me</h3><p>Collections you accepted are saved here as a snapshot—even if the sender later edits or removes their original folder.</p></div><span class="mp-collection-count-chip" id="mpCollectionAcceptedHint">0 accepted collections</span></div>
+                    <div class="mp-collection-share-grid" id="mpCollectionSharedGrid" aria-live="polite"></div>
+                    <div class="mp-collection-shared-detail" id="mpCollectionSharedDetail" hidden>
+                        <div class="mp-collection-detail-heading"><button type="button" class="mp-collection-back-button" id="mpCollectionBackToShared"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5m6 7-7-7 7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All shared collections</span></button><div class="mp-collection-detail-title"><span class="mp-collection-section-kicker">ACCEPTED COLLECTION</span><h3 id="mpCollectionSharedDetailTitle">Shared collection</h3><p id="mpCollectionSharedDetailMeta">Shared by a MoviPilot friend</p></div></div>
+                        <div class="mp-collection-title-grid" id="mpCollectionSharedDetailItems" aria-live="polite"></div>
+                    </div>
+                </section>
+
+                <div class="mp-collection-hub-footer"><span><i></i> Your collections are private unless you choose to share them.</span><span>POWERED BY MOVIPILOT</span></div>
+            </div>
+        </section>
+
+        <div class="mp-collection-share-layer" id="mpCollectionShareLayer" hidden>
+            <section class="mp-collection-share-dialog" role="dialog" aria-modal="true" aria-labelledby="mpCollectionShareTitle" aria-describedby="mpCollectionShareDescription" tabindex="-1">
+                <header class="mp-collection-share-head"><div><span class="mp-collection-section-kicker">SHARE A LITTLE DISCOVERY</span><h3 id="mpCollectionShareTitle">Send your collection</h3><p id="mpCollectionShareDescription">Choose one or more people you have marked as friends.</p></div><button id="mpCollectionShareClose" class="mp-collection-share-close" type="button" aria-label="Close sharing dialog"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></header>
+                <div class="mp-collection-share-target"><span class="mp-collection-share-target-icon" aria-hidden="true">✦</span><div><small>SHARING</small><strong id="mpCollectionShareFolderName">Collection folder</strong></div></div>
+                <div class="mp-collection-share-friends-heading"><strong>Marked friends</strong><span id="mpCollectionShareFriendCount">Loading…</span></div>
+                <div class="mp-collection-share-friends" id="mpCollectionShareFriends" aria-live="polite"><div class="mp-collection-loading"><span class="mp-collection-spinner"></span><span>Finding your marked friends…</span></div></div>
+                <label class="mp-collection-share-note"><span>Add a note <small>OPTIONAL · UP TO 500 CHARACTERS</small></span><textarea id="mpCollectionShareMessage" maxlength="500" rows="3" placeholder="I thought you might enjoy these picks…"></textarea><span class="mp-collection-share-note-count"><span id="mpCollectionShareMessageCount">0</span>/500</span></label>
+                <div class="mp-collection-share-actions"><button type="button" class="mp-collection-secondary-button" id="mpCollectionShareCancel">Not now</button><button type="button" class="mp-collection-create-button" id="mpCollectionShareSend" disabled><span>Send collection</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12 20 4l-4 16-4-6-8-2Zm8 2 8-10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+            </section>
+        </div>
+    </div>
+
 <!-- Load once in the persistent dashboard shell, outside #dashboardDynamicPage. -->
 <script src="/templates/js/profile_modal.js?v=3" defer></script>
 <script src="/templates/js/profile_marks.js?v=1" defer></script>
 
-   <script src="/templates/js/community.js?v=2" defer></script>
+   <script src="/templates/js/community.js?v=3" defer></script>
   <script src="/templates/js/community_chat.js?v=1" defer></script>
+
+  <script src="/templates/js/community_collections.js?v=2" defer></script>
 
 <script src="/templates/js/dashboard.js?v=20261006-sidebar"></script>
 

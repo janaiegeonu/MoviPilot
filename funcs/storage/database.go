@@ -23,6 +23,9 @@ func RGBR(text string, err error) string {
 
 var DB *sql.DB
 
+// InitDatabase keeps its existing no-return signature so callers in the app
+// do not need to change. A schema failure is fatal: the server must not start
+// with only part of the collection/community tables initialized.
 func InitDatabase() {
 	var err error
 	DB, err = sql.Open("sqlite", "movipilot.db")
@@ -39,13 +42,24 @@ func InitDatabase() {
 	}
 
 	log.Println(RGBG("SQLite database connected successfully"))
+
+	// The account table and its auth/public-ID migrations must exist before
+	// Community, Explore, Personal Library, or Collection Hub migrations run.
 	createUsersTable()
+
+	if err := EnsureExploreTables(); err != nil {
+		log.Fatal(RGBR("Failed to prepare Explore schema: "+err.Error(), err))
+	}
+	if err := EnsureCommunitySchema(); err != nil {
+		log.Fatal(RGBR("Failed to prepare Community schema: "+err.Error(), err))
+	}
 	if err := EnsureExplorePersonalLibrarySchema(); err != nil {
 		log.Fatal(RGBR("Failed to prepare Explore personal library schema: "+err.Error(), err))
 	}
-	if err := EnsureCommunitySchema(); err != nil {
-		log.Fatal(RGBR("Failed to prepare community schema: "+err.Error(), err))
+	if err := EnsureExploreCommunityCollectionSchema(); err != nil {
+		log.Fatal(RGBR("Failed to prepare Collection Hub schema: "+err.Error(), err))
 	}
+
 	createPasswordResetCodesTable()
 	createSessionsTable()
 }
@@ -89,8 +103,9 @@ func createUsersTable() {
 	log.Println(RGBG("Users table ready"))
 }
 
-// migrateUsersTable keeps existing SQLite databases compatible with current auth
-// fields and the new persistent public account ID.
+// migrateUsersTable keeps existing SQLite databases compatible with current
+// auth fields and the persistent public account ID. The Community migration
+// adds username later, after all existing accounts can be read safely.
 func migrateUsersTable() {
 	rows, err := DB.Query(`PRAGMA table_info(users)`)
 	if err != nil {
@@ -189,6 +204,7 @@ func ensurePublicAccountIDs() {
 	}
 
 	for _, userID := range needsNewID {
+		assigned := false
 		for attempt := 0; attempt < 5; attempt++ {
 			publicID, err := newPublicAccountID()
 			if err != nil {
@@ -201,7 +217,11 @@ func ensurePublicAccountIDs() {
 				log.Fatal(RGBR("Failed to update a public account ID: "+err.Error(), err))
 			}
 			seen[publicID] = struct{}{}
+			assigned = true
 			break
+		}
+		if !assigned {
+			log.Fatal("Failed to assign a unique public account ID after several attempts")
 		}
 	}
 }

@@ -654,7 +654,8 @@
 
         // Expose the existing Community public-profile modal to chat message names.
         // The chat script calls this function instead of creating a second profile UI.
-        window.openMoviPilotCommunityMemberProfile = (publicID) => openMemberProfile(publicID);
+        const openCommunityMemberProfileBridge = (publicID) => openMemberProfile(publicID);
+        window.openMoviPilotCommunityMemberProfile = openCommunityMemberProfileBridge;
 
         const openOrToggleCommunityChat = async () => {
             if (!openChatButton || !chatMount) return;
@@ -723,6 +724,22 @@
                 if (buttonTitle) buttonTitle.textContent = originalTitle;
             }
         };
+
+        // Stable dashboard-shell entry point: callers outside the Community fragment
+        // can open the existing chat implementation without duplicating its UI.
+        const openCommunityChatBridge = async () => {
+            if (!root.isConnected || !openChatButton || !chatMount) {
+                throw new Error("The Community chatroom is not available on this page yet.");
+            }
+            if (!chatMount.hidden) {
+                chatMount.scrollIntoView({ behavior: reducedMotionQuery.matches ? "auto" : "smooth", block: "start" });
+                return true;
+            }
+            await openOrToggleCommunityChat();
+            if (chatMount.hidden) throw new Error("The Community chatroom could not be opened. Check your connection and try again.");
+            return true;
+        };
+        window.openMoviPilotCommunityChat = openCommunityChatBridge;
 
         const closeMemberProfile = () => {
             if (!modalLayer || modalLayer.hidden) return;
@@ -850,7 +867,12 @@
             window.clearTimeout(searchTimer);
             window.clearTimeout(communityToastTimer);
             window.destroyCommunityChat?.();
-            window.openMoviPilotCommunityMemberProfile = null;
+            if (window.openMoviPilotCommunityMemberProfile === openCommunityMemberProfileBridge) {
+                window.openMoviPilotCommunityMemberProfile = null;
+            }
+            if (window.openMoviPilotCommunityChat === openCommunityChatBridge) {
+                window.openMoviPilotCommunityChat = null;
+            }
             if (modalLayer) modalLayer.hidden = true;
             if (chatMount) { chatMount.hidden = true; chatMount.classList.remove("is-fullpage"); }
             root.classList.remove("is-chat-expanded");
@@ -861,6 +883,7 @@
         }, { once: true });
 
         updateSearchMode("username");
+        window.dispatchEvent(new CustomEvent("movipilotCommunityPageReady", { detail: { root } }));
         console.log("[MOVIPILOT] Community page initialized.");
 
         // A movie card can return the browser directly to /dashboard. If that

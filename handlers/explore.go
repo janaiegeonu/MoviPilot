@@ -216,6 +216,16 @@ func ExplorePageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Save the shared TMDB snapshot and refresh the signed-in user's seven-day history.
+	// History-write failures are logged without making a valid Explore page fail.
+	if err := storage.RecordExploreMediaVisit(
+		userID, loggedIn, media.MediaType, media.ID, media.Title, media.Overview,
+		media.PosterURL, media.BackdropURL, media.Year,
+		float64(media.VoteAverage), media.MediaTypeLabel,
+	); err != nil {
+		fmt.Println("[EXPLORE PERSONAL HISTORY ERROR]", err)
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if _, err := w.Write(buffer.Bytes()); err != nil {
 		fmt.Println("[EXPLORE RESPONSE ERROR]", err)

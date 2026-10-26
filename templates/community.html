@@ -42,19 +42,82 @@
                 find people who see films the way you do, and share your thoughts,
                 visions, and opinions with the people who make MoviPilot feel alive.
             </p>
+<div class="mp-community-hero-actions">
+    <!-- Find People button -->
+    <button
+        class="mp-community-primary-cta"
+        id="mpCommunityFindPeople"
+        type="button"
+    >
+        <span>Find your people</span>
 
-            <div class="mp-community-hero-actions">
-                <button class="mp-community-primary-cta" id="mpCommunityFindPeople" type="button">
-                    <span>Find your people</span>
-                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
-                <span class="mp-community-hero-note">
-                    <span class="mp-community-note-dot"></span>
-                    A space for every perspective
-                </span>
-            </div>
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+                d="M5 12h13M13 6l6 6-6 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+        </svg>
+    </button>
+
+    <!-- Community Chatroom button -->
+    <button
+        class="mp-community-primary-chat"
+        id="mpCommunityHeroChatroom"
+        type="button"
+        aria-label="Open the Community Chatroom"
+        onclick="document.getElementById('mpCommunityOpenChat')?.click()"
+    >
+        <!-- Chat bubble icon -->
+        <svg
+            class="mp-community-chat-cta-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2 1-4.5A7.5 7.5 0 1 1 20 11.5Z"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+            <path
+                d="M8 11.5h.01M12.5 11.5h.01M17 11.5h.01"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+            />
+        </svg>
+
+        <span>Community Chatroom</span>
+
+        <!-- Arrow icon -->
+        <svg
+            class="mp-community-chat-cta-arrow"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                d="M5 12h13M13 6l6 6-6 6"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+        </svg>
+    </button>
+
+    <!-- Hero note -->
+    <span class="mp-community-hero-note">
+        <span class="mp-community-note-dot"></span>
+        A space for every perspective
+    </span>
+</div>
         </div>
 
         <div class="mp-community-hero-footer" aria-hidden="true">

@@ -74,6 +74,10 @@ func main() {
 
 	http.HandleFunc("/community-media/", handlers.CommunityChatMediaHandler)
 
+	http.HandleFunc("/api/explore/personal/watchlist", handlers.ExplorePersonalWatchlistAPI)
+	http.HandleFunc("/api/explore/personal/history", handlers.ExplorePersonalHistoryAPI)
+	http.HandleFunc("/api/explore/personal/ratings", handlers.ExplorePersonalRatingsAPI)
+
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)

@@ -40,6 +40,9 @@ func InitDatabase() {
 
 	log.Println(RGBG("SQLite database connected successfully"))
 	createUsersTable()
+	if err := EnsureExplorePersonalLibrarySchema(); err != nil {
+		log.Fatal(RGBR("Failed to prepare Explore personal library schema: "+err.Error(), err))
+	}
 	if err := EnsureCommunitySchema(); err != nil {
 		log.Fatal(RGBR("Failed to prepare community schema: "+err.Error(), err))
 	}

@@ -328,6 +328,217 @@
     filter: saturate(1.1);
 }
 
+/* =========================================================
+   COMMUNITY CHATROOM HERO CTA
+   Premium blue / cyan / sea-green glass treatment
+   ========================================================= */
+
+.mp-community-primary-chat {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+
+    min-height: 49px;
+    padding: 0 19px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(133, 213, 255, 0.38);
+    border-radius: 15px;
+
+    color: #eafaff;
+
+    background:
+        linear-gradient(
+            115deg,
+            rgba(21, 67, 118, 0.98) 0%,
+            rgba(21, 104, 139, 0.96) 52%,
+            rgba(18, 119, 106, 0.96) 100%
+        );
+
+    box-shadow:
+        0 8px 28px rgba(18, 110, 166, 0.2),
+        0 3px 12px rgba(0, 0, 0, 0.13),
+        inset 0 1px rgba(255, 255, 255, 0.17),
+        inset 0 -1px rgba(0, 0, 0, 0.12);
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+
+    white-space: nowrap;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease,
+        background 220ms ease;
+}
+
+
+/* Subtle liquid-glass highlight */
+
+.mp-community-primary-chat::before {
+    position: absolute;
+    top: -90%;
+    left: -45%;
+
+    width: 32%;
+    height: 280%;
+
+    transform: rotate(24deg);
+
+    background: rgba(220, 250, 255, 0.25);
+
+    content: "";
+
+    filter: blur(10px);
+
+    pointer-events: none;
+
+    transition:
+        left 620ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+
+/* Soft upper glass reflection */
+
+.mp-community-primary-chat::after {
+    position: absolute;
+    inset: 0;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            140deg,
+            rgba(255, 255, 255, 0.075),
+            transparent 48%,
+            rgba(115, 234, 214, 0.045)
+        );
+
+    content: "";
+
+    pointer-events: none;
+}
+
+
+/* Keep the button contents above the highlights */
+
+.mp-community-primary-chat > span,
+.mp-community-primary-chat > svg {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* Chat bubble icon */
+
+.mp-community-chat-cta-icon {
+    flex: 0 0 auto;
+
+    width: 19px;
+    height: 19px;
+
+    color: #a9f5ed;
+
+    transition:
+        transform 220ms ease,
+        color 220ms ease;
+}
+
+
+/* Arrow icon */
+
+.mp-community-chat-cta-arrow {
+    flex: 0 0 auto;
+
+    width: 16px;
+    height: 16px;
+
+    color: #d5faff;
+
+    transition: transform 220ms ease;
+}
+
+
+/* Hover */
+
+.mp-community-primary-chat:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(160, 239, 255, 0.62);
+
+    background:
+        linear-gradient(
+            115deg,
+            rgba(27, 84, 145, 0.99) 0%,
+            rgba(25, 127, 157, 0.98) 52%,
+            rgba(24, 145, 125, 0.98) 100%
+        );
+
+    box-shadow:
+        0 12px 34px rgba(24, 139, 185, 0.27),
+        0 5px 15px rgba(0, 0, 0, 0.15),
+        inset 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.mp-community-primary-chat:hover::before {
+    left: 125%;
+}
+
+.mp-community-primary-chat:hover .mp-community-chat-cta-icon {
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.mp-community-primary-chat:hover .mp-community-chat-cta-arrow {
+    transform: translateX(3px);
+}
+
+
+/* Pressed state */
+
+.mp-community-primary-chat:active {
+    transform: translateY(0) scale(0.98);
+
+    box-shadow:
+        0 4px 14px rgba(24, 139, 185, 0.18),
+        inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+
+/* Accessible keyboard focus */
+
+.mp-community-primary-chat:focus-visible {
+    outline: 2px solid rgba(157, 238, 255, 0.9);
+    outline-offset: 4px;
+}
+
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-community-primary-chat,
+    .mp-community-primary-chat::before,
+    .mp-community-chat-cta-icon,
+    .mp-community-chat-cta-arrow {
+        transition: none;
+    }
+
+    .mp-community-primary-chat:hover,
+    .mp-community-primary-chat:active {
+        transform: none;
+    }
+}
+
 .mp-community-primary-cta:hover::before { left: 120%; }
 .mp-community-primary-cta svg { width: 17px; height: 17px; transition: transform 220ms ease; }
 .mp-community-primary-cta:hover svg { transform: translateX(3px); }

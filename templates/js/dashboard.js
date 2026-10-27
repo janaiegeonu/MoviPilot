@@ -33,7 +33,65 @@ const sidebarItems =
     document.querySelectorAll(
         ".sidebar-item[data-sidebar-action]"
     );
+/* =========================================================
+   CLEAR SIDEBAR HIGHLIGHT WHEN A MODAL CLOSES
+   ---------------------------------------------------------
+   When a sidebar option opens a modal, the clicked button
+   may remain highlighted after the modal closes.
 
+   This listener clears the selected appearance and removes
+   keyboard focus from sidebar feature buttons.
+
+   It does not affect the main navbar's active page.
+   ========================================================= */
+
+window.addEventListener(
+    "movipilotSidebarModalClosed",
+    () => {
+
+        /* Remove the selected appearance from every sidebar
+           feature button. */
+
+        sidebarItems.forEach(
+            (item) => {
+
+                item.classList.remove(
+                    "is-selected"
+                );
+
+                item.removeAttribute(
+                    "aria-current"
+                );
+
+            }
+        );
+
+
+        /* Remove keyboard focus if a sidebar feature button
+           currently has it. */
+
+        const focusedElement =
+            document.activeElement;
+
+
+        if (
+            focusedElement instanceof HTMLElement &&
+            focusedElement.matches(
+                ".sidebar-item[data-sidebar-action]"
+            )
+        ) {
+
+            focusedElement.blur();
+
+        }
+
+
+        console.log(
+            "[MOVIPILOT] Sidebar modal focus cleared."
+        );
+
+    }
+);
 
 /* =========================================================
    SAFETY CHECK
@@ -625,6 +683,10 @@ dashboardMain.appendChild(
    DASHBOARD ROUTES
    ========================================================= */
 
+/* =========================================================
+   DASHBOARD ROUTES
+   ========================================================= */
+
 const dashboardPageRoutes = {
 
     home:
@@ -639,10 +701,10 @@ const dashboardPageRoutes = {
     anime:
         "/anime",
 
-    community: "/community"
+    community:
+        "/community"
 
 };
-
 
 /* =========================================================
    PAGE STATE
@@ -990,12 +1052,24 @@ async function initializeDashboardPage(
 
     }
 
-      if (
-        page === "community" &&
-        typeof window.initCommunityPage === "function"
-    ) {
-        window.initCommunityPage();
+     if (page === "community") {
+
+        if (
+            typeof window.initCommunityPage !== "function"
+        ) {
+
+            throw new Error(
+                "Community initialization failed. " +
+                "Check that /templates/js/community.js " +
+                "is loaded in the persistent dashboard shell."
+            );
+
+        }
+
+        await window.initCommunityPage();
+
         return;
+
     }
 
 }
@@ -1396,14 +1470,19 @@ async function loadDashboardPage(
 
     }
 
-        if (page === "community") {
+       if (
+        page === "community"
+    ) {
+
         await loadDashboardHTML(
             page,
             dashboardPageRoutes.community,
             controller,
             requestID
         );
+
         return;
+
     }
 
 }
@@ -2869,64 +2948,270 @@ if (
 
 
 /* =========================================================
-   WATCHLIST VISUAL STATE
+   HERO WATCHLIST — PERSISTED SERVER STATE
+   ---------------------------------------------------------
+   Uses MoviPilot's existing Explore API:
+     GET  /api/explore/state?type=movie&id=<id>
+     POST /api/explore/watchlist
+
+   The server response is the source of truth. The button must
+   never pretend to save a title by only toggling CSS classes.
    ========================================================= */
 
-const heroWatchlistButtons =
-    document.querySelectorAll(
-        ".hero-watchlist-button"
-    );
-
-
-heroWatchlistButtons.forEach(
-    (button) => {
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                const isAdded =
-                    button.classList.toggle(
-                        "is-added"
-                    );
-
-
-                button.setAttribute(
-                    "aria-pressed",
-                    String(
-                        isAdded
-                    )
-                );
-
-
-                const label =
-                    button.querySelector(
-                        ".hero-watchlist-label"
-                    );
-
-
-                if (label) {
-
-                    label.textContent =
-                        isAdded
-                            ? "Added to Watchlist"
-                            : "Add to Watchlist";
-
-                }
-
-
-                console.log(
-                    isAdded
-                        ? "Added movie to watchlist:"
-                        : "Removed movie from watchlist:",
-                    button.dataset.movieId
-                );
-
-            }
-        );
-
-    }
+const heroWatchlistButtons = Array.from(
+    document.querySelectorAll(".hero-watchlist-button")
 );
+
+let heroWatchlistToastTimer = null;
+
+function ensureHeroWatchlistToast() {
+    let toast = document.getElementById("movipilotHeroWatchlistToast");
+    if (toast) return toast;
+
+    if (!document.getElementById("movipilotHeroWatchlistToastStyles")) {
+        const style = document.createElement("style");
+        style.id = "movipilotHeroWatchlistToastStyles";
+        style.textContent = `
+            #movipilotHeroWatchlistToast {
+                position: fixed;
+                right: 24px;
+                bottom: 24px;
+                z-index: 999999;
+                width: max-content;
+                max-width: min(420px, calc(100vw - 32px));
+                box-sizing: border-box;
+                padding: 14px 18px;
+                border: 1px solid rgba(80, 220, 207, .42);
+                border-radius: 15px;
+                background: linear-gradient(135deg, rgba(3, 11, 29, .97), rgba(5, 35, 48, .97));
+                color: #e5fdfa;
+                box-shadow: 0 18px 48px rgba(0, 0, 0, .38), 0 0 24px rgba(50, 200, 199, .10);
+                font: 500 14px/1.5 Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                backdrop-filter: blur(18px);
+                -webkit-backdrop-filter: blur(18px);
+                opacity: 0;
+                transform: translateY(10px);
+                pointer-events: none;
+                transition: opacity .22s ease, transform .22s ease;
+            }
+            #movipilotHeroWatchlistToast.is-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            @media (max-width: 520px) {
+                #movipilotHeroWatchlistToast {
+                    right: 16px;
+                    bottom: 16px;
+                    max-width: calc(100vw - 32px);
+                }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                #movipilotHeroWatchlistToast { transition: none; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    toast = document.createElement("div");
+    toast.id = "movipilotHeroWatchlistToast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    toast.setAttribute("aria-atomic", "true");
+    document.body.appendChild(toast);
+    return toast;
+}
+
+function showHeroWatchlistToast(message) {
+    const toast = ensureHeroWatchlistToast();
+    toast.textContent = message;
+    toast.classList.add("is-visible");
+
+    if (heroWatchlistToastTimer) {
+        clearTimeout(heroWatchlistToastTimer);
+    }
+
+    heroWatchlistToastTimer = window.setTimeout(() => {
+        toast.classList.remove("is-visible");
+    }, 3200);
+}
+
+function getHeroWatchlistMedia(button) {
+    const slide = button.closest(".hero-slide");
+    const rawID = button.dataset.movieId || slide?.dataset.movieId || "";
+    const mediaID = Number.parseInt(rawID, 10);
+    const mediaType = (button.dataset.mediaType || "movie").toLowerCase();
+
+    if (!Number.isSafeInteger(mediaID) || mediaID <= 0) {
+        throw new Error("MoviPilot could not identify this movie. Please refresh the dashboard.");
+    }
+
+    if (mediaType !== "movie" && mediaType !== "tv") {
+        throw new Error("This title has an unsupported media type.");
+    }
+
+    return { mediaID, mediaType };
+}
+
+function setHeroWatchlistButtonState(button, isAdded) {
+    button.classList.toggle("is-added", isAdded);
+    button.setAttribute("aria-pressed", String(isAdded));
+    button.dataset.watchlistSaved = String(isAdded);
+
+    const label = button.querySelector(".hero-watchlist-label");
+    if (label) {
+        label.textContent = isAdded ? "Added to Watchlist" : "Add to Watchlist";
+    }
+}
+
+async function heroWatchlistRequest(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: "same-origin",
+        cache: "no-store",
+        ...options,
+        headers: {
+            Accept: "application/json",
+            ...(options.body ? { "Content-Type": "application/json" } : {}),
+            ...(options.headers || {})
+        }
+    });
+
+    let payload = {};
+    try {
+        payload = await response.json();
+    } catch (_) {
+        payload = {};
+    }
+
+    if (!response.ok || payload.success === false) {
+        const error = new Error(
+            payload.error || payload.message || `Watchlist request failed (${response.status}).`
+        );
+        error.status = response.status;
+        throw error;
+    }
+
+    return payload;
+}
+
+async function refreshHeroWatchlistButtonState(button) {
+    const { mediaID, mediaType } = getHeroWatchlistMedia(button);
+    const query = `type=${encodeURIComponent(mediaType)}&id=${encodeURIComponent(mediaID)}`;
+    const result = await heroWatchlistRequest(`/api/explore/state?${query}`);
+    const user = result.user || result.User;
+
+    if (!user) {
+        throw new Error("MoviPilot could not verify your Watchlist state. Please try again.");
+    }
+
+    // Go's default JSON encoder returns exported struct fields in PascalCase.
+    const loggedInValue = user.LoggedIn ?? user.loggedIn ?? user.logged_in;
+    const savedValue = user.Watchlisted ?? user.watchlisted;
+
+    if (typeof loggedInValue !== "boolean" || typeof savedValue !== "boolean") {
+        throw new Error("MoviPilot returned an incomplete Watchlist state. Please refresh the dashboard.");
+    }
+
+    button.dataset.watchlistLoggedIn = String(loggedInValue);
+    button.dataset.watchlistStateKnown = "true";
+    setHeroWatchlistButtonState(button, savedValue);
+
+    return { loggedIn: loggedInValue, watchlisted: savedValue };
+}
+
+// Resolve each slider's saved state on load. The buttons remain disabled while
+// their state is being checked so an existing item cannot be accidentally removed.
+heroWatchlistButtons.forEach((button) => {
+    button.dataset.watchlistStateKnown = "false";
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+
+    refreshHeroWatchlistButtonState(button)
+        .catch((error) => {
+            // A click will retry this state read before attempting a toggle.
+            console.warn("[MOVIPILOT HERO WATCHLIST] Could not load saved state:", error);
+            button.dataset.watchlistStateKnown = "false";
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.removeAttribute("aria-busy");
+        });
+
+    button.addEventListener("click", async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (button.dataset.watchlistSaving === "true") return;
+
+        button.dataset.watchlistSaving = "true";
+        button.disabled = true;
+        button.setAttribute("aria-busy", "true");
+
+        try {
+            // Never POST a blind toggle when we could not establish the current state.
+            if (button.dataset.watchlistStateKnown !== "true") {
+                await refreshHeroWatchlistButtonState(button);
+            }
+
+            if (button.dataset.watchlistLoggedIn !== "true") {
+                showHeroWatchlistToast("Please sign in to save movies to your Watchlist.");
+                return;
+            }
+
+            const { mediaID, mediaType } = getHeroWatchlistMedia(button);
+            const result = await heroWatchlistRequest("/api/explore/watchlist", {
+                method: "POST",
+                body: JSON.stringify({
+                    media_type: mediaType,
+                    media_id: mediaID
+                })
+            });
+
+            if (typeof result.watchlisted !== "boolean") {
+                throw new Error("MoviPilot did not confirm whether the movie was saved. Please refresh and check your Watchlist.");
+            }
+
+            const isAdded = result.watchlisted;
+            setHeroWatchlistButtonState(button, isAdded);
+            button.dataset.watchlistStateKnown = "true";
+            button.dataset.watchlistLoggedIn = "true";
+
+            const slide = button.closest(".hero-slide");
+            const title = slide?.querySelector(".hero-title")?.textContent?.trim() || "This movie";
+            showHeroWatchlistToast(
+                isAdded ? `${title} was added to your Watchlist.` : `${title} was removed from your Watchlist.`
+            );
+
+            // Other dashboard widgets may listen for this event to refresh their display.
+            window.dispatchEvent(new CustomEvent("movipilotWatchlistChanged", {
+                detail: {
+                    mediaType,
+                    mediaID,
+                    watchlisted: isAdded,
+                    source: "dashboard-hero"
+                }
+            }));
+
+            console.log(
+                isAdded ? "[MOVIPILOT] Saved hero movie to Watchlist:" : "[MOVIPILOT] Removed hero movie from Watchlist:",
+                mediaID
+            );
+        } catch (error) {
+            console.error("[MOVIPILOT HERO WATCHLIST]", error);
+
+            if (error.status === 401) {
+                button.dataset.watchlistLoggedIn = "false";
+                button.dataset.watchlistStateKnown = "false";
+                showHeroWatchlistToast("Your session may have expired. Please sign in again to update your Watchlist.");
+            } else {
+                showHeroWatchlistToast(error.message || "Could not update your Watchlist. Please try again.");
+            }
+        } finally {
+            button.dataset.watchlistSaving = "false";
+            button.disabled = false;
+            button.removeAttribute("aria-busy");
+        }
+    });
+});
 
 
 /* =========================================================

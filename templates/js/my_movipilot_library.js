@@ -471,6 +471,19 @@
             priorFocus.focus({ preventScroll: true });
         }
         priorFocus = null;
+
+                /* Notify the dashboard that the modal has closed. */
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "movipilotSidebarModalClosed",
+                {
+                    detail: {
+                        source: "personal-library"
+                    }
+                }
+            )
+);
     };
 
     const deleteItem = async (button) => {

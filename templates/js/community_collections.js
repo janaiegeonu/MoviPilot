@@ -695,7 +695,22 @@
         activeShareFolderID = 0;
         if (openingFocus && document.contains(openingFocus) && typeof openingFocus.focus === "function") openingFocus.focus({ preventScroll: true });
         openingFocus = null;
+
+                /* Clear the sidebar selection after closing My Collection. */
+
+        window.dispatchEvent(
+            new CustomEvent(
+                "movipilotSidebarModalClosed",
+                {
+                    detail: {
+                        source: "collection"
+                    }
+                }
+            )
+        );
     }
+
+
 
     function communityRuntimeReady() {
         const root = $("#mpCommunityPage");

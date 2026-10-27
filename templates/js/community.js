@@ -669,6 +669,17 @@
                 openChatButton.setAttribute("aria-expanded", "false");
                 window.destroyCommunityChat?.();
                 openChatButton.focus({ preventScroll: true });
+                /* Clear the sidebar highlight when Chatroom closes. */
+                window.dispatchEvent(
+                    new CustomEvent(
+                        "movipilotSidebarModalClosed",
+                        {
+                            detail: {
+                                source: "community-chat"
+                            }
+                        }
+                    )
+                );
                 return;
             }
 

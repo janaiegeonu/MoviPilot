@@ -1541,18 +1541,71 @@
         input?.addEventListener("keydown", (event) => {
             if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void sendMessage(); }
         }, { signal });
-        closeButton?.addEventListener("click", () => {
-            // Return to the Community landing view, preserving the persistent
-            // dashboard shell and the member-search state.
-            controller.abort();
-            if (mount) { mount.hidden = true; mount.classList.remove("is-fullpage"); }
-            const communityPage = mount?.closest("#mpCommunityPage") || document.getElementById("mpCommunityPage");
-            communityPage?.classList.remove("is-chat-expanded");
-            document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
-            document.body.classList.remove("mp-community-chat-fullscreen-open");
-            const opener = document.getElementById("mpCommunityOpenChat");
-            if (opener) { opener.setAttribute("aria-expanded", "false"); opener.focus({ preventScroll: true }); }
-        }, { signal });
+                    /* =========================================================
+                CLOSE CHATROOM — RETURN TO COMMUNITY
+                ---------------------------------------------------------
+                Restores the Community landing view and clears the
+                dashboard sidebar's selected highlight.
+                ========================================================= */
+
+                closeButton?.addEventListener("click", () => {
+
+                    /* Stop Chatroom activity and clean up its listeners. */
+                    controller.abort();
+
+
+                    /* Hide the Chatroom and remove its fullscreen styling. */
+                    if (mount) {
+                        mount.hidden = true;
+                        mount.classList.remove("is-fullpage");
+                    }
+
+
+                    /* Restore the Community page layout. */
+                    const communityPage =
+                        mount?.closest("#mpCommunityPage") ||
+                        document.getElementById("mpCommunityPage");
+
+                    communityPage?.classList.remove("is-chat-expanded");
+
+                    document.documentElement.classList.remove(
+                        "mp-community-chat-fullscreen-open"
+                    );
+
+                    document.body.classList.remove(
+                        "mp-community-chat-fullscreen-open"
+                    );
+
+
+                    /* Restore the Chatroom opener's accessibility state. */
+                    const opener =
+                        document.getElementById("mpCommunityOpenChat");
+
+                    if (opener) {
+                        opener.setAttribute("aria-expanded", "false");
+
+                        opener.focus({
+                            preventScroll: true
+                        });
+                    }
+
+
+                    /* ================================================
+                    CLEAR SIDEBAR HIGHLIGHT
+                    ================================================ */
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "movipilotSidebarModalClosed",
+                            {
+                                detail: {
+                                    source: "community-chat"
+                                }
+                            }
+                        )
+                    );
+
+                }, { signal });
         attachButton?.addEventListener("click", () => {
             const expanded = attachButton.getAttribute("aria-expanded") === "true";
             attachButton.setAttribute("aria-expanded", String(!expanded));

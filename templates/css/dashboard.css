@@ -1758,53 +1758,6 @@ body {
 }
 
 
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-.logout-item {
-
-    margin-bottom: 0;
-}
-
-
-.logout-icon {
-
-    color: rgba(198, 221, 224, 0.55);
-}
-
-
-.logout-item:hover {
-
-    color: rgba(255, 229, 229, 0.90);
-
-    background: rgba(145, 44, 56, 0.288);
-
-    border-color: rgba(217, 103, 115, 0.08);
-}
-
-
-.logout-item:hover .logout-icon {
-
-    color: #ff9da6;
-
-    filter:
-        brightness(1.18)
-        drop-shadow(0 0 7px rgba(255, 110, 124, 0.20));
-}
-
-
-.logout-arrow {
-
-    transition:
-        transform 220ms ease;
-}
-
-
-.logout-item:hover .logout-arrow {
-
-    transform: translateX(2px);
-}
 
 
 /* =========================================================
@@ -1980,6 +1933,7 @@ body {
 
     display: block;
 }
+
 
 
 /* =========================================================
@@ -2191,6 +2145,234 @@ body {
 
 }
 
+/* =========================================================
+   MOVIPILOT MOBILE SIDEBAR PAGE NAVIGATION
+   ---------------------------------------------------------
+   Additive styles only. Reuses the dashboard's existing
+   sidebar items and hides this page-navigation section on
+   desktop where the top navbar already provides navigation.
+   Includes subtle, continuously visible SVG motion.
+   ========================================================= */
+
+.mobile-page-navigation {
+    display: none;
+}
+
+.mobile-page-navigation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.mobile-page-navigation .mobile-page-nav-link {
+    min-height: 44px;
+    margin: 0;
+    padding: 7px 12px;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: rgba(5, 20, 39, 0.34);
+    color: rgba(203, 225, 239, 0.84);
+    text-align: left;
+    transition:
+        background 180ms ease,
+        border-color 180ms ease,
+        color 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms ease;
+}
+
+.mobile-page-navigation .mobile-page-nav-link:hover {
+    border-color: rgba(78, 207, 211, 0.20);
+    background: rgba(24, 83, 102, 0.22);
+    color: #e5fdfa;
+    transform: translateX(2px);
+}
+
+.mobile-page-navigation .mobile-page-nav-link.active {
+    border-color: rgba(83, 215, 214, 0.34);
+    background: linear-gradient(
+        105deg,
+        rgba(42, 170, 184, 0.22),
+        rgba(34, 104, 155, 0.17)
+    );
+    color: #e5fdfa;
+    box-shadow:
+        inset 0 0 0 1px rgba(93, 224, 212, 0.035),
+        0 7px 20px rgba(0, 0, 0, 0.13);
+}
+
+.mobile-page-navigation .mobile-page-nav-link.active .sidebar-label {
+    color: #e5fdfa;
+}
+
+.mobile-page-navigation .mobile-page-nav-icon {
+    display: inline-flex;
+    flex: 0 0 30px;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    color: #63d9d6;
+}
+
+.mobile-page-navigation .mobile-page-nav-icon .sidebar-icon-svg,
+.mobile-page-navigation .mobile-page-nav-icon svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+    max-width: 22px;
+    max-height: 22px;
+    overflow: visible;
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform, filter;
+}
+
+/* HOME: a calm upward float, like the icon is gently hovering. */
+.mobile-page-navigation .mobile-page-nav-link[data-page="home"] svg {
+    animation: mpHomeFloat 2.6s ease-in-out infinite;
+}
+
+/* SERIES: the screen floats while the play symbol softly pulses. */
+.mobile-page-navigation .mobile-page-nav-link[data-page="tv"] svg {
+    animation: mpSeriesFloat 2.35s ease-in-out infinite;
+    animation-delay: -0.45s;
+}
+
+.mobile-page-navigation .mobile-page-nav-link[data-page="tv"] svg path:first-of-type {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mpPlayPulse 1.8s ease-in-out infinite;
+}
+
+/* MOVIES: the clapper line makes a small cinematic hinge motion. */
+.mobile-page-navigation .mobile-page-nav-link[data-page="movies"] svg {
+    animation: mpMovieFloat 2.8s ease-in-out infinite;
+    animation-delay: -0.9s;
+}
+
+.mobile-page-navigation .mobile-page-nav-link[data-page="movies"] svg path:nth-of-type(2) {
+    transform-box: fill-box;
+    transform-origin: 50% 15%;
+    animation: mpClapperTilt 2.2s ease-in-out infinite;
+}
+
+/* ANIME: the main star slowly leans; the small sparkle twinkles. */
+.mobile-page-navigation .mobile-page-nav-link[data-page="anime"] svg {
+    animation: mpAnimeDrift 3.2s ease-in-out infinite;
+    animation-delay: -1.1s;
+}
+
+.mobile-page-navigation .mobile-page-nav-link[data-page="anime"] svg path:nth-of-type(2) {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mpAnimeSparkle 1.9s ease-in-out infinite;
+}
+
+/* COMMUNITY: the chat bubble floats and its message lines breathe. */
+.mobile-page-navigation .mobile-page-nav-link[data-page="community"] svg {
+    animation: mpCommunityFloat 2.7s ease-in-out infinite;
+    animation-delay: -0.65s;
+}
+
+.mobile-page-navigation .mobile-page-nav-link[data-page="community"] svg path:nth-of-type(2) {
+    animation: mpMessageBreathe 2.1s ease-in-out infinite;
+}
+
+/* A little extra cyan luminance on interaction, without harsh flashing. */
+.mobile-page-navigation .mobile-page-nav-link:hover .mobile-page-nav-icon svg,
+.mobile-page-navigation .mobile-page-nav-link.active .mobile-page-nav-icon svg {
+    filter: drop-shadow(0 0 3px rgba(81, 226, 221, 0.28));
+}
+
+.mobile-page-navigation .mobile-page-nav-link:focus-visible {
+    outline: 2px solid rgba(100, 225, 221, 0.88);
+    outline-offset: 2px;
+}
+
+.mobile-page-navigation .sidebar-item-glow {
+    pointer-events: none;
+}
+
+/* ----------------------- KEYFRAMES ----------------------- */
+@keyframes mpHomeFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-2.2px) scale(1.035); }
+}
+
+@keyframes mpSeriesFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1.7px); }
+}
+
+@keyframes mpPlayPulse {
+    0%, 100% { opacity: 0.88; transform: translateX(0) scale(1); }
+    50%      { opacity: 1; transform: translateX(0.65px) scale(1.09); }
+}
+
+@keyframes mpMovieFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-1.4px) rotate(-2.2deg); }
+}
+
+@keyframes mpClapperTilt {
+    0%, 100% { transform: rotate(0deg); }
+    35%      { transform: rotate(-3.2deg); }
+    70%      { transform: rotate(1.5deg); }
+}
+
+@keyframes mpAnimeDrift {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-1.4px) rotate(4deg); }
+}
+
+@keyframes mpAnimeSparkle {
+    0%, 100% { opacity: 0.76; transform: scale(0.91) rotate(-7deg); }
+    50%      { opacity: 1; transform: scale(1.12) rotate(8deg); }
+}
+
+@keyframes mpCommunityFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-1.8px); }
+}
+
+@keyframes mpMessageBreathe {
+    0%, 100% { opacity: 0.72; }
+    50%      { opacity: 1; }
+}
+
+@media (max-width: 720px) {
+    .mobile-page-navigation {
+        display: block;
+        margin-bottom: 18px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(104, 198, 211, 0.12);
+    }
+
+    .mobile-page-navigation .sidebar-section-heading {
+        margin-bottom: 7px;
+    }
+}
+
+@media (min-width: 721px) {
+    .mobile-page-navigation {
+        display: none !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-page-navigation .mobile-page-nav-link,
+    .mobile-page-navigation .mobile-page-nav-icon svg,
+    .mobile-page-navigation .mobile-page-nav-icon svg path,
+    .mobile-page-navigation .mobile-page-nav-icon svg rect {
+        animation: none !important;
+        transition: none !important;
+        will-change: auto;
+    }
+}
 
 /* =========================================================
    SMALL PHONES

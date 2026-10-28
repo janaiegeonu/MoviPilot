@@ -92,7 +92,11 @@
     };
 
     const setProfileStatus = (root, message, isError = false) => {
-        const status = root.querySelector("#mpCommunityProfileStatus");
+        // The Collection Hub temporarily portals the profile modal to <body>
+        // to escape the Community page stacking context. Resolve globally as a
+        // fallback so its status still updates while the modal is portaled.
+        const status = root?.querySelector("#mpCommunityProfileStatus")
+            || document.getElementById("mpCommunityProfileStatus");
         if (!status) return;
         status.textContent = message;
         status.classList.toggle("is-error", isError);
@@ -415,6 +419,11 @@
         const openChatButton = root.querySelector("#mpCommunityOpenChat");
         const chatMount = root.querySelector("#mpCommunityChatMount");
 
+        // Do not rely on root.querySelector() for profile elements after the
+        // Collection Hub portals #mpCommunityModalLayer directly under <body>.
+        // The captured modalLayer reference continues to work in either location.
+        const profileQuery = (selector) => modalLayer?.querySelector(selector) || root.querySelector(selector);
+
         let currentMode = "username";
         let latestSearchSerial = 0;
         let searchTimer = 0;
@@ -535,9 +544,9 @@
         };
 
         const updateAvatar = (user) => {
-            const avatar = root.querySelector("#mpCommunityProfileAvatar");
-            const photo = root.querySelector("#mpCommunityProfilePhoto");
-            const initials = root.querySelector("#mpCommunityProfileInitials");
+            const avatar = profileQuery("#mpCommunityProfileAvatar");
+            const photo = profileQuery("#mpCommunityProfilePhoto");
+            const initials = profileQuery("#mpCommunityProfileInitials");
             if (!avatar || !photo || !initials) return;
 
             initials.textContent = getInitials(user.fullName);
@@ -558,8 +567,8 @@
 
         const updateFriendState = (marked, count) => {
             const label = friendButton?.querySelector(".mp-community-friend-button-label");
-            const friendCount = root.querySelector("#mpCommunityFriendCount");
-            const countLabel = root.querySelector("#mpCommunityFriendCountLabel");
+            const friendCount = profileQuery("#mpCommunityFriendCount");
+            const countLabel = profileQuery("#mpCommunityFriendCountLabel");
             if (!friendButton) return;
             friendButton.classList.toggle("is-marked", Boolean(marked));
             friendButton.setAttribute("aria-pressed", String(Boolean(marked)));
@@ -593,13 +602,17 @@
             };
 
             const name = safeText(user.fullName, "MoviPilot member");
-            root.querySelector("#mpCommunityProfileName").textContent = name;
-            root.querySelector("#mpCommunityProfileUsername").textContent = `@${activeProfile.username}`;
-            root.querySelector("#mpCommunityProfilePublicID").textContent = activeProfile.publicId || "ID unavailable";
-            root.querySelector("#mpCommunityProfileJoined").textContent = formatJoinedDate(user.createdAt);
-            const heading = root.querySelector("#mpCommunityProfileHeading");
+            const nameElement = profileQuery("#mpCommunityProfileName");
+            const usernameElement = profileQuery("#mpCommunityProfileUsername");
+            const publicIDElement = profileQuery("#mpCommunityProfilePublicID");
+            const joinedElement = profileQuery("#mpCommunityProfileJoined");
+            if (nameElement) nameElement.textContent = name;
+            if (usernameElement) usernameElement.textContent = `@${activeProfile.username}`;
+            if (publicIDElement) publicIDElement.textContent = activeProfile.publicId || "ID unavailable";
+            if (joinedElement) joinedElement.textContent = formatJoinedDate(user.createdAt);
+            const heading = profileQuery("#mpCommunityProfileHeading");
             if (heading) heading.textContent = "Member profile";
-            const description = root.querySelector("#mpCommunityProfileDescription");
+            const description = profileQuery("#mpCommunityProfileDescription");
             if (description) description.textContent = "A little look at their MoviPilot identity.";
             updateAvatar(user);
             updateFriendState(activeProfile.markedByMe, activeProfile.friendCount);
@@ -622,12 +635,18 @@
             modal.scrollTop = 0;
             modal.focus({ preventScroll: true });
 
-            root.querySelector("#mpCommunityProfileName").textContent = "Loading member…";
-            root.querySelector("#mpCommunityProfileUsername").textContent = "@loading";
-            root.querySelector("#mpCommunityProfilePublicID").textContent = cleanID;
-            root.querySelector("#mpCommunityProfileJoined").textContent = "Loading date…";
-            root.querySelector("#mpCommunityProfileInitials").textContent = "MP";
-            root.querySelector("#mpCommunityFriendCount").textContent = "—";
+            const loadingName = profileQuery("#mpCommunityProfileName");
+            const loadingUsername = profileQuery("#mpCommunityProfileUsername");
+            const loadingPublicID = profileQuery("#mpCommunityProfilePublicID");
+            const loadingJoined = profileQuery("#mpCommunityProfileJoined");
+            const loadingInitials = profileQuery("#mpCommunityProfileInitials");
+            const loadingFriendCount = profileQuery("#mpCommunityFriendCount");
+            if (loadingName) loadingName.textContent = "Loading member…";
+            if (loadingUsername) loadingUsername.textContent = "@loading";
+            if (loadingPublicID) loadingPublicID.textContent = cleanID;
+            if (loadingJoined) loadingJoined.textContent = "Loading date…";
+            if (loadingInitials) loadingInitials.textContent = "MP";
+            if (loadingFriendCount) loadingFriendCount.textContent = "—";
             if (copyButton) copyButton.disabled = true;
             if (friendButton) friendButton.disabled = true;
             setProfileStatus(root, "Loading public member details…");
@@ -642,9 +661,12 @@
             } catch (error) {
                 if (signal.aborted || thisProfileRequest !== activeProfileRequest) return;
                 setProfileStatus(root, error.message || "Could not load this public profile.", true);
-                root.querySelector("#mpCommunityProfileName").textContent = "Profile unavailable";
-                root.querySelector("#mpCommunityProfileUsername").textContent = "@unavailable";
-                root.querySelector("#mpCommunityProfileJoined").textContent = "Unavailable";
+                const unavailableName = profileQuery("#mpCommunityProfileName");
+                const unavailableUsername = profileQuery("#mpCommunityProfileUsername");
+                const unavailableJoined = profileQuery("#mpCommunityProfileJoined");
+                if (unavailableName) unavailableName.textContent = "Profile unavailable";
+                if (unavailableUsername) unavailableUsername.textContent = "@unavailable";
+                if (unavailableJoined) unavailableJoined.textContent = "Unavailable";
                 if (friendButton) friendButton.disabled = true;
                 if (copyButton) copyButton.disabled = true;
             } finally {
@@ -669,17 +691,6 @@
                 openChatButton.setAttribute("aria-expanded", "false");
                 window.destroyCommunityChat?.();
                 openChatButton.focus({ preventScroll: true });
-                /* Clear the sidebar highlight when Chatroom closes. */
-                window.dispatchEvent(
-                    new CustomEvent(
-                        "movipilotSidebarModalClosed",
-                        {
-                            detail: {
-                                source: "community-chat"
-                            }
-                        }
-                    )
-                );
                 return;
             }
 

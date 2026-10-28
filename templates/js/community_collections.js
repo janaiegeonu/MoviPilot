@@ -23,8 +23,10 @@
     let heroFrame = 0;
     let heroResizeObserver = null;
     let heroLastFrameTime = 0;
-    let profileOverlayPreviousZ = "";
-    let profileRestoreTimer = 0;
+    let profilePortalState = null;
+    let profilePortalObserver = null;
+    let activeConfirmResolver = null;
+    let confirmReturnFocus = null;
     let inboxPollTimer = 0;
     let inboxPollBusy = false;
     let lastPendingIDs = new Set();
@@ -97,22 +99,298 @@
         if (!toast) {
             toast = document.createElement("div");
             toast.id = "mpDashboardFeatureToast";
-            toast.className = "mp-dashboard-feature-toast";
+            toast.className = "mp-dashboard-feature-toast mp-collection-feedback-toast";
             toast.setAttribute("role", "status");
             toast.setAttribute("aria-live", "polite");
             document.body.appendChild(toast);
         }
+        ensureCollectionEnhancementStyles();
+        toast.classList.add("mp-collection-feedback-toast");
         toast.textContent = String(message || "");
         toast.classList.toggle("is-error", Boolean(isError));
+        toast.classList.toggle("is-visible", Boolean(message));
         toast.hidden = !message;
         window.clearTimeout(showGlobalToast.timer);
         if (message) {
             showGlobalToast.timer = window.setTimeout(() => {
                 toast.hidden = true;
-                toast.classList.remove("is-error");
+                toast.classList.remove("is-error", "is-visible");
             }, 4300);
         }
     }
+
+    function ensureCollectionEnhancementStyles() {
+        if (document.getElementById("mpCollectionEnhancementStyles")) return;
+        const style = document.createElement("style");
+        style.id = "mpCollectionEnhancementStyles";
+        style.textContent = `
+            /* Collection-only UI polish. These styles are injected once so the JS upgrade is self-contained. */
+            #mpDashboardFeatureToast[hidden],
+            #mpCollectionConfirmLayer[hidden],
+            #mpCommunityModalLayer[hidden] { display: none !important; }
+
+            #mpDashboardFeatureToast.mp-collection-feedback-toast {
+                position: fixed !important;
+                z-index: 2147483100 !important;
+                top: max(16px, calc(env(safe-area-inset-top, 0px) + 10px)) !important;
+                right: max(16px, calc(env(safe-area-inset-right, 0px) + 10px)) !important;
+                bottom: auto !important;
+                left: auto !important;
+                display: flex;
+                width: min(420px, calc(100vw - 28px));
+                align-items: center;
+                gap: 12px;
+                padding: 14px 17px 14px 14px;
+                overflow: hidden;
+                border: 1px solid rgba(111, 231, 220, .32);
+                border-radius: 16px;
+                color: #e8fbff;
+                background: linear-gradient(135deg, rgba(5, 24, 43, .97), rgba(5, 45, 53, .97));
+                box-shadow: 0 22px 70px rgba(0, 0, 0, .46), 0 0 0 1px rgba(80, 210, 213, .05), 0 0 28px rgba(49, 201, 200, .13);
+                font: 600 13px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                letter-spacing: .005em;
+                -webkit-backdrop-filter: blur(20px) saturate(125%);
+                backdrop-filter: blur(20px) saturate(125%);
+                animation: mpCollectionToastIn .28s cubic-bezier(.2,.8,.2,1) both;
+            }
+            #mpDashboardFeatureToast.mp-collection-feedback-toast::before {
+                content: "✓";
+                display: grid;
+                width: 29px;
+                height: 29px;
+                flex: 0 0 29px;
+                place-items: center;
+                border: 1px solid rgba(120, 245, 209, .44);
+                border-radius: 10px;
+                color: #042e37;
+                background: linear-gradient(140deg, #a5ffe8, #58d9da);
+                box-shadow: 0 0 22px rgba(79, 227, 202, .18);
+                font-size: 16px;
+                font-weight: 900;
+            }
+            #mpDashboardFeatureToast.mp-collection-feedback-toast.is-error {
+                border-color: rgba(255, 130, 151, .42);
+                background: linear-gradient(135deg, rgba(36, 15, 31, .98), rgba(42, 26, 43, .98));
+            }
+            #mpDashboardFeatureToast.mp-collection-feedback-toast.is-error::before {
+                content: "!";
+                border-color: rgba(255, 153, 166, .5);
+                color: #fff0f2;
+                background: linear-gradient(140deg, #ff9cae, #c96b91);
+            }
+
+            #mpCollectionConfirmLayer {
+                position: fixed;
+                z-index: 2147483005;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                padding: max(18px, env(safe-area-inset-top, 0px)) 18px max(18px, env(safe-area-inset-bottom, 0px));
+                background: rgba(0, 6, 16, .78);
+                -webkit-backdrop-filter: blur(17px) saturate(115%);
+                backdrop-filter: blur(17px) saturate(115%);
+                animation: mpCollectionConfirmFadeIn .18s ease both;
+            }
+            #mpCollectionConfirmDialog {
+                position: relative;
+                width: min(460px, 100%);
+                padding: 25px;
+                overflow: hidden;
+                border: 1px solid rgba(125, 220, 232, .28);
+                border-radius: 23px;
+                color: #e8f7ff;
+                background: radial-gradient(ellipse at 92% 0%, rgba(27, 133, 161, .19), transparent 42%), linear-gradient(145deg, rgba(5, 22, 41, .99), rgba(5, 32, 43, .99));
+                box-shadow: 0 35px 105px rgba(0, 0, 0, .58), 0 0 0 1px rgba(255, 255, 255, .025), 0 0 38px rgba(55, 180, 197, .08);
+                animation: mpCollectionConfirmRise .25s cubic-bezier(.17,.75,.23,1) both;
+                outline: none;
+            }
+            #mpCollectionConfirmDialog::before {
+                position: absolute;
+                top: 0;
+                right: 18%;
+                left: 18%;
+                height: 1px;
+                content: "";
+                background: linear-gradient(90deg, transparent, rgba(112, 239, 223, .72), rgba(104, 174, 255, .42), transparent);
+                pointer-events: none;
+            }
+            #mpCollectionConfirmMark {
+                display: grid;
+                width: 50px;
+                height: 50px;
+                margin-bottom: 20px;
+                place-items: center;
+                border: 1px solid rgba(255, 128, 151, .29);
+                border-radius: 16px;
+                color: #ffb2c0;
+                background: linear-gradient(145deg, rgba(163, 53, 86, .22), rgba(15, 93, 113, .17));
+                box-shadow: inset 0 1px rgba(255,255,255,.05), 0 0 24px rgba(245, 85, 125, .07);
+            }
+            #mpCollectionConfirmMark svg { width: 24px; height: 24px; }
+            #mpCollectionConfirmEyebrow {
+                display: block;
+                margin-bottom: 7px;
+                color: #72dedb;
+                font-size: 9px;
+                font-weight: 850;
+                letter-spacing: .19em;
+                text-transform: uppercase;
+            }
+            #mpCollectionConfirmTitle {
+                margin: 0;
+                color: #f0fbff;
+                font-size: clamp(22px, 4vw, 27px);
+                font-weight: 780;
+                letter-spacing: -.035em;
+                line-height: 1.2;
+            }
+            #mpCollectionConfirmMessage {
+                margin: 12px 0 23px;
+                color: #9cb7c6;
+                font-size: 12px;
+                line-height: 1.8;
+                overflow-wrap: anywhere;
+            }
+            #mpCollectionConfirmActions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 9px;
+                flex-wrap: wrap;
+            }
+            #mpCollectionConfirmActions button {
+                min-height: 42px;
+                padding: 0 16px;
+                border: 1px solid rgba(122, 193, 216, .2);
+                border-radius: 12px;
+                color: #c6dce6;
+                background: rgba(17, 43, 61, .72);
+                font: 750 11px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                cursor: pointer;
+                transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+            }
+            #mpCollectionConfirmActions button:hover { transform: translateY(-1px); border-color: rgba(104, 224, 220, .4); background: rgba(22, 67, 82, .8); }
+            #mpCollectionConfirmActions .mp-collection-confirm-danger {
+                border-color: rgba(255, 130, 151, .36);
+                color: #fff3f5;
+                background: linear-gradient(115deg, #963d5c, #77415f 58%, #21566b);
+                box-shadow: 0 7px 20px rgba(113, 37, 74, .2), inset 0 1px rgba(255,255,255,.08);
+            }
+            #mpCollectionConfirmActions .mp-collection-confirm-danger:hover { border-color: rgba(255, 157, 175, .62); background: linear-gradient(115deg, #b34c6b, #854565 58%, #276d7b); box-shadow: 0 9px 25px rgba(125, 41, 76, .28); }
+            #mpCollectionConfirmActions button:focus-visible { outline: 2px solid #77eadf; outline-offset: 3px; }
+
+            #mpCommunityModalLayer.mp-collection-profile-portal {
+                position: fixed !important;
+                z-index: 2147482002 !important;
+                inset: 0 !important;
+                isolation: isolate;
+            }
+            #mpCommunityModalLayer.mp-collection-profile-portal [hidden] { display: none !important; }
+            .mp-collection-folder-card-cover {
+                background:
+                    radial-gradient(ellipse at 80% 10%, var(--mp-folder-glow, rgba(81,207,232,.23)), transparent 52%),
+                    linear-gradient(120deg, var(--mp-folder-start, rgba(7,43,75,.9)), var(--mp-folder-end, rgba(7,60,63,.75))) !important;
+            }
+            .mp-collection-share-avatar--photo { padding: 0 !important; overflow: hidden; }
+            .mp-collection-share-avatar--photo img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+
+            @keyframes mpCollectionToastIn { from { opacity: 0; transform: translate3d(0,-9px,0) scale(.985); } to { opacity: 1; transform: translate3d(0,0,0) scale(1); } }
+            @keyframes mpCollectionConfirmFadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes mpCollectionConfirmRise { from { opacity: 0; transform: translateY(13px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @media (max-width: 520px) {
+                #mpCollectionConfirmDialog { padding: 21px 18px 18px; border-radius: 20px; }
+                #mpCollectionConfirmActions { flex-direction: column-reverse; }
+                #mpCollectionConfirmActions button { width: 100%; min-height: 44px; }
+            }
+            @media (prefers-reduced-motion: reduce) {
+                #mpDashboardFeatureToast.mp-collection-feedback-toast,
+                #mpCollectionConfirmLayer,
+                #mpCollectionConfirmDialog { animation: none !important; transition: none !important; }
+                #mpCollectionConfirmActions button { transition: none !important; }
+            }
+        `;
+        (document.head || document.documentElement).appendChild(style);
+    }
+
+    function ensureConfirmDialog() {
+        let layer = $("#mpCollectionConfirmLayer");
+        if (layer) return layer;
+        ensureCollectionEnhancementStyles();
+        layer = document.createElement("div");
+        layer.id = "mpCollectionConfirmLayer";
+        layer.hidden = true;
+        layer.innerHTML = `
+            <section id="mpCollectionConfirmDialog" role="alertdialog" aria-modal="true" aria-labelledby="mpCollectionConfirmTitle" aria-describedby="mpCollectionConfirmMessage" tabindex="-1">
+                <span id="mpCollectionConfirmMark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13M10 11v5M14 11v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span id="mpCollectionConfirmEyebrow">COLLECTION CONTROL</span>
+                <h2 id="mpCollectionConfirmTitle">Delete this collection?</h2>
+                <p id="mpCollectionConfirmMessage"></p>
+                <div id="mpCollectionConfirmActions">
+                    <button type="button" data-collection-confirm-choice="cancel">Keep collection</button>
+                    <button class="mp-collection-confirm-danger" type="button" data-collection-confirm-choice="confirm">Delete collection</button>
+                </div>
+            </section>`;
+        document.body.appendChild(layer);
+        return layer;
+    }
+
+    function finishConfirmDialog(confirmed) {
+        const layer = $("#mpCollectionConfirmLayer");
+        if (layer) layer.hidden = true;
+        document.body.classList.remove("mp-collection-confirm-open");
+        const resolver = activeConfirmResolver;
+        activeConfirmResolver = null;
+        const returnFocus = confirmReturnFocus;
+        confirmReturnFocus = null;
+        if (returnFocus && document.contains(returnFocus) && typeof returnFocus.focus === "function" && returnFocus.getClientRects().length > 0) {
+            returnFocus.focus({ preventScroll: true });
+        }
+        if (resolver) resolver(Boolean(confirmed));
+    }
+
+    function showConfirmDialog({ title, message, confirmText = "Delete collection", cancelText = "Keep collection", eyebrow = "COLLECTION CONTROL" } = {}) {
+        if (activeConfirmResolver) return Promise.resolve(false);
+        const layer = ensureConfirmDialog();
+        const dialog = $("#mpCollectionConfirmDialog", layer);
+        const titleEl = $("#mpCollectionConfirmTitle", layer);
+        const messageEl = $("#mpCollectionConfirmMessage", layer);
+        const eyebrowEl = $("#mpCollectionConfirmEyebrow", layer);
+        const cancel = $('[data-collection-confirm-choice="cancel"]', layer);
+        const confirm = $('[data-collection-confirm-choice="confirm"]', layer);
+        if (titleEl) titleEl.textContent = String(title || "Are you sure?");
+        if (messageEl) messageEl.textContent = String(message || "This action cannot be undone.");
+        if (eyebrowEl) eyebrowEl.textContent = String(eyebrow || "COLLECTION CONTROL");
+        if (cancel) cancel.textContent = String(cancelText || "Cancel");
+        if (confirm) confirm.textContent = String(confirmText || "Confirm");
+        confirmReturnFocus = document.activeElement;
+        layer.hidden = false;
+        document.body.classList.add("mp-collection-confirm-open");
+        return new Promise((resolve) => {
+            activeConfirmResolver = resolve;
+            window.requestAnimationFrame(() => {
+                if (layer.hidden) return;
+                (cancel || dialog)?.focus({ preventScroll: true });
+            });
+        });
+    }
+
+    const FOLDER_GRADIENTS = [
+        { start: "#164f9a", end: "#067c91", glow: "rgba(70,198,239,.27)" },
+        { start: "#075d72", end: "#149a82", glow: "rgba(70,231,203,.25)" },
+        { start: "#123d7c", end: "#1779a9", glow: "rgba(69,170,255,.27)" },
+        { start: "#0b675d", end: "#148b72", glow: "rgba(82,230,180,.25)" },
+        { start: "#0a4c74", end: "#1686a0", glow: "rgba(70,224,237,.25)" },
+        { start: "#34418a", end: "#0c829a", glow: "rgba(140,159,255,.27)" },
+        { start: "#13574c", end: "#127b8c", glow: "rgba(75,220,178,.25)" },
+        { start: "#154c68", end: "#267b69", glow: "rgba(87,218,201,.25)" },
+        { start: "#085a82", end: "#206baf", glow: "rgba(81,172,255,.27)" },
+        { start: "#215a81", end: "#0a8c91", glow: "rgba(98,238,215,.25)" },
+        { start: "#273d82", end: "#176b8e", glow: "rgba(98,151,255,.27)" },
+        { start: "#096b75", end: "#36785a", glow: "rgba(88,237,182,.25)" },
+        { start: "#0a4778", end: "#087e74", glow: "rgba(57,216,217,.25)" },
+        { start: "#18507b", end: "#3b6d9c", glow: "rgba(119,194,244,.25)" },
+        { start: "#1d4e65", end: "#117e87", glow: "rgba(68,229,226,.25)" },
+        { start: "#0b5a5b", end: "#087d97", glow: "rgba(55,212,224,.25)" }
+    ];
 
     function formatDate(value, includeTime = false) {
         if (!value) return "Timestamp unavailable";
@@ -151,8 +429,13 @@
         const name = String(user?.fullName || user?.username || "MoviPilot member");
         const initials = escapeHTML(getInitials(name, user?.username));
         const tone = avatarTone(user?.publicId || user?.username || name);
+        const photo = safeImageURL(user?.avatarUrl || user?.avatarURL || user?.displayPhotoUrl || user?.displayPhotoURL || user?.profileImageUrl || user?.profilePictureUrl || user?.photoUrl || user?.photoURL || user?.imageUrl || "");
         const disabled = publicID ? "" : " disabled";
-        return `<button class="mp-collection-share-avatar mp-collection-share-avatar--tone-${tone} ${extraClass}" type="button" data-collection-public-profile="${publicID}" aria-label="Open public profile of ${escapeHTML(name)}" title="Open ${escapeHTML(name)}'s public profile"${disabled}>${initials}</button>`;
+        const photoClass = photo ? " mp-collection-share-avatar--photo" : "";
+        const content = photo
+            ? `<img src="${escapeHTML(photo)}" alt="" aria-hidden="true" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+            : initials;
+        return `<button class="mp-collection-share-avatar mp-collection-share-avatar--tone-${tone}${photoClass} ${extraClass}" type="button" data-collection-public-profile="${publicID}" aria-label="Open public profile of ${escapeHTML(name)}" title="Open ${escapeHTML(name)}'s public profile" data-avatar-fallback="${initials}"${disabled}>${content}</button>`;
     }
 
     function iconFolder() {
@@ -211,10 +494,12 @@
             grid.innerHTML = emptyState("Your story library starts here.", "Create a folder above, then add movies and series to it from the Explore page. Everything you create there will appear here too.");
             return;
         }
-        grid.innerHTML = folders.map((folder) => {
+        grid.innerHTML = folders.map((folder, index) => {
             const id = Number(folder.id || 0);
             const count = Number(folder.itemCount || 0);
-            return `<article class="mp-collection-folder-card" data-folder-card="${id}">
+            const gradient = FOLDER_GRADIENTS[index % FOLDER_GRADIENTS.length];
+            const gradientStyle = `--mp-folder-start:${gradient.start};--mp-folder-end:${gradient.end};--mp-folder-glow:${gradient.glow};`;
+            return `<article class="mp-collection-folder-card" data-folder-card="${id}" data-folder-gradient="${index % FOLDER_GRADIENTS.length}" style="${gradientStyle}">
                 <div class="mp-collection-folder-card-cover"><span class="mp-collection-folder-glyph">${iconFolder()}</span><span class="mp-collection-folder-count">${count} ${count === 1 ? "title" : "titles"}</span></div>
                 <div class="mp-collection-folder-card-body"><strong class="mp-collection-folder-card-title" title="${escapeHTML(folder.name)}">${escapeHTML(folder.name)}</strong><p class="mp-collection-folder-card-meta">Created ${escapeHTML(formatDate(folder.createdAt))} · Saved to your library</p>
                     <div class="mp-collection-folder-card-actions"><button class="mp-collection-folder-open" type="button" data-collection-action="open-folder" data-folder-id="${id}">Open folder <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span class="mp-collection-folder-tools"><button class="mp-collection-icon-button" type="button" data-collection-action="share-folder" data-folder-id="${id}" aria-label="Share ${escapeHTML(folder.name)}" title="Share folder">${iconShare()}</button><button class="mp-collection-icon-button is-danger" type="button" data-collection-action="delete-folder" data-folder-id="${id}" aria-label="Delete ${escapeHTML(folder.name)}" title="Delete folder">${iconDelete()}</button></span></div>
@@ -406,7 +691,13 @@
     async function deleteFolder(folderID) {
         const folder = cachedOverview.folders.find((item) => Number(item.id) === Number(folderID));
         if (!folder) return;
-        const confirmed = window.confirm(`Delete “${folder.name}” and the titles saved inside it? Existing shares already sent to other members will remain available as snapshots.`);
+        const confirmed = await showConfirmDialog({
+            eyebrow: "REMOVE FROM YOUR LIBRARY",
+            title: `Delete “${folder.name}”?`,
+            message: "This removes the collection folder and its saved titles from your library. Collections you already sent to other members remain available to them as snapshots. This action cannot be undone.",
+            confirmText: "Delete collection",
+            cancelText: "Keep collection"
+        });
         if (!confirmed) return;
         try {
             await requestJSON(`${API}/folder?id=${encodeURIComponent(folderID)}`, { method: "DELETE" });
@@ -421,7 +712,14 @@
     async function deleteItem(itemID) {
         const card = $(`[data-collection-action="delete-item"][data-item-id="${CSS.escape(String(itemID))}"]`);
         const title = card?.closest(".mp-collection-title-card")?.querySelector(".mp-collection-title-name")?.textContent || "this title";
-        if (!window.confirm(`Remove “${title}” from this collection folder?`)) return;
+        const confirmed = await showConfirmDialog({
+            eyebrow: "EDIT YOUR COLLECTION",
+            title: `Remove “${title}”?`,
+            message: "This title will be removed from the current collection folder. Your other folders and the original movie or series page will not be affected.",
+            confirmText: "Remove title",
+            cancelText: "Keep title"
+        });
+        if (!confirmed) return;
         try {
             const query = `${API}/item?id=${encodeURIComponent(itemID)}`;
             await requestJSON(query, { method: "DELETE" });
@@ -465,7 +763,7 @@
                     const publicID = escapeHTML(friend.publicId || "");
                     const name = String(friend.fullName || friend.username || "MoviPilot member");
                     const id = `mpCollectionFriendChoice${index}`;
-                    return `<div class="mp-collection-share-friend-row"><input type="checkbox" id="${id}" name="collectionRecipients" value="${publicID}" aria-label="Share with ${escapeHTML(name)}"><button class="mp-collection-share-avatar mp-collection-share-avatar--tone-${avatarTone(friend.publicId || friend.username || name)}" type="button" data-collection-public-profile="${publicID}" aria-label="Open public profile of ${escapeHTML(name)}">${escapeHTML(getInitials(name, friend.username))}</button><label class="mp-collection-share-friend-name" for="${id}"><span>${escapeHTML(name)}</span><small>${escapeHTML(friend.username ? `@${friend.username}` : friend.publicId || "MoviPilot member")}</small></label></div>`;
+                    return `<div class="mp-collection-share-friend-row"><input type="checkbox" id="${id}" name="collectionRecipients" value="${publicID}" aria-label="Share with ${escapeHTML(name)}">${publicAvatarButton(friend)}<label class="mp-collection-share-friend-name" for="${id}"><span>${escapeHTML(name)}</span><small>${escapeHTML(friend.username ? `@${friend.username}` : friend.publicId || "MoviPilot member")}</small></label></div>`;
                 }).join("");
             }
         } catch (error) {
@@ -520,7 +818,8 @@
                 body: JSON.stringify({ collectionId: activeShareFolderID, recipientPublicIDs: recipients, message })
             });
             closeShareDialog();
-            showStatus(`Collection sent to ${Number(payload.sent || recipients.length)} ${Number(payload.sent || recipients.length) === 1 ? "friend" : "friends"}. Their pending inbox will show a new notification.`);
+            const sentCount = Number(payload.sent ?? recipients.length);
+            showGlobalToast(`Collection sent successfully to ${sentCount} ${sentCount === 1 ? "friend" : "friends"}. Their pending inbox is ready for them to review it.`);
             await loadOverview({ preserveTab: true });
         } catch (error) {
             showStatus(error.message || "Could not share this collection.", true);
@@ -792,35 +1091,76 @@
         }
     }
 
+    function restoreProfileLayerPortal(layer = null) {
+        const state = profilePortalState;
+        if (!state || (layer && state.layer !== layer)) return;
+        if (profilePortalObserver) {
+            profilePortalObserver.disconnect();
+            profilePortalObserver = null;
+        }
+        const portalLayer = state.layer;
+        portalLayer.classList.remove("mp-collection-profile-portal");
+        portalLayer.style.zIndex = state.zIndex;
+        portalLayer.style.position = state.position;
+        portalLayer.style.inset = state.inset;
+        if (state.parent && state.parent.isConnected) {
+            if (state.nextSibling && state.nextSibling.parentNode === state.parent) {
+                state.parent.insertBefore(portalLayer, state.nextSibling);
+            } else {
+                state.parent.appendChild(portalLayer);
+            }
+        } else {
+            // The Community fragment was navigated away from while the profile was open.
+            // Do not leave an orphaned modal with a duplicate ID in the persistent shell.
+            portalLayer.remove();
+        }
+        profilePortalState = null;
+    }
+
+    function portalProfileLayerAboveCollection(profileLayer) {
+        if (!profileLayer) return;
+        if (profilePortalState && profilePortalState.layer === profileLayer && profileLayer.parentNode === document.body) {
+            profileLayer.style.zIndex = "2147482002";
+            return;
+        }
+        if (profilePortalState) restoreProfileLayerPortal(profilePortalState.layer);
+        const parent = profileLayer.parentNode;
+        if (!parent) return;
+        profilePortalState = {
+            layer: profileLayer,
+            parent,
+            nextSibling: profileLayer.nextSibling,
+            zIndex: profileLayer.style.zIndex,
+            position: profileLayer.style.position,
+            inset: profileLayer.style.inset
+        };
+        profileLayer.classList.add("mp-collection-profile-portal");
+        profileLayer.style.position = "fixed";
+        profileLayer.style.inset = "0";
+        profileLayer.style.zIndex = "2147482002";
+        document.body.appendChild(profileLayer);
+        if (typeof MutationObserver === "function") {
+            profilePortalObserver = new MutationObserver(() => {
+                if (profileLayer.hidden || profileLayer.getAttribute("aria-hidden") === "true") {
+                    restoreProfileLayerPortal(profileLayer);
+                }
+            });
+            profilePortalObserver.observe(profileLayer, { attributes: true, attributeFilter: ["hidden", "aria-hidden"] });
+        }
+    }
+
     async function openPublicProfile(publicID) {
         if (!publicID) return;
         try {
             await ensureCommunityRuntime();
             const opener = window.openMoviPilotCommunityMemberProfile;
             if (typeof opener !== "function") throw new Error("The Community public profile is not available right now.");
-            const hubOverlay = getOverlay();
             const profileLayer = $("#mpCommunityModalLayer");
-            if (hubOpen && hubOverlay && profileLayer) {
-                profileOverlayPreviousZ = hubOverlay.style.zIndex;
-                hubOverlay.style.zIndex = "9700";
-                const shareLayer = getShareLayer();
-                if (shareLayer) shareLayer.style.zIndex = "9701";
-                const profileClose = $("#mpCommunityProfileClose");
-                if (profileClose && !profileClose.dataset.collectionProfileRestoreBound) {
-                    profileClose.addEventListener("click", () => {
-                        window.clearTimeout(profileRestoreTimer);
-                        profileRestoreTimer = window.setTimeout(() => {
-                            if (hubOverlay) hubOverlay.style.zIndex = profileOverlayPreviousZ;
-                            if (shareLayer) shareLayer.style.zIndex = "";
-                        }, 80);
-                    });
-                    profileClose.dataset.collectionProfileRestoreBound = "true";
-                }
-                window.clearTimeout(profileRestoreTimer);
-                profileRestoreTimer = window.setTimeout(() => {
-                    if (profileLayer.hidden && hubOverlay) hubOverlay.style.zIndex = profileOverlayPreviousZ;
-                    if (profileLayer.hidden && shareLayer) shareLayer.style.zIndex = "";
-                }, 120000);
+            if (hubOpen && profileLayer) {
+                // The Community page uses isolation:isolate, so its modal cannot
+                // out-rank the persistent collection overlay from inside that
+                // stacking context. Portal the profile layer to body temporarily.
+                portalProfileLayerAboveCollection(profileLayer);
             }
             opener(publicID);
         } catch (error) {
@@ -912,6 +1252,7 @@
     }
 
     function bindUIOnce() {
+        ensureCollectionEnhancementStyles();
         // All Collection modal markup is in the persistent dashboard shell.
         // Do not gate binding on #mpCommunityPage, which is a dynamic fragment.
         ensureIncomingPolling();
@@ -992,6 +1333,12 @@
     document.addEventListener("click", (event) => {
         const target = event.target instanceof Element ? event.target : null;
         if (!target) return;
+        const confirmChoice = target.closest("[data-collection-confirm-choice]");
+        if (confirmChoice && $("#mpCollectionConfirmLayer") && !$("#mpCollectionConfirmLayer").hidden) {
+            event.preventDefault();
+            finishConfirmDialog(confirmChoice.dataset.collectionConfirmChoice === "confirm");
+            return;
+        }
         const heroChatButton = target.closest("#mpCommunityHeroChatroom");
         if (heroChatButton) {
             event.preventDefault();
@@ -1045,8 +1392,21 @@
     });
 
     document.addEventListener("keydown", (event) => {
-        // Deliberately no Escape/backdrop-to-close. This matches MoviPilot's
-        // existing profile and Personal Library modals; the X is the close action.
+        const confirmLayer = $("#mpCollectionConfirmLayer");
+        if (confirmLayer && !confirmLayer.hidden) {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                finishConfirmDialog(false);
+                return;
+            }
+            if (event.key === "Tab") {
+                const confirmDialog = $("#mpCollectionConfirmDialog", confirmLayer);
+                if (confirmDialog) focusTrap(confirmDialog, event);
+                return;
+            }
+        }
+        // Deliberately no Escape/backdrop-to-close for the profile and share
+        // modals; only the themed confirmation dialog supports Escape to cancel.
         if (event.key === "Tab") {
             const shareLayer = getShareLayer();
             if (shareLayer && !shareLayer.hidden) {
@@ -1055,6 +1415,16 @@
             }
         }
     });
+
+    document.addEventListener("error", (event) => {
+        const image = event.target instanceof HTMLImageElement ? event.target : null;
+        if (!image || !image.matches(".mp-collection-share-avatar--photo img")) return;
+        const button = image.closest(".mp-collection-share-avatar");
+        if (!button) return;
+        image.remove();
+        button.classList.remove("mp-collection-share-avatar--photo");
+        button.textContent = button.dataset.avatarFallback || "MP";
+    }, true);
 
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", bindUIOnce, { once: true });

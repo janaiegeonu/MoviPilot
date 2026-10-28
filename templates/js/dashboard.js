@@ -571,7 +571,7 @@ function setSidebarCollapsed(
 
 const navigationButtons =
     document.querySelectorAll(
-        ".nav-link"
+        ".nav-link, .mobile-page-nav-link"
     );
 
 
@@ -741,11 +741,24 @@ function setActiveNavigation(
     navigationButtons.forEach(
         (button) => {
 
+            const isActive =
+                button.dataset.page === activePage;
+
             button.classList.toggle(
                 "active",
-                button.dataset.page ===
-                activePage
+                isActive
             );
+
+            if (isActive) {
+                button.setAttribute(
+                    "aria-current",
+                    "page"
+                );
+            } else {
+                button.removeAttribute(
+                    "aria-current"
+                );
+            }
 
         }
     );
@@ -1513,6 +1526,22 @@ navigationButtons.forEach(
                 setActiveNavigation(
                     page
                 );
+
+
+                /*
+                    A mobile page-navigation button lives inside
+                    the drawer. Close the drawer before loading its
+                    page so the content is immediately visible.
+                    Route loading still uses loadDashboardPage().
+                */
+                if (
+                    button.classList.contains("mobile-page-nav-link") &&
+                    window.matchMedia("(max-width: 720px)").matches
+                ) {
+                    sidebar?.classList.remove("mobile-open");
+                    document.body.classList.remove("sidebar-open");
+                    mobileMenuButton?.setAttribute("aria-expanded", "false");
+                }
 
 
                 console.log(

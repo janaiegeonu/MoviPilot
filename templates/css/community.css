@@ -363,6 +363,252 @@
 .mp-community-scroll-cue { display: inline-flex; align-items: center; gap: 9px; }
 .mp-community-scroll-cue > span { display: inline-block; width: 21px; height: 1px; background: linear-gradient(90deg, #74ead6, transparent); }
 
+
+/* =========================================================
+   COMMUNITY CHATROOM HERO CTA
+   Premium blue / cyan / sea-green glass treatment
+   ========================================================= */
+
+.mp-community-primary-chat {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+
+    min-height: 49px;
+    padding: 0 19px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(133, 213, 255, 0.38);
+    border-radius: 15px;
+
+    color: #eafaff;
+
+    background:
+        linear-gradient(
+            115deg,
+            rgba(21, 67, 118, 0.98) 0%,
+            rgba(21, 104, 139, 0.96) 52%,
+            rgba(18, 119, 106, 0.96) 100%
+        );
+
+    box-shadow:
+        0 8px 28px rgba(18, 110, 166, 0.2),
+        0 3px 12px rgba(0, 0, 0, 0.13),
+        inset 0 1px rgba(255, 255, 255, 0.17),
+        inset 0 -1px rgba(0, 0, 0, 0.12);
+
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1;
+
+    white-space: nowrap;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        transform 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease,
+        background 220ms ease;
+}
+
+
+/* Subtle liquid-glass highlight */
+
+.mp-community-primary-chat::before {
+    position: absolute;
+    top: -90%;
+    left: -45%;
+
+    width: 32%;
+    height: 280%;
+
+    transform: rotate(24deg);
+
+    background: rgba(220, 250, 255, 0.25);
+
+    content: "";
+
+    filter: blur(10px);
+
+    pointer-events: none;
+
+    transition:
+        left 620ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+
+/* Soft upper glass reflection */
+
+.mp-community-primary-chat::after {
+    position: absolute;
+    inset: 0;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            140deg,
+            rgba(255, 255, 255, 0.075),
+            transparent 48%,
+            rgba(115, 234, 214, 0.045)
+        );
+
+    content: "";
+
+    pointer-events: none;
+}
+
+
+/* Keep the button contents above the highlights */
+
+.mp-community-primary-chat > span,
+.mp-community-primary-chat > svg {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* Chat bubble icon */
+
+.mp-community-chat-cta-icon {
+    flex: 0 0 auto;
+
+    width: 19px;
+    height: 19px;
+
+    color: #a9f5ed;
+
+    transition:
+        transform 220ms ease,
+        color 220ms ease;
+}
+
+
+/* Arrow icon */
+
+.mp-community-chat-cta-arrow {
+    flex: 0 0 auto;
+
+    width: 16px;
+    height: 16px;
+
+    color: #d5faff;
+
+    transition: transform 220ms ease;
+}
+
+
+/* Hover */
+
+.mp-community-primary-chat:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(160, 239, 255, 0.62);
+
+    background:
+        linear-gradient(
+            115deg,
+            rgba(27, 84, 145, 0.99) 0%,
+            rgba(25, 127, 157, 0.98) 52%,
+            rgba(24, 145, 125, 0.98) 100%
+        );
+
+    box-shadow:
+        0 12px 34px rgba(24, 139, 185, 0.27),
+        0 5px 15px rgba(0, 0, 0, 0.15),
+        inset 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.mp-community-primary-chat:hover::before {
+    left: 125%;
+}
+
+.mp-community-primary-chat:hover .mp-community-chat-cta-icon {
+    color: #ffffff;
+    transform: scale(1.08);
+}
+
+.mp-community-primary-chat:hover .mp-community-chat-cta-arrow {
+    transform: translateX(3px);
+}
+
+
+/* Pressed state */
+
+.mp-community-primary-chat:active {
+    transform: translateY(0) scale(0.98);
+
+    box-shadow:
+        0 4px 14px rgba(24, 139, 185, 0.18),
+        inset 0 1px rgba(255, 255, 255, 0.12);
+}
+
+
+/* Accessible keyboard focus */
+
+.mp-community-primary-chat:focus-visible {
+    outline: 2px solid rgba(157, 238, 255, 0.9);
+    outline-offset: 4px;
+}
+
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-community-primary-chat,
+    .mp-community-primary-chat::before,
+    .mp-community-chat-cta-icon,
+    .mp-community-chat-cta-arrow {
+        transition: none;
+    }
+
+    .mp-community-primary-chat:hover,
+    .mp-community-primary-chat:active {
+        transform: none;
+    }
+}
+
+.mp-community-primary-cta:hover::before { left: 120%; }
+.mp-community-primary-cta svg { width: 17px; height: 17px; transition: transform 220ms ease; }
+.mp-community-primary-cta:hover svg { transform: translateX(3px); }
+
+.mp-community-hero-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: rgba(194, 221, 230, 0.82);
+    font-size: 11px;
+    letter-spacing: 0.015em;
+}
+
+.mp-community-note-dot { width: 5px; height: 5px; }
+
+.mp-community-hero-footer {
+    position: absolute;
+    z-index: 6;
+    right: clamp(22px, 3vw, 42px);
+    bottom: 24px;
+    left: clamp(23px, 5.5vw, 78px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    color: rgba(150, 194, 209, 0.7);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+}
+
+.mp-community-hero-footer i { padding: 0 7px; color: #6dddcf; font-style: normal; }
+.mp-community-scroll-cue { display: inline-flex; align-items: center; gap: 9px; }
+.mp-community-scroll-cue > span { display: inline-block; width: 21px; height: 1px; background: linear-gradient(90deg, #74ead6, transparent); }
 /* ------------------------ DISCOVERY ------------------------- */
 .mp-community-discovery {
     position: relative;
@@ -2816,45 +3062,176 @@ body.mp-community-chat-fullscreen-open {
 #mpCommunityProfileDescription[data-presence="checking"] { color: #8cc8d4; }
 
 /* ========================================================================
-   CHAT REACTION ROSTER — body-level popover, safe above fullscreen chat
+   COMMUNITY CHAT SELF IDENTITY + UNCLIPPED EMOJI BAR
+   Additive overrides only: existing chat styles and dashboard features remain.
    ======================================================================== */
+.mp-chat-online-member-name-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.mp-chat-online-member-name-line > strong {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mp-chat-online-me-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 18px;
+    padding: 2px 6px;
+    border: 1px solid rgba(112, 246, 207, .42);
+    border-radius: 999px;
+    background: linear-gradient(120deg, rgba(42, 176, 143, .22), rgba(46, 158, 198, .2));
+    color: #a7ffe2;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    line-height: 1;
+    box-shadow: 0 0 12px rgba(69, 235, 184, .09), inset 0 1px rgba(255,255,255,.05);
+}
+.mp-chat-online-member.is-self {
+    border-color: rgba(103, 238, 204, .3);
+    background: linear-gradient(105deg, rgba(16, 80, 88, .42), rgba(10, 39, 58, .72));
+}
+.mp-chat-online-member.is-self .mp-chat-online-avatar {
+    box-shadow: 0 0 0 2px rgba(104, 238, 201, .1), 0 0 16px rgba(85, 237, 199, .12);
+}
+
+/* The composer emoji bar is rendered into document.body by JavaScript. That
+   removes it from message-stack overflow/transform ancestors which previously
+   clipped the left/right edges. All nine reactions fit in a responsive grid. */
+.mp-chat-reaction-picker.mp-chat-floating-reaction-picker {
+    position: fixed;
+    z-index: 10060;
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    align-items: center;
+    gap: 3px;
+    width: min(360px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    min-width: 0;
+    padding: 7px;
+    overflow: visible;
+    box-sizing: border-box;
+    border: 1px solid rgba(126, 223, 236, .32);
+    border-radius: 16px;
+    background: linear-gradient(130deg, rgba(4, 19, 39, .99), rgba(4, 39, 49, .99));
+    box-shadow: 0 18px 48px rgba(0,0,0,.52), inset 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(18px) saturate(125%);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
+}
+.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    padding: 0;
+    flex: initial;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    font-size: clamp(15px, 4vw, 19px);
+    line-height: 1;
+    cursor: pointer;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button:hover,
+.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button[aria-pressed="true"] {
+    transform: translateY(-2px) scale(1.06);
+    border-color: rgba(137, 238, 228, .38);
+    background: rgba(62, 147, 156, .2);
+}
+
+/* Styling for the existing long-press/hover roster on a reaction chip. */
+.mp-chat-reaction-people-popover[hidden] { display: none !important; }
 .mp-chat-reaction-people-popover {
     position: fixed;
-    z-index: 2147483646;
+    z-index: 10059;
     display: flex;
     flex-direction: column;
     width: min(320px, calc(100vw - 20px));
-    max-height: min(440px, 68vh);
+    max-height: min(420px, calc(100dvh - 24px));
     min-width: 0;
     overflow: hidden;
-    border: 1px solid rgba(119, 225, 222, .3);
+    border: 1px solid rgba(126, 223, 236, .28);
     border-radius: 17px;
-    background: radial-gradient(ellipse at 0 0, rgba(36, 104, 161, .19), transparent 56%), linear-gradient(145deg, rgba(3, 16, 34, .99), rgba(4, 31, 41, .99));
-    color: #e8f8ff;
-    box-shadow: 0 22px 70px rgba(0, 0, 0, .62), inset 0 1px rgba(255, 255, 255, .055);
-    -webkit-backdrop-filter: blur(18px) saturate(125%);
+    background: linear-gradient(145deg, rgba(4, 19, 38, .99), rgba(5, 37, 47, .99));
+    color: #e9f8ff;
+    box-shadow: 0 20px 54px rgba(0,0,0,.52), inset 0 1px rgba(255,255,255,.05);
     backdrop-filter: blur(18px) saturate(125%);
+    -webkit-backdrop-filter: blur(18px) saturate(125%);
 }
-.mp-chat-reaction-people-popover[hidden] { display: none !important; }
-.mp-chat-reaction-people-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 13px; border-bottom: 1px solid rgba(121, 202, 221, .13); }
-.mp-chat-reaction-people-header strong { min-width: 0; color: #bffcf0; font-size: 11px; font-weight: 850; }
-.mp-chat-reaction-people-close { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border: 1px solid rgba(121, 210, 220, .2); border-radius: 9px; background: rgba(12, 44, 63, .8); color: #d8fbff; font-size: 20px; line-height: 1; cursor: pointer; }
-.mp-chat-reaction-people-body { min-height: 0; overflow: auto; padding: 10px; scrollbar-width: thin; scrollbar-color: rgba(111, 205, 218, .28) transparent; }
-.mp-chat-reaction-people-count { margin: 0 2px 9px; color: #8fb4c8; font-size: 10px; }
+.mp-chat-reaction-people-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(126, 223, 236, .13);
+}
+.mp-chat-reaction-people-header strong { color: #eafcff; font-size: 12px; font-weight: 800; }
+.mp-chat-reaction-people-close {
+    display: grid;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid rgba(142, 208, 221, .15);
+    border-radius: 9px;
+    background: rgba(255,255,255,.04);
+    color: #c5e5ee;
+    font-size: 19px;
+    cursor: pointer;
+}
+.mp-chat-reaction-people-body { min-height: 48px; overflow-y: auto; padding: 10px; }
+.mp-chat-reaction-people-count { margin: 0 0 8px; color: #8eb7c6; font-size: 10px; }
 .mp-chat-reaction-people-list { display: grid; gap: 5px; }
-.mp-chat-reaction-person { display: flex; align-items: center; gap: 9px; width: 100%; min-width: 0; padding: 8px; border: 1px solid transparent; border-radius: 11px; background: rgba(10, 36, 54, .65); color: #e8f8ff; text-align: left; cursor: pointer; }
-.mp-chat-reaction-person:hover, .mp-chat-reaction-person:focus-visible { border-color: rgba(113, 237, 221, .3); background: rgba(16, 75, 82, .52); outline: none; }
-.mp-chat-reaction-person-avatar { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; border: 1px solid hsla(var(--mp-avatar-hue), 75%, 80%, .35); border-radius: 11px; background: linear-gradient(135deg, hsl(var(--mp-avatar-hue), 58%, 29%), hsl(var(--mp-avatar-hue-two), 58%, 22%) 55%, hsl(var(--mp-avatar-hue-three), 60%, 18%)); color: #f2ffff; font-size: 10px; font-weight: 850; }
-.mp-chat-reaction-person-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; }
-.mp-chat-reaction-person-copy strong { overflow: hidden; color: #eefbff; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.mp-chat-reaction-person-copy small { overflow: hidden; color: #86b8c7; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.mp-chat-reaction-people-loading, .mp-chat-reaction-people-error, .mp-chat-reaction-people-note { display: block; margin: 0; padding: 8px 3px; color: #91aebe; font-size: 10px; line-height: 1.55; overflow-wrap: anywhere; }
-.mp-chat-reaction-people-error { color: #ffb1b8; }
-.mp-chat-reaction-people-note { border-top: 1px solid rgba(121, 202, 221, .12); }
+.mp-chat-reaction-person {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid rgba(121,194,221,.1);
+    border-radius: 12px;
+    background: rgba(7,29,47,.58);
+    color: #e8f7ff;
+    text-align: left;
+    cursor: pointer;
+}
+.mp-chat-reaction-person:hover { border-color: rgba(103,225,217,.36); background: rgba(16,68,78,.42); }
+.mp-chat-reaction-person-avatar {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 1px solid hsla(var(--mp-avatar-hue),75%,80%,.35);
+    border-radius: 11px;
+    background: linear-gradient(135deg,hsl(var(--mp-avatar-hue),58%,29%),hsl(var(--mp-avatar-hue-two),58%,22%) 55%,hsl(var(--mp-avatar-hue-three),60%,18%));
+    color: #f2ffff;
+    font-size: 9px;
+    font-weight: 850;
+}
+.mp-chat-reaction-person-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
+.mp-chat-reaction-person-copy strong { overflow: hidden; color: #eaf8ff; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.mp-chat-reaction-person-copy small { overflow: hidden; color: #86aebf; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.mp-chat-reaction-people-note,
+.mp-chat-reaction-people-loading,
+.mp-chat-reaction-people-error { display: block; margin: 8px 2px 2px; color: #86aebf; font-size: 10px; line-height: 1.45; }
+.mp-chat-reaction-people-error { color: #ffb8c0; }
 
-/* When the personal dashboard profile is opened from the full-screen chat,
-   keep it above the chat layer. JS raises this layer only on that action. */
-#profileOverlay { isolation: isolate; }
-@media (max-width: 420px) {
-    .mp-chat-reaction-people-popover { width: min(300px, calc(100vw - 16px)); max-height: 62vh; }
+@media (max-width: 390px) {
+    .mp-chat-reaction-picker.mp-chat-floating-reaction-picker { gap: 2px; padding: 6px; border-radius: 13px; }
+    .mp-chat-reaction-picker.mp-chat-floating-reaction-picker button { height: 31px; font-size: 15px; border-radius: 8px; }
+    .mp-chat-online-member-name-line { gap: 5px; }
+    .mp-chat-online-me-badge { min-height: 16px; padding: 2px 5px; font-size: 7px; }
 }

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"MoviPilot/funcs/storage"
 )
@@ -25,6 +24,10 @@ type chatPresenceRequest struct {
 // just-opened chat count its viewer immediately instead of waiting for the first
 // JavaScript interval. A successful heartbeat means this authenticated viewer must
 // be included in the returned online count and roster.
+// CommunityChatPresenceHandler supports heartbeat (POST), current/recent list (GET),
+// and explicit leave (DELETE). Presence rows expire from the online count after 90s.
+// The response adds self/selfOnline/selfPublicId fields without removing the existing
+// onlineCount, online, recent, or memberStatus fields consumed by the chat UI.
 func CommunityChatPresenceHandler(w http.ResponseWriter, r *http.Request) {
 	viewerID, ok := communityCurrentUserID(r)
 	if !ok {
@@ -32,78 +35,63 @@ func CommunityChatPresenceHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store, private")
-	w.Header().Set("Vary", "Cookie")
 
 	switch r.Method {
 	case http.MethodGet:
-		// Profile presence must not create a heartbeat for someone else. Only the
-		// authenticated viewer's roster request below is allowed to touch presence.
+		// The public profile modal requests only one member's presence.
 		if publicID := strings.TrimSpace(r.URL.Query().Get("publicId")); publicID != "" {
 			status, err := storage.GetCommunityChatMemberPresenceStatus(publicID)
 			if err != nil {
 				writeCommunityError(w, "Could not load this member's chat presence.", http.StatusNotFound)
 				return
 			}
-			writeCommunityJSON(w, http.StatusOK, map[string]any{
-				"success": true, "memberStatus": status,
-				"serverTime": time.Now().UTC().Format(time.RFC3339Nano),
-			})
+			writeCommunityJSON(w, http.StatusOK, map[string]any{"success": true, "memberStatus": status})
 			return
 		}
 
 		clientID := strings.TrimSpace(r.URL.Query().Get("clientId"))
 		if clientID == "" {
-			// Compatibility with a stale JS bundle that does not provide clientId.
-			// This fallback is a valid 32-character lower-case hexadecimal value.
+			// Compatibility for older cached bundles. New clients always provide a
+			// random per-tab client ID; this fallback is a valid, account-scoped ID.
 			clientID = fmt.Sprintf("%032x", uint64(viewerID))
 		}
+		// Make the authenticated viewer active before calculating the online count.
+		// This prevents the first/single member from seeing a false zero.
 		if err := storage.TouchCommunityChatPresence(viewerID, clientID); err != nil {
 			fmt.Printf("[community chat] roster self-presence touch failed user=%d client=%q: %v\n", viewerID, clientID, err)
 			writeCommunityError(w, "Could not register your online status. Refresh the chat and try again.", http.StatusInternalServerError)
 			return
 		}
-
+		self, err := storage.GetCommunityChatPresenceForUserID(viewerID)
+		if err != nil {
+			fmt.Printf("[community chat] load self-presence failed user=%d: %v\n", viewerID, err)
+			writeCommunityError(w, "Could not load your online status.", http.StatusInternalServerError)
+			return
+		}
 		onlineCount, err := storage.CountOnlineCommunityChatMembers()
 		if err != nil {
 			fmt.Printf("[community chat] online count failed viewer=%d: %v\n", viewerID, err)
 			writeCommunityError(w, "Could not count online members.", http.StatusInternalServerError)
 			return
 		}
-		// This request successfully wrote a fresh heartbeat for the authenticated
-		// viewer. Therefore a count below one indicates a database/query race, not
-		// that nobody is online. Keep the guaranteed active viewer in the count.
-		if onlineCount < 1 {
-			onlineCount = 1
-		}
-
 		members, err := storage.ListCommunityChatPresence(100)
 		if err != nil {
-			fmt.Printf("[community chat] roster query failed viewer=%d: %v\n", viewerID, err)
-			writeCommunityError(w, "Could not load chat presence. Ensure storage.EnsureCommunityChatSchema() runs before the chat routes are served.", http.StatusInternalServerError)
+			fmt.Printf("[community chat] list presence failed viewer=%d: %v\n", viewerID, err)
+			writeCommunityError(w, "Could not load chat presence. Ensure EnsureCommunityChatSchema() runs before the chat routes are served.", http.StatusInternalServerError)
 			return
 		}
-		self, err := storage.GetCommunityChatPresenceForUserID(viewerID)
-		if err != nil {
-			fmt.Printf("[community chat] own roster identity failed viewer=%d: %v\n", viewerID, err)
-			writeCommunityError(w, "Could not load your online profile.", http.StatusInternalServerError)
-			return
-		}
-		// The heartbeat above makes this viewer online for this response. Also add
-		// them defensively if a concurrent roster update/pagination omitted the row.
-		self.IsOnline = true
-		foundSelf := false
-		for i := range members {
-			if strings.EqualFold(members[i].PublicID, self.PublicID) {
-				members[i].IsOnline = true
-				if members[i].LastSeenAt == "" {
-					members[i].LastSeenAt = self.LastSeenAt
-				}
-				foundSelf = true
+
+		// The full roster normally already contains self. Include the authenticated
+		// user explicitly if a bounded roster or concurrent update omitted them.
+		selfListed := false
+		for _, member := range members {
+			if strings.EqualFold(member.PublicID, self.PublicID) && self.PublicID != "" {
+				selfListed = true
 				break
 			}
 		}
-		if !foundSelf {
-			members = append([]storage.CommunityChatPresence{self}, members...)
+		if self.IsOnline && !selfListed {
+			members = append(members, self)
 		}
 
 		online := make([]storage.CommunityChatPresence, 0, len(members))
@@ -114,15 +102,19 @@ func CommunityChatPresenceHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			recent = append(recent, member)
 		}
+		// If the same successful touch is confirmed online, the count cannot
+		// logically be zero. Preserve the server count otherwise.
+		if self.IsOnline && onlineCount < 1 {
+			onlineCount = 1
+		}
 		writeCommunityJSON(w, http.StatusOK, map[string]any{
-			"success":          true,
-			"onlineCount":      onlineCount,
-			"selfOnline":       true,
-			"clientId":         clientID,
-			"onlineTTLSeconds": 90,
-			"serverTime":       time.Now().UTC().Format(time.RFC3339Nano),
-			"online":           online,
-			"recent":           recent,
+			"success":      true,
+			"onlineCount":  onlineCount,
+			"online":       online,
+			"recent":       recent,
+			"self":         self,
+			"selfOnline":   self.IsOnline,
+			"selfPublicId": self.PublicID,
 		})
 
 	case http.MethodPost:
@@ -141,22 +133,25 @@ func CommunityChatPresenceHandler(w http.ResponseWriter, r *http.Request) {
 			writeCommunityError(w, "Could not update chat presence.", http.StatusBadRequest)
 			return
 		}
+		self, err := storage.GetCommunityChatPresenceForUserID(viewerID)
+		if err != nil {
+			writeCommunityError(w, "Could not verify your online status.", http.StatusInternalServerError)
+			return
+		}
 		onlineCount, err := storage.CountOnlineCommunityChatMembers()
 		if err != nil {
-			fmt.Printf("[community chat] post-heartbeat count failed viewer=%d: %v\n", viewerID, err)
 			writeCommunityError(w, "Could not count online members.", http.StatusInternalServerError)
 			return
 		}
-		if onlineCount < 1 {
+		if self.IsOnline && onlineCount < 1 {
 			onlineCount = 1
 		}
 		writeCommunityJSON(w, http.StatusOK, map[string]any{
-			"success":          true,
-			"onlineCount":      onlineCount,
-			"selfOnline":       true,
-			"clientId":         input.ClientID,
-			"onlineTTLSeconds": 90,
-			"serverTime":       time.Now().UTC().Format(time.RFC3339Nano),
+			"success":      true,
+			"onlineCount":  onlineCount,
+			"self":         self,
+			"selfOnline":   self.IsOnline,
+			"selfPublicId": self.PublicID,
 		})
 
 	case http.MethodDelete:

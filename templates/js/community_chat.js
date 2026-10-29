@@ -407,6 +407,9 @@
         let mentionCandidates = [];
         const seenMentionIDs = new Set();
         let chatClientID = "";
+        // Filled by the authenticated presence response. Never infer the current
+        // member from a display name; public IDs are the stable identity key.
+        let currentUserPublicID = "";
 
         const ensureChatClientID = () => {
             if (chatClientID) return chatClientID;
@@ -483,32 +486,74 @@
             return overlay;
         };
 
+        const openOwnPrivateProfile = () => {
+            const profileButton = document.getElementById("profileButton");
+            const profileOverlay = document.getElementById("profileOverlay");
+            if (!profileButton || !profileOverlay) {
+                announce("Your personal profile is unavailable on this page.", true);
+                return;
+            }
+            // The dashboard's private profile is a separate modal from the public
+            // Community member card. Open it only if it is currently closed.
+            if (profileOverlay.hidden) {
+                profileButton.click();
+            } else {
+                const focusTarget = profileOverlay.querySelector(
+                    '[autofocus], [role="dialog"], button:not([disabled]), [tabindex="0"]'
+                );
+                focusTarget?.focus?.({ preventScroll: true });
+            }
+        };
+
+        const openMemberProfileByPublicID = (publicID, options = {}) => {
+            const cleanID = safeString(publicID);
+            if (!cleanID) {
+                announce("This member's profile is unavailable.", true);
+                return;
+            }
+            if (currentUserPublicID && cleanID.toLowerCase() === currentUserPublicID.toLowerCase()) {
+                openOwnPrivateProfile();
+                return;
+            }
+            if (typeof window.openMoviPilotCommunityMemberProfile === "function") {
+                window.openMoviPilotCommunityMemberProfile(cleanID, options);
+            } else {
+                announce("The Community profile service is not ready yet.", true);
+            }
+        };
+
         const renderPresenceMember = (member, isOnline) => {
-            const row = makeElement("button", `mp-chat-online-member${isOnline ? " is-online" : " is-recent"}`);
+            const publicID = safeString(member.publicId);
+            const isSelf = Boolean(member.isSelf) || Boolean(currentUserPublicID && publicID &&
+                publicID.toLowerCase() === currentUserPublicID.toLowerCase());
+            const row = makeElement("button", `mp-chat-online-member${isOnline ? " is-online" : " is-recent"}${isSelf ? " is-self" : ""}`);
             row.type = "button";
             const avatar = makeElement("span", "mp-chat-online-avatar", initials(member.fullName));
-            const tone = avatarColorsFor(member.publicId || member.username || member.fullName);
+            const tone = avatarColorsFor(publicID || member.username || member.fullName);
             avatar.style.setProperty("--mp-avatar-hue", String(tone.primary));
             avatar.style.setProperty("--mp-avatar-hue-two", String(tone.secondary));
             avatar.style.setProperty("--mp-avatar-hue-three", String(tone.tertiary));
             const copy = makeElement("span", "mp-chat-online-member-copy");
-            copy.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+            const nameLine = makeElement("span", "mp-chat-online-member-name-line");
+            nameLine.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+            if (isSelf) nameLine.append(makeElement("span", "mp-chat-online-me-badge", "ME"));
+            copy.append(nameLine);
             if (member.username) copy.append(makeElement("small", "", `@${member.username}`));
             const status = makeElement("span", "mp-chat-online-member-status");
-            status.append(makeElement("i", "", ""), makeElement("span", "", isOnline ? "Online now" : `Last seen ${normalizeSeenTime(member.lastSeenAt)}`));
+            status.append(makeElement("i", "", ""), makeElement("span", "", isOnline ? (isSelf ? "You · Online now" : "Online now") : `Last seen ${normalizeSeenTime(member.lastSeenAt)}`));
             if (!isOnline) status.append(makeElement("small", "", formatSeenTimestamp(member.lastSeenAt)));
             row.append(avatar, copy, status);
+            row.setAttribute("aria-label", isSelf
+                ? `You, ${isOnline ? "online now" : "recently online"}. Open your personal profile.`
+                : `${member.fullName || member.username || "Member"}, ${isOnline ? "online now" : "recently online"}. Open public profile.`);
             row.addEventListener("click", () => {
-                const publicID = safeString(member.publicId);
-                if (!publicID) { announce("This member's public profile is unavailable.", true); return; }
                 onlineModal.hidden = true;
                 onlineButton?.setAttribute("aria-expanded", "false");
-                onlineButton?.focus({ preventScroll: true });
-                if (typeof window.openMoviPilotCommunityMemberProfile === "function") {
-                    window.openMoviPilotCommunityMemberProfile(publicID, { source: "chat-presence", isOnline });
-                } else {
-                    announce("The Community public-profile service is not ready yet.", true);
+                if (isSelf) {
+                    openOwnPrivateProfile();
+                    return;
                 }
+                openMemberProfileByPublicID(publicID, { source: "chat-presence", isOnline });
             }, { signal });
             return row;
         };
@@ -536,13 +581,20 @@
                 url.searchParams.set("clientId", ensureChatClientID());
                 const payload = await requestJSON(url.toString(), { signal });
                 if (signal.aborted) return;
+                const selfRecord = payload?.self && typeof payload.self === "object" ? payload.self : null;
+                const selfID = safeString(payload?.selfPublicId || selfRecord?.publicId);
+                if (selfID) currentUserPublicID = selfID;
                 const reportedCount = Number(payload?.onlineCount);
-                if (payload?.selfOnline !== true || payload?.onlineCount == null || !Number.isSafeInteger(reportedCount) || reportedCount < 1) {
-                    throw new Error("The presence endpoint did not confirm this signed-in user as online. Update the Community Chat presence handler and verify its route registration.");
+                if (payload?.onlineCount == null || !Number.isSafeInteger(reportedCount) || reportedCount < 0) {
+                    throw new Error("The presence endpoint did not return a valid online count. Check the Community Chat presence route.");
                 }
-                // A successful self heartbeat proves there is at least one active
-                // chat participant; the server's count includes any other active users.
-                const onlineCount = Math.max(1, reportedCount);
+                if (payload?.selfOnline === false) {
+                    throw new Error("The server did not confirm your account as online. Check the presence heartbeat and database.");
+                }
+                // When the backend confirms the current authenticated user is active,
+                // a legitimate count cannot be zero, even if a concurrent roster read
+                // briefly missed that user's row.
+                const onlineCount = Math.max(reportedCount, payload?.selfOnline === true ? 1 : 0);
                 if (onlineCountLabel) onlineCountLabel.textContent = String(onlineCount);
                 if (onlineButton) {
                     onlineButton.removeAttribute("data-presence-error");
@@ -553,14 +605,34 @@
                     const overlay = ensureOnlineModal();
                     const onlineList = overlay.querySelector('[data-list="online"]');
                     const recentList = overlay.querySelector('[data-list="recent"]');
-                    const onlineMembers = Array.isArray(payload.online) ? payload.online : [];
-                    const recentMembers = Array.isArray(payload.recent) ? payload.recent : [];
+                    let onlineMembers = Array.isArray(payload.online) ? payload.online.map((member) => ({ ...member })) : [];
+                    let recentMembers = Array.isArray(payload.recent) ? payload.recent.map((member) => ({ ...member })) : [];
+                    const selfMember = selfRecord || onlineMembers.find((member) => currentUserPublicID &&
+                        String(member.publicId).toLowerCase() === currentUserPublicID.toLowerCase()) || null;
+                    if (currentUserPublicID) {
+                        onlineMembers = onlineMembers.map((member) => ({
+                            ...member,
+                            isSelf: Boolean(member.isSelf) || String(member.publicId).toLowerCase() === currentUserPublicID.toLowerCase()
+                        }));
+                        recentMembers = recentMembers.map((member) => ({
+                            ...member,
+                            isSelf: Boolean(member.isSelf) || String(member.publicId).toLowerCase() === currentUserPublicID.toLowerCase()
+                        }));
+                    }
+                    // If the server's paginated roster omitted the authenticated user,
+                    // append the server-confirmed self record without duplicating them.
+                    if (payload?.selfOnline === true && selfMember?.publicId) {
+                        const alreadyListed = onlineMembers.some((member) => String(member.publicId).toLowerCase() === String(selfMember.publicId).toLowerCase());
+                        if (!alreadyListed) onlineMembers.unshift({ ...selfMember, isOnline: true, isSelf: true });
+                        else onlineMembers = onlineMembers.map((member) => String(member.publicId).toLowerCase() === String(selfMember.publicId).toLowerCase()
+                            ? { ...member, isOnline: true, isSelf: true } : member);
+                    }
                     onlineList.replaceChildren();
                     recentList.replaceChildren();
                     if (!onlineMembers.length) onlineList.append(makeElement("p", "mp-chat-online-empty", "No members are active right now. Check your connection and try again."));
                     onlineMembers.forEach((member) => onlineList.append(renderPresenceMember(member, true)));
-                    const onlineIDs = new Set(onlineMembers.map((member) => String(member.publicId)));
-                    const recentOnly = recentMembers.filter((member) => !onlineIDs.has(String(member.publicId)));
+                    const onlineIDs = new Set(onlineMembers.map((member) => String(member.publicId).toLowerCase()));
+                    const recentOnly = recentMembers.filter((member) => !onlineIDs.has(String(member.publicId).toLowerCase()));
                     if (!recentOnly.length) recentList.append(makeElement("p", "mp-chat-online-empty", "No other recent visits yet."));
                     recentOnly.forEach((member) => recentList.append(renderPresenceMember(member, false)));
                 }
@@ -615,7 +687,7 @@
                 activeMentionAlertID = 0;
                 await jumpToMessageAsync(Number(mention.messageId));
                 try {
-                    await requestJSON("/api/community/chat/mentions", {
+                    await requestJSON("/api/community/chat/mentions/read", {
                         method: "POST", signal,
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ id: Number(mention.id) })
@@ -775,11 +847,13 @@
                     body: JSON.stringify({ clientId })
                 }).then((payload) => {
                     if (signal.aborted) return;
+                    const selfID = safeString(payload?.selfPublicId || payload?.self?.publicId);
+                    if (selfID) currentUserPublicID = selfID;
                     const rawCount = Number(payload?.onlineCount);
-                    if (payload?.selfOnline !== true || payload?.onlineCount == null || !Number.isSafeInteger(rawCount) || rawCount < 1) {
-                        throw new Error("The presence heartbeat did not confirm this user is online. Check that the updated handler is registered.");
+                    if (payload?.onlineCount == null || !Number.isSafeInteger(rawCount) || rawCount < 0 || payload?.selfOnline === false) {
+                        throw new Error("The presence heartbeat response did not confirm an active user and a valid onlineCount.");
                     }
-                    const count = Math.max(1, rawCount);
+                    const count = Math.max(rawCount, payload?.selfOnline === true ? 1 : 0);
                     if (onlineCountLabel) onlineCountLabel.textContent = String(count);
                     if (onlineButton) {
                         onlineButton.removeAttribute("data-presence-error");
@@ -794,14 +868,10 @@
                     if (error.status !== 401) console.warn("[MOVIPILOT] Presence POST heartbeat failed; attempting roster self-refresh.", error);
                     // GET refreshes this user's presence before counting, so a POST
                     // failure should not leave this user's count stuck at zero.
-                    void loadPresence(false, { touchFirst: true });
+                    void loadPresence(false);
                 });
             };
             heartbeat();
-            // The authenticated roster GET self-registers this tab on the server
-            // as well. This closes the cold-start race and verifies that the route
-            // serving the chat JS is the same implementation as the current backend.
-            void loadPresence(false, { touchFirst: true });
             state.presenceTimer = window.setInterval(heartbeat, 15000);
             void pollMentions(true);
             state.mentionTimer = window.setInterval(() => {
@@ -1064,7 +1134,7 @@
         };
 
         const closeAllMenus = () => {
-            document.querySelectorAll(".mp-chat-context-menu[data-chat-context-menu='true']").forEach((node) => node.remove());
+            document.querySelectorAll(".mp-chat-context-menu[data-chat-context-menu='true'], .mp-chat-floating-reaction-picker").forEach((node) => node.remove());
             root.querySelectorAll(".mp-chat-reaction-picker").forEach((node) => node.remove());
             root.querySelectorAll(".mp-chat-message-row.is-tools-open").forEach((node) => node.classList.remove("is-tools-open"));
         };
@@ -1082,6 +1152,38 @@
                 picker.append(button);
             });
             return picker;
+        };
+
+        // Portal the complete emoji bar to <body>, keeping it outside the message
+        // row's overflow/transform ancestors. A 9-column grid lets all reactions fit
+        // on small screens without a clipped edge or an inner horizontal scrollbar.
+        const openFloatingReactionPicker = (anchor, message) => {
+            const existing = document.querySelector(".mp-chat-floating-reaction-picker");
+            if (existing && existing.dataset.messageId === String(Number(message.id))) {
+                existing.remove();
+                return;
+            }
+            closeAllMenus();
+            closeReactionPeek();
+            const picker = makeReactionButtons(message, "mp-chat-reaction-picker mp-chat-floating-reaction-picker");
+            picker.dataset.messageId = String(Number(message.id));
+            picker.style.position = "fixed";
+            picker.style.left = "0px";
+            picker.style.top = "0px";
+            picker.style.visibility = "hidden";
+            picker.style.zIndex = "10060";
+            document.body.append(picker);
+            const anchorRect = anchor.getBoundingClientRect();
+            const pickerRect = picker.getBoundingClientRect();
+            const gutter = 8;
+            const maxLeft = Math.max(gutter, window.innerWidth - pickerRect.width - gutter);
+            const left = Math.max(gutter, Math.min(anchorRect.left + anchorRect.width / 2 - pickerRect.width / 2, maxLeft));
+            let top = anchorRect.top - pickerRect.height - 8;
+            if (top < gutter) top = anchorRect.bottom + 8;
+            top = Math.max(gutter, Math.min(top, window.innerHeight - pickerRect.height - gutter));
+            picker.style.left = `${Math.round(left)}px`;
+            picker.style.top = `${Math.round(top)}px`;
+            picker.style.visibility = "visible";
         };
 
         const beginEdit = (message) => {
@@ -1536,9 +1638,8 @@
                         person.append(avatar, copy);
                         person.addEventListener("click", () => {
                             closeReactionPeek();
-                            if (member.publicId && typeof window.openMoviPilotCommunityMemberProfile === "function") {
-                                window.openMoviPilotCommunityMemberProfile(member.publicId, { source: "chat-reaction" });
-                            } else announce("This member's public profile is unavailable.", true);
+                            if (member.publicId) openMemberProfileByPublicID(member.publicId, { source: "chat-reaction" });
+                            else announce("This member's profile is unavailable.", true);
                         }, { signal });
                         list.append(person);
                     });
@@ -1809,13 +1910,9 @@
                 const tools = makeElement("div", "mp-chat-hover-tools");
                 const reactButton = makeElement("button", "mp-chat-tool-button"); reactButton.type = "button"; reactButton.dataset.chatTooltip = "React to message"; reactButton.setAttribute("aria-label", "React to message"); reactButton.append(icon("reaction"));
                 reactButton.addEventListener("click", (event) => {
+                    event.preventDefault();
                     event.stopPropagation();
-                    const previous = tools.querySelector(".mp-chat-reaction-picker");
-                    if (previous) { previous.remove(); return; }
-                    // Only one message popup should be open at a time.
-                    closeAllMenus();
-                    const picker = makeReactionButtons(message, "mp-chat-reaction-picker");
-                    tools.append(picker);
+                    openFloatingReactionPicker(reactButton, message);
                 }, { signal });
                 const replyButton = makeElement("button", "mp-chat-tool-button"); replyButton.type = "button"; replyButton.dataset.chatTooltip = "Reply to message"; replyButton.setAttribute("aria-label", "Reply to message"); replyButton.append(icon("reply"));
                 replyButton.addEventListener("click", () => openReply(message), { signal });
@@ -1850,41 +1947,13 @@
 
         const describeKind = (kind) => ({ image: "Photo", video: "Video", voice: "Voice note", movie: "Movie card", deleted: "This message was deleted" }[kind] || "Message");
 
-        const openOwnPrivateProfile = () => {
-            const profileButton = document.getElementById("profileButton");
-            const profileOverlay = document.getElementById("profileOverlay");
-            const profileDialog = document.getElementById("profileDialog");
-            if (!profileButton || !profileOverlay) {
-                announce("Your personal profile modal is unavailable. Check that the dashboard profile modal is present.", true);
-                return;
-            }
-            // The full-page chat sits above ordinary dashboard layers. Raise the
-            // canonical private profile overlay so it can actually be seen above chat.
-            profileOverlay.style.setProperty("z-index", "2147483602", "important");
-            const isProfileOpen = () => !profileOverlay.hidden
-                && getComputedStyle(profileOverlay).display !== "none"
-                && getComputedStyle(profileOverlay).visibility !== "hidden";
-            if (!isProfileOpen()) profileButton.click();
-            window.requestAnimationFrame(() => {
-                if (!isProfileOpen()) {
-                    announce("Your personal profile did not open. Check that profile_modal.js is loaded and the profileButton handler is attached.", true);
-                    return;
-                }
-                profileDialog?.focus({ preventScroll: true });
-            });
-        };
-
         const openSenderProfile = (message) => {
             if (message?.isMine) {
                 openOwnPrivateProfile();
                 return;
             }
             const publicId = safeString(message?.sender?.publicId);
-            if (publicId && typeof window.openMoviPilotCommunityMemberProfile === "function") {
-                window.openMoviPilotCommunityMemberProfile(publicId);
-            } else if (publicId) {
-                announce("Return to the Community page to open this member profile.", true);
-            }
+            if (publicId) openMemberProfileByPublicID(publicId, { source: "chat-message" });
         };
 
         const openMentionProfile = async (username) => {
@@ -1897,11 +1966,7 @@
                 if (signal.aborted) return;
                 const publicID = safeString(payload.member?.publicId);
                 if (!publicID) throw new Error("That member's public profile is unavailable.");
-                if (typeof window.openMoviPilotCommunityMemberProfile === "function") {
-                    window.openMoviPilotCommunityMemberProfile(publicID, { source: "chat-mention" });
-                } else {
-                    announce("The Community public-profile service is not ready yet.", true);
-                }
+                openMemberProfileByPublicID(publicID, { source: "chat-mention" });
             } catch (error) {
                 if (!signal.aborted) announce(error.message || "Could not open that member's profile.", true);
             }
@@ -2351,7 +2416,7 @@
             if (state.recorder && state.recorder.state !== "inactive") { state.recordStopRequested = false; try { state.recorder.stop(); } catch (_) {} }
             if (state.recordStream) state.recordStream.getTracks().forEach((track) => track.stop());
             if (state.audioContext && state.audioContext.state !== "closed") void state.audioContext.close().catch(() => {});
-            document.querySelectorAll(".mp-chat-context-menu[data-chat-context-menu='true']").forEach((node) => node.remove());
+            document.querySelectorAll(".mp-chat-context-menu[data-chat-context-menu='true'], .mp-chat-floating-reaction-picker").forEach((node) => node.remove());
             root.classList.remove("is-fullpage");
             document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
             document.body.classList.remove("mp-community-chat-fullscreen-open");

@@ -493,9 +493,7 @@
         const mediaID = Number(button.dataset.mediaId);
         if (!API[mode] || !["movie", "tv"].includes(mediaType) || !Number.isInteger(mediaID) || mediaID <= 0) return;
 
-        const item = currentItems.find((entry) => entry.mediaType === mediaType && Number(entry.mediaId) === mediaID);
-        if (!item) return;
-        if (mode === "watchlist" && !window.confirm(`Remove “${safeText(item.title, "this title")}” from your Watchlist?`)) return;
+
 
         button.disabled = true;
         try {

@@ -88,6 +88,14 @@ func main() {
 	http.HandleFunc("/api/explore/collection-hub/respond", handlers.ExploreCommunityCollectionRespondAPI)
 	http.HandleFunc("/api/explore/collection-hub/shared-items", handlers.ExploreCommunityCollectionSharedItemsAPI)
 
+	//chatroom features API route
+
+	http.HandleFunc("/api/community/chat/presence", handlers.CommunityChatPresenceHandler)
+	http.HandleFunc("/api/community/chat/members", handlers.CommunityChatMentionMembersHandler)
+	http.HandleFunc("/api/community/chat/mentions", handlers.CommunityChatMentionsHandler)
+	http.HandleFunc("/api/community/chat/mentions/read", handlers.CommunityChatMentionReadHandler)
+	http.HandleFunc("/api/community/chat/reactions", handlers.CommunityChatReactionUsersHandler)
+
 	storage.InitDatabase()
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
 	http.ListenAndServe(":8080", nil)

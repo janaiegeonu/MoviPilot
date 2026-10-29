@@ -53,6 +53,22 @@ func InitDatabase() {
 	if err := EnsureCommunitySchema(); err != nil {
 		log.Fatal(RGBR("Failed to prepare Community schema: "+err.Error(), err))
 	}
+
+	// Initialize Community Chat messages, reactions, online presence,
+	// and persistent mention notifications before the server accepts requests.
+	if err := EnsureCommunityChatSchema(); err != nil {
+		log.Fatal(
+			RGBR(
+				"Failed to prepare Community Chat schema: "+err.Error(),
+				err,
+			),
+		)
+	}
+
+	log.Println(RGBG(
+		"Community Chat database ready: messages, reactions, presence, mentions",
+	))
+
 	if err := EnsureExplorePersonalLibrarySchema(); err != nil {
 		log.Fatal(RGBR("Failed to prepare Explore personal library schema: "+err.Error(), err))
 	}

@@ -233,6 +233,13 @@ func CommunityChatMessagesHandler(w http.ResponseWriter, r *http.Request) {
 			writeCommunityError(w, "We could not send that message.", http.StatusInternalServerError)
 			return
 		}
+		if message.Body != "" {
+			if mentionErr := storage.CreateCommunityChatMentionNotifications(message.ID, viewerID, message.Body); mentionErr != nil {
+				// A mention-indexing failure must not roll back an already-saved chat message.
+				// Log the error server-side while keeping the message delivery successful.
+				fmt.Printf("[community chat] mention notification indexing failed for message %d: %v\n", message.ID, mentionErr)
+			}
+		}
 		broadcastCommunityChatEvent("new", message.ID)
 		writeCommunityJSON(w, http.StatusCreated, map[string]any{"success": true, "message": toCommunityChatDTO(message, viewerID)})
 
@@ -266,6 +273,11 @@ func CommunityChatMessagesHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			writeCommunityError(w, "We could not edit that message.", http.StatusInternalServerError)
 			return
+		}
+		if message.Body != "" {
+			if mentionErr := storage.CreateCommunityChatMentionNotifications(message.ID, viewerID, message.Body); mentionErr != nil {
+				fmt.Printf("[community chat] mention notification indexing failed for edited message %d: %v\n", message.ID, mentionErr)
+			}
 		}
 		broadcastCommunityChatEvent("refresh", message.ID)
 		writeCommunityJSON(w, http.StatusOK, map[string]any{"success": true, "message": toCommunityChatDTO(message, viewerID)})

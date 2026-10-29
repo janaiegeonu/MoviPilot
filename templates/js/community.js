@@ -430,6 +430,7 @@
         let activeProfile = null;
         let previousFocus = null;
         let profileLoading = false;
+        let profilePresenceTimer = 0;
 
         // Self results should use the dashboard's existing profile modal rather
         // than opening a duplicate public Community profile card.
@@ -593,6 +594,53 @@
             });
         };
 
+        const formatPresenceLastSeen = (value) => {
+            const raw = String(value || "").trim();
+            if (!raw) return "recently";
+            const normalized = raw.includes("T")
+                ? raw
+                : `${raw.replace(" ", "T")}Z`;
+            const date = new Date(normalized);
+            if (Number.isNaN(date.getTime())) return "recently";
+            const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+            if (seconds < 60) return "just now";
+            if (seconds < 3600) return `${Math.floor(seconds / 60)} minute${Math.floor(seconds / 60) === 1 ? "" : "s"} ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) === 1 ? "" : "s"} ago`;
+            return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+        };
+
+        const refreshMemberProfilePresence = async (publicID, requestNumber) => {
+            const description = profileQuery("#mpCommunityProfileDescription");
+            if (!description || !publicID) return;
+            try {
+                const url = new URL("/api/community/chat/presence", window.location.origin);
+                url.searchParams.set("publicId", publicID);
+                const payload = await requestJSON(url.toString(), { signal });
+                if (signal.aborted || requestNumber !== activeProfileRequest || modalLayer?.hidden) return;
+                const presence = payload.memberStatus || {};
+                if (presence.isOnline) {
+                    description.textContent = "Online now · Active in the Community chat";
+                    description.dataset.presence = "online";
+                    description.setAttribute("aria-label", "Online now, active in the Community chat");
+                } else if (presence.hasPresence && presence.lastSeenAt) {
+                    description.textContent = `Offline · Last active ${formatPresenceLastSeen(presence.lastSeenAt)}`;
+                    description.dataset.presence = "offline";
+                    description.removeAttribute("aria-label");
+                } else {
+                    description.textContent = "No recent Community chat activity";
+                    description.dataset.presence = "unknown";
+                    description.removeAttribute("aria-label");
+                }
+            } catch (_) {
+                // Presence is supplementary to a public profile. Keep the profile
+                // usable if chat presence is unavailable on this server instance.
+                if (!signal.aborted && requestNumber === activeProfileRequest && description.isConnected) {
+                    description.textContent = "A little look at their MoviPilot identity.";
+                    description.dataset.presence = "unknown";
+                }
+            }
+        };
+
         const renderMemberProfile = (user) => {
             activeProfile = {
                 publicId: safeText(user.publicId),
@@ -613,7 +661,10 @@
             const heading = profileQuery("#mpCommunityProfileHeading");
             if (heading) heading.textContent = "Member profile";
             const description = profileQuery("#mpCommunityProfileDescription");
-            if (description) description.textContent = "A little look at their MoviPilot identity.";
+            if (description) {
+                description.textContent = "Checking Community presence…";
+                description.dataset.presence = "checking";
+            }
             updateAvatar(user);
             updateFriendState(activeProfile.markedByMe, activeProfile.friendCount);
             if (copyButton) copyButton.disabled = !activeProfile.publicId;
@@ -624,12 +675,17 @@
         async function openMemberProfile(publicId) {
             const cleanID = safeText(publicId);
             if (!cleanID || !modalLayer || !modal) return;
+            if (profilePresenceTimer) window.clearInterval(profilePresenceTimer);
+            profilePresenceTimer = 0;
 
             previousFocus = document.activeElement;
             activeProfileRequest += 1;
             const thisProfileRequest = activeProfileRequest;
             activeProfile = null;
             profileLoading = true;
+            // This modal may be portaled directly under <body>. Ancestor selectors
+            // no longer control its layer then, so always place it over full-page chat.
+            modalLayer.style.setProperty("z-index", "2147483001", "important");
             modalLayer.hidden = false;
             document.body.classList.add("mp-community-modal-open");
             modal.scrollTop = 0;
@@ -658,6 +714,10 @@
                 if (signal.aborted || thisProfileRequest !== activeProfileRequest) return;
                 const user = payload.user || payload.profile || {};
                 renderMemberProfile(user);
+                void refreshMemberProfilePresence(cleanID, thisProfileRequest);
+                profilePresenceTimer = window.setInterval(() => {
+                    void refreshMemberProfilePresence(cleanID, thisProfileRequest);
+                }, 25000);
             } catch (error) {
                 if (signal.aborted || thisProfileRequest !== activeProfileRequest) return;
                 setProfileStatus(root, error.message || "Could not load this public profile.", true);
@@ -676,7 +736,14 @@
 
         // Expose the existing Community public-profile modal to chat message names.
         // The chat script calls this function instead of creating a second profile UI.
-        const openCommunityMemberProfileBridge = (publicID) => openMemberProfile(publicID);
+        const openCommunityMemberProfileBridge = (publicID, options = {}) => {
+            const description = profileQuery("#mpCommunityProfileDescription");
+            if (options?.isOnline && description) {
+                description.textContent = "Online now · Active in the Community chat";
+                description.dataset.presence = "online";
+            }
+            return openMemberProfile(publicID);
+        };
         window.openMoviPilotCommunityMemberProfile = openCommunityMemberProfileBridge;
 
         const openOrToggleCommunityChat = async () => {
@@ -765,6 +832,8 @@
 
         const closeMemberProfile = () => {
             if (!modalLayer || modalLayer.hidden) return;
+            if (profilePresenceTimer) window.clearInterval(profilePresenceTimer);
+            profilePresenceTimer = 0;
             activeProfileRequest += 1;
             activeProfile = null;
             profileLoading = false;
@@ -887,6 +956,8 @@
         // Escape is intentionally not handled, matching the existing profile-card behavior.
         signal.addEventListener("abort", () => {
             window.clearTimeout(searchTimer);
+            if (profilePresenceTimer) window.clearInterval(profilePresenceTimer);
+            profilePresenceTimer = 0;
             window.clearTimeout(communityToastTimer);
             window.destroyCommunityChat?.();
             if (window.openMoviPilotCommunityMemberProfile === openCommunityMemberProfileBridge) {

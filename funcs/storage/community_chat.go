@@ -70,6 +70,14 @@ func EnsureCommunityChatSchema() error {
 	if DB == nil {
 		return fmt.Errorf("community chat schema: database is not initialized")
 	}
+
+	// Chat identity queries depend on users.username. Do not rely on a separate
+	// startup call happening to run first: initialize/backfill the Community user
+	// schema here before creating or serving chat presence and mention features.
+	if err := EnsureCommunitySchema(); err != nil {
+		return fmt.Errorf("prepare community user schema before chat: %w", err)
+	}
+
 	statements := []string{
 		`CREATE TABLE IF NOT EXISTS community_chat_messages (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,6 +121,9 @@ func EnsureCommunityChatSchema() error {
 	}
 	if err := migrateCommunityChatReactionSchema(); err != nil {
 		return fmt.Errorf("migrate community chat reactions: %w", err)
+	}
+	if err := EnsureCommunityChatSocialSchema(); err != nil {
+		return fmt.Errorf("prepare community chat presence and mentions: %w", err)
 	}
 	return nil
 }

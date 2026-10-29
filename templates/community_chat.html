@@ -30,6 +30,7 @@
     <header class="mp-chat-header">
         <button class="mp-chat-back-button" id="mpChatCloseButton" type="button" aria-label="Return to Community" data-chat-tooltip="Back to Community">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Community</span>
         </button>
         <div class="mp-chat-brand-mark" aria-hidden="true">
             <img src="/img/logo favicon.png" alt="" width="32" height="32" decoding="async">
@@ -38,6 +39,15 @@
             <span class="mp-chat-overline">MOVIPILOT COMMUNITY</span>
             <h2 id="mpChatRoomTitle">Community Chatroom</h2>
             <p><span class="mp-chat-live-pulse" aria-hidden="true"></span><span id="mpChatConnectionLabel">Connecting to the room…</span></p>
+        </div>
+        <div class="mp-chat-header-actions">
+            <button class="mp-chat-online-button" id="mpChatOnlineButton" type="button" aria-haspopup="dialog" aria-controls="mpChatOnlineModal" aria-label="View members online">
+                <span class="mp-chat-online-indicator" aria-hidden="true"></span><span class="mp-chat-online-button-label">Online</span><strong id="mpChatOnlineCount">…</strong>
+            </button>
+            <button class="mp-chat-mentions-button" id="mpChatMentionButton" type="button" aria-label="Mentions and notifications" data-chat-tooltip="Mentions">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="mp-chat-mention-count" id="mpChatMentionCount" hidden>0</span>
+            </button>
         </div>
         <div class="mp-chat-sound-status" data-chat-tooltip="Sound alerts are always on" aria-label="Sound alerts are always on">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 9a4 4 0 0 1 0 6m2.5-8.5a7 7 0 0 1 0 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>

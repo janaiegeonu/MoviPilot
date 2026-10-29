@@ -237,6 +237,10 @@
         const uploadProgress = byID("mpChatUploadProgress");
         const uploadProgressLabel = byID("mpChatUploadProgressLabel");
         const toast = byID("mpChatToast");
+        const onlineButton = byID("mpChatOnlineButton");
+        const onlineCountLabel = byID("mpChatOnlineCount");
+        const mentionButton = byID("mpChatMentionButton");
+        const mentionCountLabel = byID("mpChatMentionCount");
         const mediaViewer = byID("mpChatMediaViewer");
         const mediaViewerPanel = mediaViewer?.querySelector(".mp-chat-media-viewer-panel");
         const mediaViewerTitle = byID("mpChatMediaViewerTitle");
@@ -261,6 +265,77 @@
         const mediaViewerDownload = byID("mpChatMediaViewerDownload");
         const mediaViewerClose = byID("mpChatMediaViewerClose");
 
+        // Body-level tooltip portal prevents tooltip text being clipped by the
+        // chat history, message stacks, or other ancestors with overflow rules.
+        let globalTooltip = null;
+        let globalTooltipTarget = null;
+        const ensureGlobalTooltip = () => {
+            if (globalTooltip?.isConnected) return globalTooltip;
+            globalTooltip = makeElement("div", "mp-chat-global-tooltip");
+            globalTooltip.hidden = true;
+            globalTooltip.setAttribute("role", "tooltip");
+            document.body.append(globalTooltip);
+            return globalTooltip;
+        };
+        const hideGlobalTooltip = () => {
+            if (globalTooltip) globalTooltip.hidden = true;
+            globalTooltipTarget = null;
+        };
+        const positionGlobalTooltip = () => {
+            if (!globalTooltip || globalTooltip.hidden || !globalTooltipTarget?.isConnected) {
+                hideGlobalTooltip();
+                return;
+            }
+            const targetRect = globalTooltipTarget.getBoundingClientRect();
+            globalTooltip.style.left = "0px";
+            globalTooltip.style.top = "0px";
+            globalTooltip.style.visibility = "hidden";
+            const tooltipRect = globalTooltip.getBoundingClientRect();
+            const gutter = 12;
+            const left = Math.max(gutter, Math.min(targetRect.left + targetRect.width / 2 - tooltipRect.width / 2, window.innerWidth - tooltipRect.width - gutter));
+            let top = targetRect.bottom + 8;
+            if (top + tooltipRect.height > window.innerHeight - gutter) top = targetRect.top - tooltipRect.height - 8;
+            top = Math.max(gutter, Math.min(top, window.innerHeight - tooltipRect.height - gutter));
+            globalTooltip.style.left = `${left}px`;
+            globalTooltip.style.top = `${top}px`;
+            globalTooltip.style.visibility = "visible";
+        };
+        const tooltipTargetFrom = (target) => target instanceof Element ? target.closest("[data-chat-tooltip]") : null;
+        const showGlobalTooltip = (target) => {
+            if (!(target instanceof Element)) return;
+            const tooltipText = safeString(target.getAttribute("data-chat-tooltip"));
+            if (!tooltipText) { hideGlobalTooltip(); return; }
+            const tooltip = ensureGlobalTooltip();
+            if (globalTooltipTarget === target && !tooltip.hidden) return;
+            globalTooltipTarget = target;
+            tooltip.textContent = tooltipText;
+            tooltip.hidden = false;
+            tooltip.style.visibility = "hidden";
+            requestAnimationFrame(positionGlobalTooltip);
+        };
+        document.addEventListener("pointerover", (event) => {
+            const target = tooltipTargetFrom(event.target);
+            if (target) showGlobalTooltip(target);
+        }, { signal });
+        document.addEventListener("pointerout", (event) => {
+            const previous = tooltipTargetFrom(event.target);
+            if (!previous || previous !== globalTooltipTarget) return;
+            if (event.relatedTarget instanceof Node && previous.contains(event.relatedTarget)) return;
+            hideGlobalTooltip();
+        }, { signal });
+        document.addEventListener("focusin", (event) => {
+            const target = tooltipTargetFrom(event.target);
+            if (target) showGlobalTooltip(target);
+        }, { signal });
+        document.addEventListener("focusout", (event) => {
+            const previous = tooltipTargetFrom(event.target);
+            if (!previous || previous !== globalTooltipTarget) return;
+            if (event.relatedTarget instanceof Node && previous.contains(event.relatedTarget)) return;
+            hideGlobalTooltip();
+        }, { signal });
+        document.addEventListener("scroll", positionGlobalTooltip, { capture: true, passive: true, signal });
+        window.addEventListener("resize", positionGlobalTooltip, { passive: true, signal });
+
         const state = {
             messages: new Map(),
             latestID: 0,
@@ -271,6 +346,9 @@
             pendingMovie: null,
             eventSource: null,
             pollTimer: 0,
+            presenceTimer: 0,
+            mentionTimer: 0,
+            mentionSearchTimer: 0,
             toastTimer: 0,
             movieSearchTimer: 0,
             recordTimer: 0,
@@ -305,12 +383,472 @@
 
         const announce = (message, isError = false) => {
             if (!toast) return;
+            if (toast.classList.contains("is-mention-toast") && toast.classList.contains("is-visible")) {
+                // Keep the unread mention visible until the user opens or dismisses it.
+                console.info("[MOVIPILOT] A chat notice was deferred while a mention alert is visible:", message);
+                return;
+            }
             window.clearTimeout(state.toastTimer);
+            toast.classList.remove("is-mention-toast");
             toast.textContent = message;
             toast.classList.toggle("is-error", Boolean(isError));
             toast.classList.add("is-visible");
             state.toastTimer = window.setTimeout(() => toast.classList.remove("is-visible"), 3300);
         };
+
+        // Presence and mention UI are created by this chat instance so they are
+        // removed cleanly when the room closes. No external UI library is required.
+        let onlineModal = null;
+        let onlineModalReturnFocus = null;
+        let mentionMenu = null;
+        let mentionQueryStart = -1;
+        let mentionQueryEnd = -1;
+        let mentionSelectedIndex = 0;
+        let mentionCandidates = [];
+        const seenMentionIDs = new Set();
+        let chatClientID = "";
+
+        const ensureChatClientID = () => {
+            if (chatClientID) return chatClientID;
+            try {
+                const bytes = new Uint8Array(16);
+                crypto.getRandomValues(bytes);
+                chatClientID = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+            } catch (_) {
+                chatClientID = Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+            }
+            return chatClientID;
+        };
+
+        const normalizeSeenTime = (value) => {
+            const raw = String(value || "");
+            const date = new Date(raw.includes("T") || raw.endsWith("Z") ? raw : `${raw.replace(" ", "T")}Z`);
+            if (Number.isNaN(date.getTime())) return "Recently";
+            const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+            if (seconds < 60) return "Just now";
+            if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+            return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+        };
+
+        const formatSeenTimestamp = (value) => {
+            const raw = String(value || "");
+            const date = new Date(raw.includes("T") || raw.endsWith("Z") ? raw : `${raw.replace(" ", "T")}Z`);
+            if (Number.isNaN(date.getTime())) return "Timestamp unavailable";
+            return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+        };
+
+        const ensureOnlineModal = () => {
+            if (onlineModal?.isConnected) return onlineModal;
+            const overlay = makeElement("section", "mp-chat-online-modal");
+            overlay.id = "mpChatOnlineModal";
+            overlay.hidden = true;
+            overlay.setAttribute("role", "dialog");
+            overlay.setAttribute("aria-modal", "true");
+            overlay.setAttribute("aria-labelledby", "mpChatOnlineModalTitle");
+            const backdrop = makeElement("button", "mp-chat-online-backdrop");
+            backdrop.type = "button"; backdrop.setAttribute("aria-label", "Close online members");
+            const panel = makeElement("div", "mp-chat-online-panel");
+            const header = makeElement("header", "mp-chat-online-modal-header");
+            const titleWrap = makeElement("div", "");
+            titleWrap.append(makeElement("span", "mp-chat-overline", "COMMUNITY PRESENCE"), makeElement("h3", "", "Members online"));
+            titleWrap.querySelector("h3").id = "mpChatOnlineModalTitle";
+            const close = makeElement("button", "mp-chat-online-close", "×");
+            close.type = "button"; close.setAttribute("aria-label", "Close online members");
+            header.append(titleWrap, close);
+            const summary = makeElement("p", "mp-chat-online-summary", "People here now and members who were recently active.");
+            const onlineSection = makeElement("section", "mp-chat-online-section");
+            const onlineHeading = makeElement("h4", "", "Online now");
+            const onlineList = makeElement("div", "mp-chat-online-list"); onlineList.dataset.list = "online";
+            onlineSection.append(onlineHeading, onlineList);
+            const recentSection = makeElement("section", "mp-chat-online-section");
+            const recentHeading = makeElement("h4", "", "Recently online · last 24 hours");
+            const recentList = makeElement("div", "mp-chat-online-list"); recentList.dataset.list = "recent";
+            recentSection.append(recentHeading, recentList);
+            const footer = makeElement("p", "mp-chat-online-footnote", "Presence updates automatically while a member keeps the chat open.");
+            panel.append(header, summary, onlineSection, recentSection, footer);
+            overlay.append(backdrop, panel);
+            root.append(overlay);
+            const closeModal = () => {
+                overlay.hidden = true;
+                onlineButton?.setAttribute("aria-expanded", "false");
+                if (onlineModalReturnFocus?.isConnected) onlineModalReturnFocus.focus({ preventScroll: true });
+            };
+            backdrop.addEventListener("click", closeModal, { signal });
+            close.addEventListener("click", closeModal, { signal });
+            overlay.addEventListener("keydown", (event) => {
+                if (event.key === "Escape") { event.preventDefault(); closeModal(); }
+            }, { signal });
+            onlineModal = overlay;
+            return overlay;
+        };
+
+        const renderPresenceMember = (member, isOnline) => {
+            const row = makeElement("button", `mp-chat-online-member${isOnline ? " is-online" : " is-recent"}`);
+            row.type = "button";
+            const avatar = makeElement("span", "mp-chat-online-avatar", initials(member.fullName));
+            const tone = avatarColorsFor(member.publicId || member.username || member.fullName);
+            avatar.style.setProperty("--mp-avatar-hue", String(tone.primary));
+            avatar.style.setProperty("--mp-avatar-hue-two", String(tone.secondary));
+            avatar.style.setProperty("--mp-avatar-hue-three", String(tone.tertiary));
+            const copy = makeElement("span", "mp-chat-online-member-copy");
+            copy.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+            if (member.username) copy.append(makeElement("small", "", `@${member.username}`));
+            const status = makeElement("span", "mp-chat-online-member-status");
+            status.append(makeElement("i", "", ""), makeElement("span", "", isOnline ? "Online now" : `Last seen ${normalizeSeenTime(member.lastSeenAt)}`));
+            if (!isOnline) status.append(makeElement("small", "", formatSeenTimestamp(member.lastSeenAt)));
+            row.append(avatar, copy, status);
+            row.addEventListener("click", () => {
+                const publicID = safeString(member.publicId);
+                if (!publicID) { announce("This member's public profile is unavailable.", true); return; }
+                onlineModal.hidden = true;
+                onlineButton?.setAttribute("aria-expanded", "false");
+                onlineButton?.focus({ preventScroll: true });
+                if (typeof window.openMoviPilotCommunityMemberProfile === "function") {
+                    window.openMoviPilotCommunityMemberProfile(publicID, { source: "chat-presence", isOnline });
+                } else {
+                    announce("The Community public-profile service is not ready yet.", true);
+                }
+            }, { signal });
+            return row;
+        };
+
+        const loadPresence = async (openModal = false, options = {}) => {
+            try {
+                // Touch the current user's presence before showing the roster. This
+                // avoids the initial race where a solo user saw a count of zero.
+                if (options.touchFirst) {
+                    try {
+                        await requestJSON("/api/community/chat/presence", {
+                            method: "POST", signal,
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ clientId: ensureChatClientID() })
+                        });
+                    } catch (heartbeatError) {
+                        if (signal.aborted) return;
+                        console.warn("[MOVIPILOT] Presence preflight failed; roster GET will retry the self-presence update.", heartbeatError);
+                    }
+                }
+                const url = new URL("/api/community/chat/presence", window.location.origin);
+                // The authenticated GET also refreshes the current viewer's per-tab
+                // presence server-side before calculating the count. This avoids a
+                // zero-user race if the separate POST heartbeat is delayed or blocked.
+                url.searchParams.set("clientId", ensureChatClientID());
+                const payload = await requestJSON(url.toString(), { signal });
+                if (signal.aborted) return;
+                const reportedCount = Number(payload?.onlineCount);
+                if (payload?.selfOnline !== true || payload?.onlineCount == null || !Number.isSafeInteger(reportedCount) || reportedCount < 1) {
+                    throw new Error("The presence endpoint did not confirm this signed-in user as online. Update the Community Chat presence handler and verify its route registration.");
+                }
+                // A successful self heartbeat proves there is at least one active
+                // chat participant; the server's count includes any other active users.
+                const onlineCount = Math.max(1, reportedCount);
+                if (onlineCountLabel) onlineCountLabel.textContent = String(onlineCount);
+                if (onlineButton) {
+                    onlineButton.removeAttribute("data-presence-error");
+                    onlineButton.removeAttribute("title");
+                    onlineButton.setAttribute("aria-label", `${onlineCount} members online. Open member list.`);
+                }
+                if (openModal || (onlineModal && !onlineModal.hidden)) {
+                    const overlay = ensureOnlineModal();
+                    const onlineList = overlay.querySelector('[data-list="online"]');
+                    const recentList = overlay.querySelector('[data-list="recent"]');
+                    const onlineMembers = Array.isArray(payload.online) ? payload.online : [];
+                    const recentMembers = Array.isArray(payload.recent) ? payload.recent : [];
+                    onlineList.replaceChildren();
+                    recentList.replaceChildren();
+                    if (!onlineMembers.length) onlineList.append(makeElement("p", "mp-chat-online-empty", "No members are active right now. Check your connection and try again."));
+                    onlineMembers.forEach((member) => onlineList.append(renderPresenceMember(member, true)));
+                    const onlineIDs = new Set(onlineMembers.map((member) => String(member.publicId)));
+                    const recentOnly = recentMembers.filter((member) => !onlineIDs.has(String(member.publicId)));
+                    if (!recentOnly.length) recentList.append(makeElement("p", "mp-chat-online-empty", "No other recent visits yet."));
+                    recentOnly.forEach((member) => recentList.append(renderPresenceMember(member, false)));
+                }
+            } catch (error) {
+                if (signal.aborted) return;
+                // Never disguise a failed endpoint as a legitimate count of zero.
+                // An em dash makes broken routing/auth visible instead of misleading.
+                if (onlineCountLabel) onlineCountLabel.textContent = "—";
+                if (onlineButton) {
+                    onlineButton.dataset.presenceError = "true";
+                    onlineButton.title = error.status === 401 ? "Sign in again to see online members." : "Online status could not be refreshed. Check the Community Chat routes and try again.";
+                    onlineButton.setAttribute("aria-label", "Online status unavailable. Activate to retry.");
+                }
+                if (error.status !== 401) console.warn("[MOVIPILOT] Presence roster request failed.", error);
+                if (openModal) announce(error.message || "Could not load member presence.", true);
+            }
+        };
+
+        const updateMentionBadge = (count) => {
+            if (!mentionCountLabel || !mentionButton) return;
+            const safeCount = Math.max(0, Number(count) || 0);
+            mentionCountLabel.textContent = safeCount > 99 ? "99+" : String(safeCount);
+            mentionCountLabel.hidden = safeCount === 0;
+            mentionButton.setAttribute("aria-label", safeCount ? `${safeCount} unread mentions` : "No unread mentions");
+        };
+
+        let activeMentionAlertID = 0;
+        const showMentionAlert = (mention) => {
+            if (!toast || !mention) return;
+            window.clearTimeout(state.toastTimer);
+            activeMentionAlertID = Number(mention.id) || 0;
+            const card = makeElement("div", "mp-chat-mention-toast-card");
+            const button = makeElement("button", "mp-chat-mention-toast-action");
+            button.type = "button";
+            const sender = safeString(mention.senderFullName, mention.senderUsername || "A member");
+            button.append(makeElement("strong", "", `${sender} mentioned you`));
+            button.append(makeElement("span", "", safeString(mention.messageBody, "Tap to view the message")));
+            button.append(makeElement("small", "", "Tap to jump to the conversation ↗"));
+            const dismiss = makeElement("button", "mp-chat-mention-toast-dismiss", "×");
+            dismiss.type = "button";
+            dismiss.setAttribute("aria-label", "Dismiss mention alert. It will remain unread.");
+            dismiss.addEventListener("click", (event) => {
+                event.stopPropagation();
+                toast.classList.remove("is-visible", "is-mention-toast");
+                activeMentionAlertID = 0;
+                // Dismissing the visual alert does not mark the notification read.
+                // A later poll may surface the next unread mention.
+                void pollMentions(true);
+            }, { signal });
+            button.addEventListener("click", async () => {
+                toast.classList.remove("is-visible", "is-mention-toast");
+                activeMentionAlertID = 0;
+                await jumpToMessageAsync(Number(mention.messageId));
+                try {
+                    await requestJSON("/api/community/chat/mentions", {
+                        method: "POST", signal,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: Number(mention.id) })
+                    });
+                    seenMentionIDs.add(Number(mention.id));
+                    void pollMentions(true);
+                } catch (error) { if (!signal.aborted) announce(error.message || "Could not update mention status.", true); }
+            }, { signal });
+            card.append(button, dismiss);
+            toast.replaceChildren(card);
+            toast.classList.remove("is-error");
+            toast.classList.add("is-visible", "is-mention-toast");
+            // This is an inbox alert, not a fleeting toast: it stays until opened or
+            // dismissed, so people returning to the room can actually see it.
+            void playTone("incoming");
+        };
+
+        const pollMentions = async (showNewAlert = true) => {
+            try {
+                const payload = await requestJSON("/api/community/chat/mentions", { signal });
+                if (signal.aborted) return;
+                const mentions = Array.isArray(payload.mentions) ? payload.mentions : [];
+                updateMentionBadge(Number(payload.unreadCount) || mentions.length);
+                const unseen = mentions.find((item) => !seenMentionIDs.has(Number(item.id)));
+                const alertIsOpen = toast?.classList.contains("is-mention-toast") && toast.classList.contains("is-visible");
+                if (showNewAlert && unseen && !alertIsOpen) {
+                    seenMentionIDs.add(Number(unseen.id));
+                    showMentionAlert(unseen);
+                }
+            } catch (error) {
+                if (!signal.aborted && error.status !== 401) console.warn("[MOVIPILOT] Mention notifications could not be refreshed.", error);
+            }
+        };
+
+        const createMentionMenu = () => {
+            if (mentionMenu?.isConnected) return mentionMenu;
+            mentionMenu = makeElement("div", "mp-chat-mention-menu");
+            mentionMenu.hidden = true;
+            mentionMenu.setAttribute("role", "listbox");
+            mentionMenu.setAttribute("aria-label", "Mention a community member");
+            document.body.append(mentionMenu);
+            return mentionMenu;
+        };
+
+        const closeMentionMenu = () => {
+            if (state.mentionSearchTimer) window.clearTimeout(state.mentionSearchTimer);
+            if (mentionMenu) mentionMenu.hidden = true;
+            mentionCandidates = [];
+            mentionSelectedIndex = 0;
+            input?.removeAttribute("aria-activedescendant");
+            input?.setAttribute("aria-expanded", "false");
+        };
+
+        const positionMentionMenu = () => {
+            if (!mentionMenu || !input || mentionMenu.hidden) return;
+            const bounds = input.getBoundingClientRect();
+            const width = Math.min(360, Math.max(230, bounds.width));
+            mentionMenu.style.width = `${Math.min(width, window.innerWidth - 20)}px`;
+            mentionMenu.style.left = `${Math.max(10, Math.min(bounds.left, window.innerWidth - width - 10))}px`;
+            mentionMenu.style.bottom = `${Math.max(10, window.innerHeight - bounds.top + 8)}px`;
+        };
+
+        const renderMentionCandidates = (members) => {
+            const menu = createMentionMenu();
+            mentionCandidates = members;
+            mentionSelectedIndex = 0;
+            menu.replaceChildren();
+            if (!members.length) {
+                closeMentionMenu();
+                return;
+            } else {
+                members.forEach((member, index) => {
+                    const option = makeElement("button", `mp-chat-mention-option${index === 0 ? " is-selected" : ""}`);
+                    option.type = "button"; option.id = `mpChatMentionOption${index}`;
+                    option.setAttribute("role", "option"); option.setAttribute("aria-selected", String(index === 0));
+                    const avatar = makeElement("span", "mp-chat-mention-avatar", initials(member.fullName));
+                    const copy = makeElement("span", "mp-chat-mention-option-copy");
+                    copy.append(makeElement("strong", "", member.fullName || member.username));
+                    copy.append(makeElement("small", "", `@${member.username}`));
+                    option.append(avatar, copy);
+                    option.addEventListener("mousedown", (event) => event.preventDefault(), { signal });
+                    option.addEventListener("click", () => insertMention(member), { signal });
+                    menu.append(option);
+                });
+            }
+            menu.hidden = false;
+            input?.setAttribute("aria-expanded", "true");
+            if (mentionCandidates.length) input?.setAttribute("aria-activedescendant", "mpChatMentionOption0");
+            positionMentionMenu();
+        };
+
+        const searchMentionCandidates = async (query) => {
+            // Create the menu before the request. The old version required an
+            // existing menu in the response guard, so its very first request
+            // was silently discarded and autocomplete never opened.
+            const menu = createMentionMenu();
+            try {
+                const url = new URL("/api/community/chat/members", window.location.origin);
+                url.searchParams.set("q", query);
+                const payload = await requestJSON(url.toString(), { signal });
+                if (signal.aborted || !input || !menu.isConnected) return;
+                const current = findMentionQuery();
+                if (!current || current.query.toLowerCase() !== query.toLowerCase()) return;
+                renderMentionCandidates(Array.isArray(payload.members) ? payload.members : []);
+            } catch (error) {
+                if (!signal.aborted && error.status !== 401) closeMentionMenu();
+            }
+        };
+
+        const findMentionQuery = () => {
+            if (!input) return null;
+            const cursor = input.selectionStart ?? input.value.length;
+            const beforeCursor = input.value.slice(0, cursor);
+            const at = beforeCursor.lastIndexOf("@");
+            if (at < 0) return null;
+            const before = at > 0 ? beforeCursor[at - 1] : "";
+            if (before && /[\p{L}\p{N}_.+-]/u.test(before)) return null;
+            const query = beforeCursor.slice(at + 1);
+            // Usernames are single tokens; scope the search to the active handle.
+            if (query.length > 80 || /[\s!?;:,@]/u.test(query)) return null;
+            if (query && !/^[\p{L}\p{N}_]+$/u.test(query)) return null;
+            return { start: at, end: cursor, query };
+        };
+
+        const insertMention = (member) => {
+            if (!input || !member?.username) return;
+            const current = findMentionQuery();
+            if (!current) { closeMentionMenu(); return; }
+            const value = input.value;
+            const replacement = `@${member.username} `;
+            input.value = value.slice(0, current.start) + replacement + value.slice(current.end);
+            const cursor = current.start + replacement.length;
+            input.setSelectionRange(cursor, cursor);
+            adjustTextarea();
+            closeMentionMenu();
+            input.focus({ preventScroll: true });
+        };
+
+        const updateMentionSuggestions = () => {
+            const current = findMentionQuery();
+            if (!current) { closeMentionMenu(); return; }
+            mentionQueryStart = current.start; mentionQueryEnd = current.end;
+            if (state.mentionSearchTimer) window.clearTimeout(state.mentionSearchTimer);
+            state.mentionSearchTimer = window.setTimeout(() => void searchMentionCandidates(current.query), 180);
+        };
+
+        const startPresenceAndMentions = () => {
+            const clientId = ensureChatClientID();
+            const heartbeat = () => {
+                if (signal.aborted) return;
+                // Do not intentionally stop heartbeats for background tabs. Browsers
+                // may throttle timers, but leaving the chat tab open should not itself
+                // mark a signed-in member offline.
+                void requestJSON("/api/community/chat/presence", {
+                    method: "POST", signal,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ clientId })
+                }).then((payload) => {
+                    if (signal.aborted) return;
+                    const rawCount = Number(payload?.onlineCount);
+                    if (payload?.selfOnline !== true || payload?.onlineCount == null || !Number.isSafeInteger(rawCount) || rawCount < 1) {
+                        throw new Error("The presence heartbeat did not confirm this user is online. Check that the updated handler is registered.");
+                    }
+                    const count = Math.max(1, rawCount);
+                    if (onlineCountLabel) onlineCountLabel.textContent = String(count);
+                    if (onlineButton) {
+                        onlineButton.removeAttribute("data-presence-error");
+                        onlineButton.removeAttribute("title");
+                        onlineButton.setAttribute("aria-label", `${count} members online. Open member list.`);
+                    }
+                    // Roster details are fetched only while its modal is open; ordinary
+                    // heartbeats return the authoritative count in the same response.
+                    if (onlineModal && !onlineModal.hidden) void loadPresence(false);
+                }).catch((error) => {
+                    if (signal.aborted) return;
+                    if (error.status !== 401) console.warn("[MOVIPILOT] Presence POST heartbeat failed; attempting roster self-refresh.", error);
+                    // GET refreshes this user's presence before counting, so a POST
+                    // failure should not leave this user's count stuck at zero.
+                    void loadPresence(false, { touchFirst: true });
+                });
+            };
+            heartbeat();
+            // The authenticated roster GET self-registers this tab on the server
+            // as well. This closes the cold-start race and verifies that the route
+            // serving the chat JS is the same implementation as the current backend.
+            void loadPresence(false, { touchFirst: true });
+            state.presenceTimer = window.setInterval(heartbeat, 15000);
+            void pollMentions(true);
+            state.mentionTimer = window.setInterval(() => {
+                if (!signal.aborted && !document.hidden) void pollMentions(true);
+            }, 5000);
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden) {
+                    // Do not mark offline just because a tab is backgrounded; the heartbeat
+                    // pauses and the server's 90-second freshness window handles stale tabs.
+                    return;
+                }
+                heartbeat(); void pollMentions(true);
+            }, { signal });
+            window.addEventListener("pagehide", () => {
+                if (!chatClientID) return;
+                try {
+                    fetch("/api/community/chat/presence", {
+                        method: "DELETE", credentials: "same-origin", keepalive: true,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ clientId: chatClientID })
+                    }).catch(() => {});
+                } catch (_) {}
+            }, { signal });
+        };
+
+        onlineButton?.addEventListener("click", () => {
+            const overlay = ensureOnlineModal();
+            onlineModalReturnFocus = document.activeElement;
+            overlay.hidden = false;
+            onlineButton.setAttribute("aria-expanded", "true");
+            void loadPresence(true, { touchFirst: true });
+            overlay.querySelector(".mp-chat-online-close")?.focus({ preventScroll: true });
+        }, { signal });
+
+        mentionButton?.addEventListener("click", async () => {
+            try {
+                const payload = await requestJSON("/api/community/chat/mentions", { signal });
+                if (signal.aborted) return;
+                const mentions = Array.isArray(payload.mentions) ? payload.mentions : [];
+                updateMentionBadge(Number(payload.unreadCount) || mentions.length);
+                if (mentions.length) {
+                    const target = mentions.find((item) => !seenMentionIDs.has(Number(item.id))) || mentions[0];
+                    seenMentionIDs.add(Number(target.id));
+                    showMentionAlert(target);
+                } else announce("You're all caught up. No unread mentions.");
+            } catch (error) { if (!signal.aborted) announce(error.message || "Could not load mentions.", true); }
+        }, { signal });
 
         const showNotice = (message, isError = false) => {
             const notice = byID("mpChatNotice");
@@ -513,6 +1051,7 @@
 
         const addReaction = async (message, reaction) => {
             try {
+                reactionPeekCache.delete(String(Number(message.id)));
                 const payload = await requestJSON("/api/community/chat/reaction", {
                     method: "POST", signal, headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ messageId: Number(message.id), reaction })
@@ -520,6 +1059,7 @@
                 if (signal.aborted) return;
                 if (payload.message) upsertMessage(payload.message, { playIncoming: false });
                 closeAllMenus();
+                closeReactionPeek();
             } catch (error) { if (!signal.aborted) announce(error.message || "Could not save that reaction.", true); }
         };
 
@@ -558,13 +1098,25 @@
         const deleteMessage = async (message) => {
             if (!message?.isMine || message.deleted) { announce("You can only delete your own active messages.", true); closeAllMenus(); return; }
             closeAllMenus();
-            const confirmed = window.confirm("Delete this message for everyone in the community room?");
-            if (!confirmed) return;
+            const id = Number(message.id);
+            const original = state.messages.get(id) || message;
+            const optimisticDeleted = {
+                ...original, deleted: true, kind: "deleted", body: "",
+                attachmentUrl: "", attachmentMime: "", attachmentName: "",
+                attachmentSize: 0, movie: null
+            };
+            // Optimistically replace the row; no confirmation popup and no
+            // success toast. Restore only if the server refuses the deletion.
+            upsertMessage(optimisticDeleted, { silentUpdate: true });
             try {
-                await requestJSON(`/api/community/chat/messages?id=${encodeURIComponent(message.id)}`, { method: "DELETE", signal });
-                announce("Message deleted.");
+                await requestJSON(`/api/community/chat/messages?id=${encodeURIComponent(id)}`, { method: "DELETE", signal });
                 await refreshLatest({ silent: true, preserveScroll: true });
-            } catch (error) { if (!signal.aborted) announce(error.message || "Could not delete that message.", true); }
+            } catch (error) {
+                if (!signal.aborted) {
+                    upsertMessage(original, { silentUpdate: true });
+                    announce(error.message || "Could not delete that message.", true);
+                }
+            }
         };
 
         const copyMessage = async (message) => {
@@ -875,6 +1427,184 @@
             } catch (_) { announce("The browser could not enter full-screen mode.", true); }
         };
 
+        // Reaction details are fetched from the server on demand, then briefly
+        // cached per message. The popover is rendered under document.body so a
+        // message-history overflow container can never clip the member list.
+        let reactionPeekElement = null;
+        let reactionPeekTrigger = null;
+        let reactionPeekHideTimer = 0;
+        let reactionPeekHoverTimer = 0;
+        let reactionPeekSequence = 0;
+        const reactionPeekCache = new Map();
+
+        const clearReactionPeekHideTimer = () => {
+            if (reactionPeekHideTimer) window.clearTimeout(reactionPeekHideTimer);
+            reactionPeekHideTimer = 0;
+        };
+        const closeReactionPeek = () => {
+            clearReactionPeekHideTimer();
+            if (reactionPeekHoverTimer) window.clearTimeout(reactionPeekHoverTimer);
+            reactionPeekHoverTimer = 0;
+            reactionPeekSequence += 1;
+            if (reactionPeekElement) reactionPeekElement.remove();
+            reactionPeekElement = null;
+            reactionPeekTrigger = null;
+        };
+        const scheduleReactionPeekClose = (delay = 220) => {
+            clearReactionPeekHideTimer();
+            reactionPeekHideTimer = window.setTimeout(() => {
+                if (reactionPeekElement?.matches(":hover")) return;
+                closeReactionPeek();
+            }, delay);
+        };
+        const positionReactionPeek = (anchor) => {
+            if (!reactionPeekElement || !anchor?.isConnected) return;
+            const bounds = anchor.getBoundingClientRect();
+            const popup = reactionPeekElement.getBoundingClientRect();
+            const gutter = 10;
+            let left = bounds.left + bounds.width / 2 - popup.width / 2;
+            left = Math.max(gutter, Math.min(left, window.innerWidth - popup.width - gutter));
+            let top = bounds.top - popup.height - 9;
+            if (top < gutter) top = bounds.bottom + 9;
+            top = Math.max(gutter, Math.min(top, window.innerHeight - popup.height - gutter));
+            reactionPeekElement.style.left = `${Math.round(left)}px`;
+            reactionPeekElement.style.top = `${Math.round(top)}px`;
+        };
+        const ensureReactionPeek = () => {
+            if (reactionPeekElement?.isConnected) return reactionPeekElement;
+            const popup = makeElement("section", "mp-chat-reaction-people-popover");
+            popup.hidden = true;
+            popup.setAttribute("role", "dialog");
+            popup.setAttribute("aria-label", "People who reacted to this message");
+            const header = makeElement("header", "mp-chat-reaction-people-header");
+            const title = makeElement("strong", "", "People who reacted");
+            const close = makeElement("button", "mp-chat-reaction-people-close", "×");
+            close.type = "button";
+            close.setAttribute("aria-label", "Close reaction details");
+            close.addEventListener("click", closeReactionPeek, { signal });
+            header.append(title, close);
+            const body = makeElement("div", "mp-chat-reaction-people-body");
+            popup.append(header, body);
+            popup.addEventListener("pointerenter", clearReactionPeekHideTimer, { signal });
+            popup.addEventListener("pointerleave", () => scheduleReactionPeekClose(300), { signal });
+            document.body.append(popup);
+            reactionPeekElement = popup;
+            return popup;
+        };
+        const showReactionPeek = async (anchor, message, reaction) => {
+            if (!anchor?.isConnected || !message || !reaction || signal.aborted) return;
+            clearReactionPeekHideTimer();
+            const sequence = ++reactionPeekSequence;
+            reactionPeekTrigger = anchor;
+            const popup = ensureReactionPeek();
+            popup.hidden = false;
+            popup.dataset.messageId = String(message.id);
+            popup.dataset.reaction = reaction.key;
+            popup.querySelector(".mp-chat-reaction-people-header strong").textContent = `${reaction.emoji} ${reaction.label}`;
+            const body = popup.querySelector(".mp-chat-reaction-people-body");
+            body.replaceChildren(makeElement("p", "mp-chat-reaction-people-loading", "Loading people…"));
+            positionReactionPeek(anchor);
+
+            try {
+                const cacheKey = String(Number(message.id));
+                let record = reactionPeekCache.get(cacheKey);
+                if (!record || Date.now() - record.savedAt > 2000) {
+                    const url = new URL("/api/community/chat/reactions", window.location.origin);
+                    url.searchParams.set("messageId", String(Number(message.id)));
+                    const payload = await requestJSON(url.toString(), { signal });
+                    record = { savedAt: Date.now(), reactors: Array.isArray(payload.reactors) ? payload.reactors : [] };
+                    reactionPeekCache.set(cacheKey, record);
+                }
+                if (signal.aborted || sequence !== reactionPeekSequence || !popup.isConnected) return;
+                const reactors = record.reactors.filter((member) => member.reaction === reaction.key);
+                body.replaceChildren();
+                const heading = makeElement("p", "mp-chat-reaction-people-count", reactors.length ? `${reactors.length} ${reactors.length === 1 ? "person" : "people"}` : "No one has selected this reaction yet.");
+                body.append(heading);
+                if (reactors.length) {
+                    const list = makeElement("div", "mp-chat-reaction-people-list");
+                    reactors.forEach((member) => {
+                        const person = makeElement("button", "mp-chat-reaction-person");
+                        person.type = "button";
+                        const avatar = makeElement("span", "mp-chat-reaction-person-avatar", initials(member.fullName || member.username));
+                        const colors = avatarColorsFor(member.publicId || member.username || member.fullName);
+                        avatar.style.setProperty("--mp-avatar-hue", String(colors.primary));
+                        avatar.style.setProperty("--mp-avatar-hue-two", String(colors.secondary));
+                        avatar.style.setProperty("--mp-avatar-hue-three", String(colors.tertiary));
+                        const copy = makeElement("span", "mp-chat-reaction-person-copy");
+                        copy.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+                        if (member.username) copy.append(makeElement("small", "", `@${member.username}`));
+                        person.append(avatar, copy);
+                        person.addEventListener("click", () => {
+                            closeReactionPeek();
+                            if (member.publicId && typeof window.openMoviPilotCommunityMemberProfile === "function") {
+                                window.openMoviPilotCommunityMemberProfile(member.publicId, { source: "chat-reaction" });
+                            } else announce("This member's public profile is unavailable.", true);
+                        }, { signal });
+                        list.append(person);
+                    });
+                    body.append(list);
+                    if (record.reactors.length >= 100) body.append(makeElement("small", "mp-chat-reaction-people-note", "Showing the 100 most recent reactions."));
+                }
+                positionReactionPeek(anchor);
+            } catch (error) {
+                if (signal.aborted || sequence !== reactionPeekSequence) return;
+                body.replaceChildren(makeElement("p", "mp-chat-reaction-people-error", error.message || "Could not load reaction details."));
+                positionReactionPeek(anchor);
+            }
+        };
+        const bindReactionPeek = (pill, message, reaction) => {
+            let holdTimer = 0;
+            let holdTriggered = false;
+            pill.addEventListener("pointerdown", (event) => {
+                if (event.button !== undefined && event.button !== 0) return;
+                holdTriggered = false;
+                if (holdTimer) window.clearTimeout(holdTimer);
+                holdTimer = window.setTimeout(() => {
+                    holdTimer = 0;
+                    holdTriggered = true;
+                    void showReactionPeek(pill, message, reaction);
+                }, event.pointerType === "touch" || event.pointerType === "pen" ? 430 : 620);
+            }, { signal });
+            pill.addEventListener("pointerup", () => {
+                if (holdTimer) window.clearTimeout(holdTimer);
+                holdTimer = 0;
+                if (holdTriggered) scheduleReactionPeekClose(6000);
+            }, { signal });
+            pill.addEventListener("pointercancel", () => {
+                if (holdTimer) window.clearTimeout(holdTimer);
+                holdTimer = 0;
+            }, { signal });
+            pill.addEventListener("pointerenter", (event) => {
+                if (event.pointerType === "touch") return;
+                clearReactionPeekHideTimer();
+                if (reactionPeekHoverTimer) window.clearTimeout(reactionPeekHoverTimer);
+                reactionPeekHoverTimer = window.setTimeout(() => {
+                    reactionPeekHoverTimer = 0;
+                    void showReactionPeek(pill, message, reaction);
+                }, 520);
+            }, { signal });
+            pill.addEventListener("pointerleave", () => {
+                if (holdTimer) window.clearTimeout(holdTimer);
+                holdTimer = 0;
+                if (reactionPeekHoverTimer) window.clearTimeout(reactionPeekHoverTimer);
+                reactionPeekHoverTimer = 0;
+                if (!holdTriggered) scheduleReactionPeekClose(260);
+            }, { signal });
+            pill.addEventListener("contextmenu", (event) => {
+                event.preventDefault();
+                holdTriggered = true;
+                void showReactionPeek(pill, message, reaction);
+                scheduleReactionPeekClose(6000);
+            }, { signal });
+            pill.addEventListener("click", (event) => {
+                if (!holdTriggered) return;
+                event.preventDefault();
+                event.stopPropagation();
+                holdTriggered = false;
+                scheduleReactionPeekClose(6000);
+            }, { signal });
+        };
+
         const createMessageRow = (message) => {
             const row = makeElement("article", `mp-chat-message-row${message.isMine ? " is-mine" : ""}`);
             row.dataset.messageId = String(message.id);
@@ -1042,7 +1772,29 @@
                 } else if (message.kind === "movie" && message.movie) {
                     bubble.append(createMovieCard(message.movie));
                 }
-                if (message.body) bubble.append(makeElement("p", "mp-chat-message-text", message.body));
+                if (message.body) {
+                    const messageText = makeElement("p", "mp-chat-message-text");
+                    const mentionPattern = /(^|[^\p{L}\p{N}_.+-])@([\p{L}\p{N}_]+)/gu;
+                    let lastIndex = 0;
+                    for (const match of message.body.matchAll(mentionPattern)) {
+                        const matchStart = match.index || 0;
+                        const prefix = match[1] || "";
+                        const mentionStart = matchStart + prefix.length;
+                        const username = match[2];
+                        const mentionText = `@${username}`;
+                        if (mentionStart > lastIndex) messageText.append(document.createTextNode(message.body.slice(lastIndex, mentionStart)));
+                        const mentionLink = makeElement("button", "mp-chat-inline-mention", mentionText);
+                        mentionLink.type = "button";
+                        mentionLink.dataset.mentionUsername = username;
+                        mentionLink.dataset.chatTooltip = `Open @${username}'s public profile`;
+                        mentionLink.setAttribute("aria-label", `Open @${username}'s public profile`);
+                        mentionLink.addEventListener("click", () => void openMentionProfile(username), { signal });
+                        messageText.append(mentionLink);
+                        lastIndex = mentionStart + mentionText.length;
+                    }
+                    if (lastIndex < message.body.length) messageText.append(document.createTextNode(message.body.slice(lastIndex)));
+                    bubble.append(messageText);
+                }
                 if (!message.body && ["image", "video", "voice"].includes(message.kind) && !message.attachmentUrl) bubble.append(makeElement("p", "mp-chat-message-text", "Attachment unavailable"));
             }
 
@@ -1080,7 +1832,13 @@
                 const pill = makeElement("button", `mp-chat-reaction-pill${message.myReaction === reaction.key ? " is-mine" : ""}`);
                 pill.type = "button"; pill.dataset.chatTooltip = reaction.label; pill.setAttribute("aria-label", reaction.label); pill.setAttribute("aria-pressed", String(message.myReaction === reaction.key));
                 pill.append(makeElement("span", "", reaction.emoji)); pill.append(makeElement("small", "", count));
-                pill.addEventListener("click", () => addReaction(message, reaction.key), { signal });
+                bindReactionPeek(pill, message, reaction);
+                pill.addEventListener("click", (event) => {
+                    if (event.defaultPrevented) return;
+                    // Normal tap/click still adds/removes the current viewer's reaction;
+                    // long-press and hover are reserved for the reactor roster.
+                    void addReaction(message, reaction.key);
+                }, { signal });
                 reactions.append(pill);
             });
             if (reactions.childElementCount) stack.append(reactions);
@@ -1092,9 +1850,33 @@
 
         const describeKind = (kind) => ({ image: "Photo", video: "Video", voice: "Voice note", movie: "Movie card", deleted: "This message was deleted" }[kind] || "Message");
 
+        const openOwnPrivateProfile = () => {
+            const profileButton = document.getElementById("profileButton");
+            const profileOverlay = document.getElementById("profileOverlay");
+            const profileDialog = document.getElementById("profileDialog");
+            if (!profileButton || !profileOverlay) {
+                announce("Your personal profile modal is unavailable. Check that the dashboard profile modal is present.", true);
+                return;
+            }
+            // The full-page chat sits above ordinary dashboard layers. Raise the
+            // canonical private profile overlay so it can actually be seen above chat.
+            profileOverlay.style.setProperty("z-index", "2147483602", "important");
+            const isProfileOpen = () => !profileOverlay.hidden
+                && getComputedStyle(profileOverlay).display !== "none"
+                && getComputedStyle(profileOverlay).visibility !== "hidden";
+            if (!isProfileOpen()) profileButton.click();
+            window.requestAnimationFrame(() => {
+                if (!isProfileOpen()) {
+                    announce("Your personal profile did not open. Check that profile_modal.js is loaded and the profileButton handler is attached.", true);
+                    return;
+                }
+                profileDialog?.focus({ preventScroll: true });
+            });
+        };
+
         const openSenderProfile = (message) => {
             if (message?.isMine) {
-                document.getElementById("profileButton")?.click();
+                openOwnPrivateProfile();
                 return;
             }
             const publicId = safeString(message?.sender?.publicId);
@@ -1105,6 +1887,26 @@
             }
         };
 
+        const openMentionProfile = async (username) => {
+            const cleanUsername = String(username || "").replace(/^@/, "").trim();
+            if (!cleanUsername) return;
+            try {
+                const url = new URL("/api/community/chat/members", window.location.origin);
+                url.searchParams.set("username", cleanUsername);
+                const payload = await requestJSON(url.toString(), { signal });
+                if (signal.aborted) return;
+                const publicID = safeString(payload.member?.publicId);
+                if (!publicID) throw new Error("That member's public profile is unavailable.");
+                if (typeof window.openMoviPilotCommunityMemberProfile === "function") {
+                    window.openMoviPilotCommunityMemberProfile(publicID, { source: "chat-mention" });
+                } else {
+                    announce("The Community public-profile service is not ready yet.", true);
+                }
+            } catch (error) {
+                if (!signal.aborted) announce(error.message || "Could not open that member's profile.", true);
+            }
+        };
+
         const jumpToMessage = (id) => {
             const target = root.querySelector(`[data-message-id="${Number(id)}"]`);
             if (!target) { announce("That message is outside the currently loaded history."); return; }
@@ -1112,6 +1914,26 @@
             target.classList.remove("is-highlighted");
             requestAnimationFrame(() => target.classList.add("is-highlighted"));
             window.setTimeout(() => target.classList.remove("is-highlighted"), 1300);
+        };
+
+        const jumpToMessageAsync = async (id) => {
+            const targetID = Number(id);
+            if (!targetID) return;
+            let target = root.querySelector(`[data-message-id="${targetID}"]`);
+            let attempts = 0;
+            while (!target && state.oldestID > 0 && targetID < state.oldestID && attempts < 20 && !signal.aborted) {
+                const previousOldest = state.oldestID;
+                await loadOlderMessages();
+                attempts += 1;
+                if (state.oldestID >= previousOldest) break;
+                target = root.querySelector(`[data-message-id="${targetID}"]`);
+            }
+            target = target || root.querySelector(`[data-message-id="${targetID}"]`);
+            if (!target) { announce("That mention is older than the available chat history.", true); return; }
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+            target.classList.remove("is-highlighted");
+            requestAnimationFrame(() => target.classList.add("is-highlighted"));
+            window.setTimeout(() => target.classList.remove("is-highlighted"), 1800);
         };
 
         const attachMessageGestures = (row, bubble, message) => {
@@ -1160,6 +1982,7 @@
             if (!message || !Number(message.id)) return false;
             const id = Number(message.id);
             const exists = state.messages.has(id);
+            if (exists && reactionPeekCache) reactionPeekCache.delete(String(id));
             const wasAtBottom = isNearBottom();
             state.messages.set(id, message);
             state.latestID = Math.max(state.latestID, id);
@@ -1507,8 +2330,22 @@
             }
             if (state.eventSource) state.eventSource.close();
             if (state.pollTimer) window.clearInterval(state.pollTimer);
+            if (state.presenceTimer) window.clearInterval(state.presenceTimer);
+            if (state.mentionTimer) window.clearInterval(state.mentionTimer);
+            if (state.mentionSearchTimer) window.clearTimeout(state.mentionSearchTimer);
             if (state.toastTimer) window.clearTimeout(state.toastTimer);
             if (state.movieSearchTimer) window.clearTimeout(state.movieSearchTimer);
+            closeReactionPeek();
+            if (reactionPeekHoverTimer) window.clearTimeout(reactionPeekHoverTimer);
+            if (reactionPeekHideTimer) window.clearTimeout(reactionPeekHideTimer);
+            if (mentionMenu) mentionMenu.remove();
+            if (onlineModal) onlineModal.remove();
+            if (globalTooltip) globalTooltip.remove();
+            globalTooltip = null;
+            globalTooltipTarget = null;
+            if (chatClientID) {
+                try { fetch("/api/community/chat/presence", { method: "DELETE", credentials: "same-origin", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientId: chatClientID }) }).catch(() => {}); } catch (_) {}
+            }
             if (state.recordTimer) window.clearInterval(state.recordTimer);
             pointerTimers.forEach((timer) => window.clearTimeout(timer)); pointerTimers.clear();
             if (state.recorder && state.recorder.state !== "inactive") { state.recordStopRequested = false; try { state.recorder.stop(); } catch (_) {} }
@@ -1537,75 +2374,52 @@
         dashboardMain?.addEventListener("transitionend", scheduleChatViewportSync, { signal });
 
         form?.addEventListener("submit", (event) => { event.preventDefault(); void sendMessage(); }, { signal });
-        input?.addEventListener("input", adjustTextarea, { signal });
+        input?.addEventListener("input", () => { adjustTextarea(); updateMentionSuggestions(); }, { signal });
+        input?.addEventListener("click", updateMentionSuggestions, { signal });
+        input?.addEventListener("keyup", (event) => {
+            if (["ArrowUp", "ArrowDown", "Escape"].includes(event.key)) return;
+            updateMentionSuggestions();
+        }, { signal });
         input?.addEventListener("keydown", (event) => {
+            const activeMentionQuery = findMentionQuery();
+            if (event.key === "Enter" && !event.shiftKey && !event.isComposing && activeMentionQuery && (!mentionMenu || mentionMenu.hidden) && activeMentionQuery.query.length > 0) {
+                event.preventDefault();
+                if (state.mentionSearchTimer) window.clearTimeout(state.mentionSearchTimer);
+                void searchMentionCandidates(activeMentionQuery.query);
+                return;
+            }
+            if (mentionMenu && !mentionMenu.hidden && mentionCandidates.length) {
+                if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                    event.preventDefault();
+                    mentionSelectedIndex = (mentionSelectedIndex + (event.key === "ArrowDown" ? 1 : -1) + mentionCandidates.length) % mentionCandidates.length;
+                    mentionMenu.querySelectorAll(".mp-chat-mention-option").forEach((option, index) => {
+                        option.classList.toggle("is-selected", index === mentionSelectedIndex);
+                        option.setAttribute("aria-selected", String(index === mentionSelectedIndex));
+                    });
+                    input.setAttribute("aria-activedescendant", `mpChatMentionOption${mentionSelectedIndex}`);
+                    return;
+                }
+                if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+                    event.preventDefault(); insertMention(mentionCandidates[mentionSelectedIndex]); return;
+                }
+                if (event.key === "Escape") { event.preventDefault(); closeMentionMenu(); return; }
+            }
             if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void sendMessage(); }
         }, { signal });
-                    /* =========================================================
-                CLOSE CHATROOM — RETURN TO COMMUNITY
-                ---------------------------------------------------------
-                Restores the Community landing view and clears the
-                dashboard sidebar's selected highlight.
-                ========================================================= */
-
-                closeButton?.addEventListener("click", () => {
-
-                    /* Stop Chatroom activity and clean up its listeners. */
-                    controller.abort();
-
-
-                    /* Hide the Chatroom and remove its fullscreen styling. */
-                    if (mount) {
-                        mount.hidden = true;
-                        mount.classList.remove("is-fullpage");
-                    }
-
-
-                    /* Restore the Community page layout. */
-                    const communityPage =
-                        mount?.closest("#mpCommunityPage") ||
-                        document.getElementById("mpCommunityPage");
-
-                    communityPage?.classList.remove("is-chat-expanded");
-
-                    document.documentElement.classList.remove(
-                        "mp-community-chat-fullscreen-open"
-                    );
-
-                    document.body.classList.remove(
-                        "mp-community-chat-fullscreen-open"
-                    );
-
-
-                    /* Restore the Chatroom opener's accessibility state. */
-                    const opener =
-                        document.getElementById("mpCommunityOpenChat");
-
-                    if (opener) {
-                        opener.setAttribute("aria-expanded", "false");
-
-                        opener.focus({
-                            preventScroll: true
-                        });
-                    }
-
-
-                    /* ================================================
-                    CLEAR SIDEBAR HIGHLIGHT
-                    ================================================ */
-
-                    window.dispatchEvent(
-                        new CustomEvent(
-                            "movipilotSidebarModalClosed",
-                            {
-                                detail: {
-                                    source: "community-chat"
-                                }
-                            }
-                        )
-                    );
-
-                }, { signal });
+        window.addEventListener("resize", positionMentionMenu, { passive: true, signal });
+        history?.addEventListener("scroll", positionMentionMenu, { passive: true, signal });
+        closeButton?.addEventListener("click", () => {
+            // Return to the Community landing view, preserving the persistent
+            // dashboard shell and the member-search state.
+            controller.abort();
+            if (mount) { mount.hidden = true; mount.classList.remove("is-fullpage"); }
+            const communityPage = mount?.closest("#mpCommunityPage") || document.getElementById("mpCommunityPage");
+            communityPage?.classList.remove("is-chat-expanded");
+            document.documentElement.classList.remove("mp-community-chat-fullscreen-open");
+            document.body.classList.remove("mp-community-chat-fullscreen-open");
+            const opener = document.getElementById("mpCommunityOpenChat");
+            if (opener) { opener.setAttribute("aria-expanded", "false"); opener.focus({ preventScroll: true }); }
+        }, { signal });
         attachButton?.addEventListener("click", () => {
             const expanded = attachButton.getAttribute("aria-expanded") === "true";
             attachButton.setAttribute("aria-expanded", String(!expanded));
@@ -1724,6 +2538,11 @@
             if (isMessagePopupOrTrigger(event.target)) return;
             closeAllMenus();
         }, { capture: true, signal });
+        document.addEventListener("pointerdown", (event) => {
+            if (!reactionPeekElement) return;
+            if (reactionPeekElement.contains(event.target) || reactionPeekTrigger?.contains(event.target)) return;
+            closeReactionPeek();
+        }, { capture: true, signal });
 
         document.addEventListener("click", (event) => {
             if (attachMenu && !attachMenu.hidden && !attachMenu.contains(event.target) && !attachButton?.contains(event.target)) closeAttachMenu();
@@ -1731,7 +2550,13 @@
             // Keyboard-activated clicks do not necessarily emit pointerdown.
             if (event.detail === 0 && !isMessagePopupOrTrigger(event.target)) closeAllMenus();
         }, { signal });
+        document.addEventListener("pointerdown", (event) => {
+            if (mentionMenu && !mentionMenu.hidden && !mentionMenu.contains(event.target) && !input?.contains(event.target)) closeMentionMenu();
+        }, { capture: true, signal });
         document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && onlineModal && !onlineModal.hidden) {
+                event.preventDefault(); onlineModal.hidden = true; onlineButton?.setAttribute("aria-expanded", "false"); onlineButton?.focus({ preventScroll: true }); return;
+            }
             if (event.key === "Escape" && mediaViewer && !mediaViewer.hidden) {
                 event.preventDefault();
                 closeMediaViewer();
@@ -1774,6 +2599,7 @@
             }
         }
 
+        startPresenceAndMentions();
         input?.focus({ preventScroll: true });
         console.log("[MOVIPILOT] Community chatroom initialized.");
     };

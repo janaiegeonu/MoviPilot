@@ -683,9 +683,6 @@
             const thisProfileRequest = activeProfileRequest;
             activeProfile = null;
             profileLoading = true;
-            // This modal may be portaled directly under <body>. Ancestor selectors
-            // no longer control its layer then, so always place it over full-page chat.
-            modalLayer.style.setProperty("z-index", "2147483001", "important");
             modalLayer.hidden = false;
             document.body.classList.add("mp-community-modal-open");
             modal.scrollTop = 0;

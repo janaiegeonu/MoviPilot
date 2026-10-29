@@ -363,7 +363,6 @@
 .mp-community-scroll-cue { display: inline-flex; align-items: center; gap: 9px; }
 .mp-community-scroll-cue > span { display: inline-block; width: 21px; height: 1px; background: linear-gradient(90deg, #74ead6, transparent); }
 
-
 /* =========================================================
    COMMUNITY CHATROOM HERO CTA
    Premium blue / cyan / sea-green glass treatment
@@ -609,6 +608,7 @@
 .mp-community-hero-footer i { padding: 0 7px; color: #6dddcf; font-style: normal; }
 .mp-community-scroll-cue { display: inline-flex; align-items: center; gap: 9px; }
 .mp-community-scroll-cue > span { display: inline-block; width: 21px; height: 1px; background: linear-gradient(90deg, #74ead6, transparent); }
+
 /* ------------------------ DISCOVERY ------------------------- */
 .mp-community-discovery {
     position: relative;
@@ -3062,176 +3062,405 @@ body.mp-community-chat-fullscreen-open {
 #mpCommunityProfileDescription[data-presence="checking"] { color: #8cc8d4; }
 
 /* ========================================================================
-   COMMUNITY CHAT SELF IDENTITY + UNCLIPPED EMOJI BAR
-   Additive overrides only: existing chat styles and dashboard features remain.
+   MOVIPILOT COMMUNITY CHAT — EDITABLE REACTION BAR SIZING
+
+   This final override intentionally appears at the end of the stylesheet so
+   these values win over earlier defaults without removing the original styles.
+
+   QUICK CUSTOMIZATION:
+   - --mp-reaction-button-width: emoji button width.
+   - --mp-reaction-button-height: vertical room for the emoji glyph.
+   - --mp-reaction-gap: spacing between emoji buttons.
+   - --mp-reaction-padding-x / -y: inner space around the emoji row.
+   - --mp-reaction-max-width: maximum width; on narrow screens the emoji row
+     wraps instead of clipping or forcing a horizontal scrollbar.
    ======================================================================== */
-.mp-chat-online-member-name-line {
+.mp-chat-reaction-picker {
+    --mp-reaction-button-width: 36px;
+    --mp-reaction-button-height: 44px;
+    --mp-reaction-gap: 4px;
+    --mp-reaction-padding-x: 10px;
+    --mp-reaction-padding-y: 9px;
+    --mp-reaction-max-width: 378px;
+
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--mp-reaction-gap);
+    width: max-content;
+    max-width: min(var(--mp-reaction-max-width), calc(100vw - 20px));
+    min-height: calc(var(--mp-reaction-button-height) + var(--mp-reaction-padding-y) + var(--mp-reaction-padding-y) + 2px);
+    padding: var(--mp-reaction-padding-y) var(--mp-reaction-padding-x);
+    overflow: visible;
+    box-sizing: border-box;
+    scrollbar-width: none;
+    white-space: normal;
+}
+
+.mp-chat-reaction-picker::-webkit-scrollbar {
+    display: none;
+}
+
+.mp-chat-reaction-picker button {
+    display: grid;
+    place-items: center;
+    flex: 0 0 var(--mp-reaction-button-width);
+    width: var(--mp-reaction-button-width);
+    min-width: var(--mp-reaction-button-width);
+    height: var(--mp-reaction-button-height);
+    min-height: var(--mp-reaction-button-height);
+    margin: 0;
+    padding: 1px 0 3px;
+    overflow: visible;
+    box-sizing: border-box;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 21px;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: center;
+    vertical-align: middle;
+    transform-origin: center;
+}
+
+/* Give the emoji glyph room to animate without being cut off at the top. */
+.mp-chat-reaction-picker button:hover,
+.mp-chat-reaction-picker button[aria-pressed="true"] {
+    position: relative;
+    z-index: 1;
+    transform: translateY(-1px) scale(1.06);
+}
+
+/* A little more breathing room on touch screens; wrapping is preferred to clipping. */
+@media (max-width: 760px) {
+    .mp-chat-reaction-picker {
+        --mp-reaction-button-width: 35px;
+        --mp-reaction-button-height: 44px;
+        --mp-reaction-gap: 3px;
+        --mp-reaction-padding-x: 8px;
+        --mp-reaction-padding-y: 9px;
+        --mp-reaction-max-width: 378px;
+        max-width: calc(100vw - 20px);
+    }
+
+    .mp-chat-reaction-picker button {
+        font-size: 21px;
+        line-height: 1.2;
+    }
+}
+
+
+/* ========================================================================
+   MOVIPILOT COMMUNITY CHAT — REACTION PEOPLE POPOVER
+   The popover is portalled to document.body so chat history overflow cannot
+   clip it. Keep these selectors global (not scoped to .mp-community-page).
+   ======================================================================== */
+.mp-chat-reaction-people-popover[hidden] {
+    display: none !important;
+}
+.mp-chat-reaction-people-popover {
+    position: fixed;
+    z-index: 2147483646;
+    display: flex;
+    flex-direction: column;
+    width: min(320px, calc(100vw - 20px));
+    max-width: calc(100vw - 20px);
+    max-height: min(430px, calc(100vh - 20px));
+    overflow: hidden;
+    border: 1px solid rgba(111, 220, 228, .28);
+    border-radius: 18px;
+    color: #e9f8ff;
+    background: linear-gradient(145deg, rgba(4, 18, 37, .985), rgba(5, 34, 47, .985));
+    box-shadow: 0 22px 70px rgba(0, 0, 0, .6), inset 0 1px rgba(255, 255, 255, .06);
+    -webkit-backdrop-filter: blur(22px) saturate(145%);
+    backdrop-filter: blur(22px) saturate(145%);
+    box-sizing: border-box;
+    isolation: isolate;
+}
+.mp-chat-reaction-people-header {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 10px 13px 10px 15px;
+    border-bottom: 1px solid rgba(143, 215, 231, .13);
+    background: linear-gradient(105deg, rgba(30, 79, 111, .48), rgba(11, 75, 76, .25));
+}
+.mp-chat-reaction-people-header strong {
+    min-width: 0;
+    color: #eaffff;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+.mp-chat-reaction-people-close {
+    display: grid;
+    flex: 0 0 28px;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid rgba(153, 220, 231, .18);
+    border-radius: 9px;
+    color: #b9dce8;
+    background: rgba(3, 17, 31, .72);
+    font-size: 19px;
+    line-height: 1;
+    cursor: pointer;
+}
+.mp-chat-reaction-people-close:hover {
+    border-color: rgba(130, 241, 225, .45);
+    color: #fff;
+    background: rgba(29, 106, 111, .5);
+}
+.mp-chat-reaction-people-body {
+    min-height: 42px;
+    max-height: min(370px, calc(100vh - 90px));
+    padding: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(103, 200, 212, .42) transparent;
+}
+.mp-chat-reaction-people-count,
+.mp-chat-reaction-people-loading,
+.mp-chat-reaction-people-error {
+    margin: 0 0 9px;
+    padding: 4px 5px 7px;
+    color: #a9c7d5;
+    font-size: 10px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.mp-chat-reaction-people-error { color: #ffb7b7; }
+.mp-chat-reaction-people-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+.mp-chat-reaction-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 8px 9px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    color: #e7f5fb;
+    background: rgba(111, 179, 205, .055);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+.mp-chat-reaction-person:hover,
+.mp-chat-reaction-person:focus-visible {
+    border-color: rgba(108, 230, 224, .32);
+    background: rgba(54, 144, 156, .2);
+}
+.mp-chat-reaction-person:hover { transform: translateY(-1px); }
+.mp-chat-reaction-person.is-self {
+    border-color: rgba(121, 241, 203, .23);
+    background: linear-gradient(110deg, rgba(45, 141, 126, .18), rgba(49, 111, 151, .13));
+}
+.mp-chat-reaction-person-avatar {
+    display: grid;
+    flex: 0 0 36px;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, .28);
+    border-radius: 50%;
+    color: #f6ffff;
+    background: linear-gradient(135deg,
+        hsl(var(--mp-avatar-hue, 196) 73% 42%),
+        hsl(var(--mp-avatar-hue-two, 166) 70% 34%),
+        hsl(var(--mp-avatar-hue-three, 218) 72% 46%));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .2), inset 0 1px rgba(255, 255, 255, .18);
+    font-size: 10px;
+    font-weight: 850;
+}
+.mp-chat-reaction-person-copy {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.mp-chat-reaction-person-name-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 7px;
     min-width: 0;
 }
-.mp-chat-online-member-name-line > strong {
-    display: block;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.mp-chat-reaction-person-copy strong {
+    max-width: 100%;
+    color: #f2fcff;
+    font-size: 11px;
+    font-weight: 780;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
 }
-.mp-chat-online-me-badge {
+.mp-chat-reaction-person-copy small {
+    color: #8eafbf;
+    font-size: 9px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.mp-chat-reaction-me-badge {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    min-height: 18px;
+    min-height: 17px;
     padding: 2px 6px;
-    border: 1px solid rgba(112, 246, 207, .42);
-    border-radius: 999px;
-    background: linear-gradient(120deg, rgba(42, 176, 143, .22), rgba(46, 158, 198, .2));
-    color: #a7ffe2;
+    border: 1px solid rgba(126, 241, 203, .34);
+    border-radius: 6px;
+    color: #a9ffe3;
+    background: rgba(30, 126, 101, .22);
     font-size: 8px;
     font-weight: 900;
-    letter-spacing: .12em;
+    letter-spacing: .08em;
     line-height: 1;
-    box-shadow: 0 0 12px rgba(69, 235, 184, .09), inset 0 1px rgba(255,255,255,.05);
 }
-.mp-chat-online-member.is-self {
-    border-color: rgba(103, 238, 204, .3);
-    background: linear-gradient(105deg, rgba(16, 80, 88, .42), rgba(10, 39, 58, .72));
-}
-.mp-chat-online-member.is-self .mp-chat-online-avatar {
-    box-shadow: 0 0 0 2px rgba(104, 238, 201, .1), 0 0 16px rgba(85, 237, 199, .12);
-}
-
-/* The composer emoji bar is rendered into document.body by JavaScript. That
-   removes it from message-stack overflow/transform ancestors which previously
-   clipped the left/right edges. All nine reactions fit in a responsive grid. */
-.mp-chat-reaction-picker.mp-chat-floating-reaction-picker {
-    position: fixed;
-    z-index: 10060;
-    display: grid;
-    grid-template-columns: repeat(9, minmax(0, 1fr));
-    align-items: center;
-    gap: 3px;
-    width: min(360px, calc(100vw - 16px));
-    max-width: calc(100vw - 16px);
-    min-width: 0;
-    padding: 7px;
-    overflow: visible;
-    box-sizing: border-box;
-    border: 1px solid rgba(126, 223, 236, .32);
-    border-radius: 16px;
-    background: linear-gradient(130deg, rgba(4, 19, 39, .99), rgba(4, 39, 49, .99));
-    box-shadow: 0 18px 48px rgba(0,0,0,.52), inset 0 1px rgba(255,255,255,.06);
-    backdrop-filter: blur(18px) saturate(125%);
-    -webkit-backdrop-filter: blur(18px) saturate(125%);
-}
-.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    min-width: 0;
-    height: 34px;
-    padding: 0;
-    flex: initial;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: transparent;
-    font-size: clamp(15px, 4vw, 19px);
-    line-height: 1;
-    cursor: pointer;
-    transition: transform .16s ease, background .16s ease, border-color .16s ease;
-}
-.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button:hover,
-.mp-chat-reaction-picker.mp-chat-floating-reaction-picker button[aria-pressed="true"] {
-    transform: translateY(-2px) scale(1.06);
-    border-color: rgba(137, 238, 228, .38);
-    background: rgba(62, 147, 156, .2);
-}
-
-/* Styling for the existing long-press/hover roster on a reaction chip. */
-.mp-chat-reaction-people-popover[hidden] { display: none !important; }
-.mp-chat-reaction-people-popover {
-    position: fixed;
-    z-index: 10059;
-    display: flex;
-    flex-direction: column;
-    width: min(320px, calc(100vw - 20px));
-    max-height: min(420px, calc(100dvh - 24px));
-    min-width: 0;
-    overflow: hidden;
-    border: 1px solid rgba(126, 223, 236, .28);
-    border-radius: 17px;
-    background: linear-gradient(145deg, rgba(4, 19, 38, .99), rgba(5, 37, 47, .99));
-    color: #e9f8ff;
-    box-shadow: 0 20px 54px rgba(0,0,0,.52), inset 0 1px rgba(255,255,255,.05);
-    backdrop-filter: blur(18px) saturate(125%);
-    -webkit-backdrop-filter: blur(18px) saturate(125%);
-}
-.mp-chat-reaction-people-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 12px 14px;
-    border-bottom: 1px solid rgba(126, 223, 236, .13);
-}
-.mp-chat-reaction-people-header strong { color: #eafcff; font-size: 12px; font-weight: 800; }
-.mp-chat-reaction-people-close {
-    display: grid;
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
-    place-items: center;
-    border: 1px solid rgba(142, 208, 221, .15);
-    border-radius: 9px;
-    background: rgba(255,255,255,.04);
-    color: #c5e5ee;
-    font-size: 19px;
-    cursor: pointer;
-}
-.mp-chat-reaction-people-body { min-height: 48px; overflow-y: auto; padding: 10px; }
-.mp-chat-reaction-people-count { margin: 0 0 8px; color: #8eb7c6; font-size: 10px; }
-.mp-chat-reaction-people-list { display: grid; gap: 5px; }
-.mp-chat-reaction-person {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    width: 100%;
-    min-width: 0;
-    padding: 7px;
-    border: 1px solid rgba(121,194,221,.1);
-    border-radius: 12px;
-    background: rgba(7,29,47,.58);
-    color: #e8f7ff;
-    text-align: left;
-    cursor: pointer;
-}
-.mp-chat-reaction-person:hover { border-color: rgba(103,225,217,.36); background: rgba(16,68,78,.42); }
-.mp-chat-reaction-person-avatar {
-    display: grid;
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
-    place-items: center;
-    border: 1px solid hsla(var(--mp-avatar-hue),75%,80%,.35);
-    border-radius: 11px;
-    background: linear-gradient(135deg,hsl(var(--mp-avatar-hue),58%,29%),hsl(var(--mp-avatar-hue-two),58%,22%) 55%,hsl(var(--mp-avatar-hue-three),60%,18%));
-    color: #f2ffff;
+.mp-chat-reaction-people-note {
+    display: block;
+    margin: 9px 4px 1px;
+    color: #829eac;
     font-size: 9px;
-    font-weight: 850;
+    line-height: 1.5;
 }
-.mp-chat-reaction-person-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 3px; }
-.mp-chat-reaction-person-copy strong { overflow: hidden; color: #eaf8ff; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.mp-chat-reaction-person-copy small { overflow: hidden; color: #86aebf; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.mp-chat-reaction-people-note,
-.mp-chat-reaction-people-loading,
-.mp-chat-reaction-people-error { display: block; margin: 8px 2px 2px; color: #86aebf; font-size: 10px; line-height: 1.45; }
-.mp-chat-reaction-people-error { color: #ffb8c0; }
+@media (max-width: 480px) {
+    .mp-chat-reaction-people-popover {
+        width: min(320px, calc(100vw - 16px));
+        max-width: calc(100vw - 16px);
+        max-height: min(390px, calc(100vh - 16px));
+        border-radius: 15px;
+    }
+    .mp-chat-reaction-people-body {
+        max-height: min(330px, calc(100vh - 76px));
+    }
+    .mp-chat-reaction-person { padding: 8px; }
+}
 
-@media (max-width: 390px) {
-    .mp-chat-reaction-picker.mp-chat-floating-reaction-picker { gap: 2px; padding: 6px; border-radius: 13px; }
-    .mp-chat-reaction-picker.mp-chat-floating-reaction-picker button { height: 31px; font-size: 15px; border-radius: 8px; }
-    .mp-chat-online-member-name-line { gap: 5px; }
-    .mp-chat-online-me-badge { min-height: 16px; padding: 2px 5px; font-size: 7px; }
+/* ========================================================================
+   SAFE CUSTOMIZATION ZONE — ONLINE ROSTER SELF / ME BADGE
+   Added as an override so the original Community styles stay intact.
+   Edit these values to customize only the current-user marker.
+   ======================================================================== */
+
+/* Give the current user's online-list row a clearer premium treatment. */
+.mp-chat-online-member.is-self,
+.mp-chat-online-member.is-me,
+.mp-chat-online-member[data-is-self="true"] {
+    position: relative;
+    border-color: rgba(119, 244, 215, 0.48);
+    background:
+        radial-gradient(ellipse at 0 0, rgba(104, 241, 215, 0.13), transparent 62%),
+        linear-gradient(115deg, rgba(28, 110, 111, 0.24), rgba(25, 73, 112, 0.22));
+    box-shadow:
+        inset 0 1px rgba(255, 255, 255, 0.075),
+        0 0 0 1px rgba(93, 230, 204, 0.055),
+        0 7px 20px rgba(0, 0, 0, 0.14);
+}
+
+.mp-chat-online-member.is-self:hover,
+.mp-chat-online-member.is-me:hover,
+.mp-chat-online-member[data-is-self="true"]:hover {
+    border-color: rgba(142, 255, 224, 0.72);
+    background:
+        radial-gradient(ellipse at 0 0, rgba(104, 241, 215, 0.19), transparent 62%),
+        linear-gradient(115deg, rgba(32, 131, 129, 0.31), rgba(30, 91, 137, 0.27));
+}
+
+.mp-chat-online-member-name-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.mp-chat-online-me-badge,
+.mp-chat-presence-me-badge,
+.mp-chat-me-badge {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 30px;
+    min-height: 19px;
+    padding: 3px 8px;
+    border: 1px solid rgba(142, 255, 224, 0.58);
+    border-radius: 999px;
+    color: #c5fff0;
+    background:
+        linear-gradient(135deg, rgba(64, 212, 176, 0.28), rgba(67, 160, 232, 0.22)),
+        rgba(4, 30, 39, 0.88);
+    box-shadow:
+        inset 0 1px rgba(255, 255, 255, 0.19),
+        0 0 0 2px rgba(81, 231, 201, 0.055),
+        0 0 15px rgba(74, 221, 194, 0.13);
+    font-size: 8px;
+    font-weight: 950;
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    vertical-align: middle;
+            transform: translateX(5px);
+
+}
+
+.mp-chat-online-member.is-self .mp-chat-online-avatar,
+.mp-chat-online-member.is-me .mp-chat-online-avatar,
+.mp-chat-online-member[data-is-self="true"] .mp-chat-online-avatar {
+    border-color: rgba(151, 255, 222, 0.78);
+    box-shadow:
+        0 0 0 3px rgba(93, 231, 204, 0.09),
+        0 0 20px rgba(75, 224, 192, 0.13),
+        inset 0 1px rgba(255, 255, 255, 0.18);
+}
+
+/* The Community member-search card uses this badge class too. */
+.mp-community-self-badge {
+    min-height: 20px;
+    padding: 3px 9px;
+    border-color: rgba(142, 255, 224, 0.53);
+    border-radius: 999px;
+    color: #c5fff0;
+    background:
+        linear-gradient(135deg, rgba(64, 212, 176, 0.26), rgba(67, 160, 232, 0.22)),
+        rgba(4, 30, 39, 0.72);
+    box-shadow:
+        inset 0 1px rgba(255, 255, 255, 0.15),
+        0 0 13px rgba(74, 221, 194, 0.1);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.13em;
+    line-height: 1.1;
+    white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+    .mp-chat-online-member-name-row {
+        gap: 5px;
+    }
+
+    .mp-chat-online-me-badge,
+    .mp-chat-presence-me-badge,
+    .mp-chat-me-badge {
+        min-width: 27px;
+        min-height: 18px;
+        padding: 3px 7px;
+        font-size: 7px;
+        transform: translateX(5px);
+    }
 }

@@ -50,6 +50,18 @@ type CommunityChatMentionNotification struct {
 	CreatedAt      string `json:"createdAt"`
 }
 
+// CommunityChatReactionMemberForViewer is the public, privacy-safe reaction roster.
+// IsSelf is computed on the server for the authenticated viewer, so the browser
+// never has to guess whether a reactor is the current account.
+type CommunityChatReactionMemberForViewer struct {
+	PublicID  string `json:"publicId"`
+	Username  string `json:"username"`
+	FullName  string `json:"fullName"`
+	Reaction  string `json:"reaction"`
+	CreatedAt string `json:"createdAt"`
+	IsSelf    bool   `json:"isSelf"`
+}
+
 // EnsureCommunityChatSocialSchema creates additive presence and mention tables.
 // It migrates old presence rows to a numeric epoch timestamp; message and reaction
 // history is not dropped or rewritten by this migration.
@@ -567,4 +579,66 @@ func MarkCommunityChatMentionRead(userID, mentionID int64) error {
 		return fmt.Errorf("mark chat mention read: %w", err)
 	}
 	return nil
+}
+
+// ListCommunityChatReactionMembersForViewer returns the most recent reactors
+// for one active chat message, marking the authenticated viewer's own reaction.
+// It deliberately does not expose internal numeric user IDs or email addresses.
+func ListCommunityChatReactionMembersForViewer(messageID, viewerID int64, limit int) ([]CommunityChatReactionMemberForViewer, error) {
+	if DB == nil || messageID <= 0 || viewerID <= 0 {
+		return nil, fmt.Errorf("invalid message, viewer, or database")
+	}
+	if limit < 1 || limit > 200 {
+		limit = 100
+	}
+
+	var exists int
+	if err := DB.QueryRow(
+		`SELECT EXISTS(SELECT 1 FROM community_chat_messages WHERE id=? AND deleted_at IS NULL)`,
+		messageID,
+	).Scan(&exists); err != nil {
+		return nil, fmt.Errorf("check reaction target message: %w", err)
+	}
+	if exists == 0 {
+		return nil, fmt.Errorf("message not found")
+	}
+
+	rows, err := DB.Query(`
+		SELECT u.public_id,
+		       COALESCE(u.username, ''),
+		       u.full_name,
+		       r.reaction,
+		       CAST(r.created_at AS TEXT),
+		       CASE WHEN r.user_id = ? THEN 1 ELSE 0 END
+		FROM community_chat_reactions AS r
+		JOIN users AS u ON u.id = r.user_id
+		WHERE r.message_id = ?
+		ORDER BY r.created_at DESC, u.id ASC
+		LIMIT ?`, viewerID, messageID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list reaction members for viewer: %w", err)
+	}
+	defer rows.Close()
+
+	members := make([]CommunityChatReactionMemberForViewer, 0, limit)
+	for rows.Next() {
+		var member CommunityChatReactionMemberForViewer
+		var isSelf int
+		if err := rows.Scan(
+			&member.PublicID,
+			&member.Username,
+			&member.FullName,
+			&member.Reaction,
+			&member.CreatedAt,
+			&isSelf,
+		); err != nil {
+			return nil, fmt.Errorf("scan reaction member: %w", err)
+		}
+		member.IsSelf = isSelf == 1
+		members = append(members, member)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate reaction members: %w", err)
+	}
+	return members, nil
 }

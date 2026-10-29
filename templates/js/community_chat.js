@@ -1560,12 +1560,14 @@
             }, delay);
         };
         const positionReactionPeek = (anchor) => {
-            if (!reactionPeekElement || !anchor?.isConnected) return;
+            if (!reactionPeekElement || reactionPeekElement.hidden || !anchor?.isConnected) return;
             const bounds = anchor.getBoundingClientRect();
             const popup = reactionPeekElement.getBoundingClientRect();
             const gutter = 10;
-            let left = bounds.left + bounds.width / 2 - popup.width / 2;
-            left = Math.max(gutter, Math.min(left, window.innerWidth - popup.width - gutter));
+            const popupWidth = Math.min(popup.width || 320, Math.max(220, window.innerWidth - gutter * 2));
+            reactionPeekElement.style.width = `${Math.round(popupWidth)}px`;
+            let left = bounds.left + bounds.width / 2 - popupWidth / 2;
+            left = Math.max(gutter, Math.min(left, window.innerWidth - popupWidth - gutter));
             let top = bounds.top - popup.height - 9;
             if (top < gutter) top = bounds.bottom + 9;
             top = Math.max(gutter, Math.min(top, window.innerHeight - popup.height - gutter));
@@ -1625,21 +1627,39 @@
                 if (reactors.length) {
                     const list = makeElement("div", "mp-chat-reaction-people-list");
                     reactors.forEach((member) => {
-                        const person = makeElement("button", "mp-chat-reaction-person");
+                        const memberPublicID = safeString(member.publicId);
+                        // The server marks the authenticated reactor with isSelf.
+                        // The public-ID comparison is retained as a compatibility
+                        // fallback for an older reaction endpoint response.
+                        const isSelf = member.isSelf === true || member.isSelf === 1 ||
+                            (Boolean(currentUserPublicID) && Boolean(memberPublicID) &&
+                                memberPublicID.toLowerCase() === currentUserPublicID.toLowerCase());
+                        const person = makeElement("button", `mp-chat-reaction-person${isSelf ? " is-self" : ""}`);
                         person.type = "button";
+                        person.setAttribute("aria-label", isSelf
+                            ? "You reacted to this message. Open your personal profile."
+                            : `Open ${safeString(member.fullName, member.username || "member")}'s public profile`);
                         const avatar = makeElement("span", "mp-chat-reaction-person-avatar", initials(member.fullName || member.username));
-                        const colors = avatarColorsFor(member.publicId || member.username || member.fullName);
+                        const colors = avatarColorsFor(memberPublicID || member.username || member.fullName);
                         avatar.style.setProperty("--mp-avatar-hue", String(colors.primary));
                         avatar.style.setProperty("--mp-avatar-hue-two", String(colors.secondary));
                         avatar.style.setProperty("--mp-avatar-hue-three", String(colors.tertiary));
                         const copy = makeElement("span", "mp-chat-reaction-person-copy");
-                        copy.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+                        const nameLine = makeElement("span", "mp-chat-reaction-person-name-line");
+                        nameLine.append(makeElement("strong", "", member.fullName || member.username || "MoviPilot member"));
+                        if (isSelf) nameLine.append(makeElement("span", "mp-chat-reaction-me-badge", "ME"));
+                        copy.append(nameLine);
                         if (member.username) copy.append(makeElement("small", "", `@${member.username}`));
                         person.append(avatar, copy);
                         person.addEventListener("click", () => {
                             closeReactionPeek();
-                            if (member.publicId) openMemberProfileByPublicID(member.publicId, { source: "chat-reaction" });
-                            else announce("This member's profile is unavailable.", true);
+                            if (isSelf) {
+                                openOwnPrivateProfile();
+                            } else if (memberPublicID) {
+                                openMemberProfileByPublicID(memberPublicID, { source: "chat-reaction" });
+                            } else {
+                                announce("This member's profile is unavailable.", true);
+                            }
                         }, { signal });
                         list.append(person);
                     });

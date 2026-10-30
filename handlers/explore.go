@@ -238,6 +238,8 @@ func getExploreMedia(mediaType string, id int64) (ExploreMedia, error) {
 		return cached, nil
 	}
 
+	
+
 	client, err := newMovieTMDBClient()
 	if err != nil {
 		return ExploreMedia{}, err
@@ -258,7 +260,11 @@ func getExploreMedia(mediaType string, id int64) (ExploreMedia, error) {
 
 	saveExploreCached(cacheKey, media)
 	return media, nil
+
+	
 }
+
+
 
 func getExploreMovie(client *tmdb.Client, id int64) (ExploreMedia, error) {
 	details, err := client.GetMovieDetails(id, map[string]string{

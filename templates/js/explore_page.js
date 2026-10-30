@@ -10,9 +10,9 @@
         const page = document.querySelector(".explore-page");
         if (!page) return;
 
-        const mediaType = page.dataset.mediaType;
-        const mediaID = Number(page.dataset.mediaId);
-        const loggedIn = page.dataset.loggedIn === "true";
+        const mediaType = String(page.dataset.mediaType || "").trim().toLowerCase();
+const mediaID = Number(page.dataset.mediaId);
+const loggedIn = page.dataset.loggedIn === "true";
         const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const coarsePointer = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
@@ -29,6 +29,16 @@
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3200);
         }
+
+        if (!["movie", "tv"].includes(mediaType) || !Number.isSafeInteger(mediaID) || mediaID <= 0) {
+    console.error("[MOVIPILOT EXPLORE] Invalid page identity", {
+        mediaType,
+        mediaID,
+        url: window.location.href
+    });
+    showToast("This title link is missing a valid movie or series type. Please return and open it again.");
+    return;
+}
 
         function requireLogin(message = "Please log in to use this MoviPilot feature.") {
             if (loggedIn) return true;
@@ -112,17 +122,276 @@
             button.addEventListener("pointerdown", () => addPressFeedback(button));
         });
 
-        /* ---------------------------------------------------------
-           Back navigation
-           --------------------------------------------------------- */
-        const backButton = document.getElementById("exploreBack");
-        backButton?.addEventListener("click", () => {
-            if (window.history.length > 1) {
-                window.history.back();
-                return;
+       /* ---------------------------------------------------------
+   EXPLORE BACK NAVIGATION
+
+   Returns users to the page they opened Explore from.
+
+   Priority:
+   1. Use the browser's actual previous history entry.
+   2. Use the saved return URL if browser history fails.
+   3. Do not force users back to the dashboard.
+   --------------------------------------------------------- */
+
+(() => {
+    const backButton = document.getElementById("exploreBack");
+
+    if (!backButton) {
+        return;
+    }
+
+    // Prevent duplicate event listeners if this script
+    // happens to be initialized more than once.
+    if (backButton.dataset.backNavigationBound === "true") {
+        return;
+    }
+
+    backButton.dataset.backNavigationBound = "true";
+
+    const RETURN_KEY = "movipilot:explore:return:v1";
+    const MAX_RETURN_AGE = 2 * 60 * 60 * 1000; // 2 hours
+
+    let isNavigatingBack = false;
+
+    const buttonLabel = backButton.querySelector("span");
+    const originalLabel = buttonLabel?.textContent || "Back";
+
+
+    /* -----------------------------------------------------
+       Validate a previous URL.
+
+       Only same-origin MoviPilot URLs are accepted.
+       ----------------------------------------------------- */
+
+    function getSafeSameOriginURL(value) {
+        if (!value) {
+            return null;
+        }
+
+        try {
+            const url = new URL(value, window.location.origin);
+
+            if (url.origin !== window.location.origin) {
+                return null;
             }
-            window.location.href = "/dashboard";
-        });
+
+            if (url.href === window.location.href) {
+                return null;
+            }
+
+            return url.href;
+
+        } catch (error) {
+            return null;
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       Retrieve the saved page from sessionStorage.
+       ----------------------------------------------------- */
+
+    function getSavedReturnURL() {
+        try {
+            const savedData = sessionStorage.getItem(RETURN_KEY);
+
+            if (!savedData) {
+                return null;
+            }
+
+            const parsedData = JSON.parse(savedData);
+
+            const savedAt = Number(parsedData.savedAt);
+
+            // Reject expired or invalid saved destinations.
+            if (
+                !savedAt ||
+                Date.now() - savedAt > MAX_RETURN_AGE
+            ) {
+                sessionStorage.removeItem(RETURN_KEY);
+                return null;
+            }
+
+            return getSafeSameOriginURL(parsedData.url);
+
+        } catch (error) {
+            console.warn(
+                "[MoviPilot] Could not retrieve saved return page:",
+                error
+            );
+
+            return null;
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       Determine the best fallback destination.
+
+       The saved URL is preferred because it preserves
+       the exact page and URL the user came from.
+       ----------------------------------------------------- */
+
+    function getPreviousPageURL() {
+        const savedURL = getSavedReturnURL();
+
+        if (savedURL) {
+            return savedURL;
+        }
+
+        return getSafeSameOriginURL(document.referrer);
+    }
+
+
+    /* -----------------------------------------------------
+       Clear the stored destination after using it.
+       ----------------------------------------------------- */
+
+    function clearSavedReturnURL() {
+        try {
+            sessionStorage.removeItem(RETURN_KEY);
+        } catch (error) {
+            console.warn(
+                "[MoviPilot] Could not clear saved return page:",
+                error
+            );
+        }
+    }
+
+
+    /* -----------------------------------------------------
+       Handle cases where no previous page is available.
+       ----------------------------------------------------- */
+
+    function restoreBackButton() {
+        isNavigatingBack = false;
+
+        backButton.disabled = false;
+        backButton.removeAttribute("aria-busy");
+
+        if (buttonLabel) {
+            buttonLabel.textContent = "No previous page";
+
+            window.setTimeout(() => {
+                buttonLabel.textContent = originalLabel;
+            }, 2200);
+        }
+
+        console.warn(
+            "[MoviPilot] No previous page is available for navigation."
+        );
+    }
+
+
+    /* -----------------------------------------------------
+       Navigate to the saved page if browser history fails.
+
+       replace() prevents the Explore page from remaining
+       immediately behind the restored page in history.
+       ----------------------------------------------------- */
+
+    function useFallbackDestination(previousPageURL) {
+        if (previousPageURL) {
+            window.location.replace(previousPageURL);
+            return;
+        }
+
+        restoreBackButton();
+    }
+
+
+    /* -----------------------------------------------------
+       Back button click handler.
+       ----------------------------------------------------- */
+
+    backButton.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        // Ignore additional clicks while navigation is pending.
+        if (isNavigatingBack) {
+            return;
+        }
+
+        isNavigatingBack = true;
+
+        backButton.disabled = true;
+        backButton.setAttribute("aria-busy", "true");
+
+        if (buttonLabel) {
+            buttonLabel.textContent = "Going back...";
+        }
+
+        const previousPageURL = getPreviousPageURL();
+        const currentURL = window.location.href;
+
+        // Save the fallback URL locally before clearing storage.
+        clearSavedReturnURL();
+
+
+        /* -------------------------------------------------
+           FIRST CHOICE: Browser history navigation.
+           ------------------------------------------------- */
+
+        if (window.history.length > 1) {
+
+            let navigationStarted = false;
+
+            // Detect whether the browser actually started
+            // navigating to the previous history entry.
+            const markNavigationStarted = () => {
+                navigationStarted = true;
+            };
+
+            window.addEventListener(
+                "pagehide",
+                markNavigationStarted,
+                { once: true }
+            );
+
+            window.addEventListener(
+                "popstate",
+                markNavigationStarted,
+                { once: true }
+            );
+
+            window.history.back();
+
+
+            /* ---------------------------------------------
+               FALLBACK
+
+               If the history movement does not happen,
+               return to the exact saved previous page.
+               --------------------------------------------- */
+
+            window.setTimeout(() => {
+
+                const urlHasChanged =
+                    window.location.href !== currentURL;
+
+                if (navigationStarted || urlHasChanged) {
+                    return;
+                }
+
+                useFallbackDestination(previousPageURL);
+
+            }, 1500);
+
+            return;
+        }
+
+
+        /* -------------------------------------------------
+           SECOND CHOICE: Saved previous page.
+
+           This handles cases where Explore was opened
+           without a usable browser history entry.
+           ------------------------------------------------- */
+
+        useFallbackDestination(previousPageURL);
+
+    });
+})();
 
         /* ---------------------------------------------------------
            Watchlist toggle
@@ -656,8 +925,12 @@
         const keywordResultsClose = document.getElementById("keywordResultsClose");
 
         function recommendationCardHTML(movie) {
-            const type = movie.media_type || movie.MediaType || "movie";
-            const id = Number(movie.id || movie.ID || 0);
+           const type = String(movie.media_type ?? movie.MediaType ?? "").trim().toLowerCase();
+const id = Number(movie.id || movie.ID || 0);
+if (!["movie", "tv"].includes(type) || !Number.isSafeInteger(id) || id <= 0) {
+    console.warn("[MOVIPILOT EXPLORE] Skipping recommendation with invalid media identity", movie);
+    return "";
+}
             const title = movie.title || movie.Title || "Untitled";
             const poster = movie.poster_url || movie.PosterURL || "";
             const year = movie.year || movie.Year || "";
@@ -695,7 +968,9 @@
                         keywordResultsGrid.innerHTML = '<div class="empty-inline">No matching movies were found for this keyword.</div>';
                         return;
                     }
-                    keywordResultsGrid.innerHTML = items.map(recommendationCardHTML).join("");
+                     const cardsHTML = items.map(recommendationCardHTML).filter(Boolean).join("");
+       keywordResultsGrid.innerHTML = cardsHTML ||
+           '<div class="empty-inline">The returned results did not contain valid movie links.</div>';
                 } catch (error) {
                     keywordResultsGrid.innerHTML = `<div class="empty-inline">${escapeHTML(error.message || "Could not fetch keyword matches.")}</div>`;
                 }

@@ -964,77 +964,29 @@
                EXPLORE BUTTON
                ================================================= */
 
-            results.addEventListener(
-                "click",
-                (event) => {
+           results.addEventListener("click", (event) => {
+    const button = event.target.closest(".anime-explore-button");
+    if (!button) return;
 
-                    const button =
-                        event.target.closest(
-                            ".anime-explore-button"
-                        );
+    const animeID = String(button.dataset.mediaId || button.dataset.animeId || "").trim();
+    const rawType = String(button.dataset.mediaType || "").trim().toLowerCase();
+    const animeType = rawType === "series" ? "tv" : rawType;
 
+    if (!/^[1-9]\d*$/.test(animeID) || !["movie", "tv"].includes(animeType)) {
+        event.preventDefault();
+        console.error("[MOVIPILOT ANIME] Explore link has invalid media identity", {
+            animeID,
+            animeType,
+            button
+        });
+        return;
+    }
 
-                    if (!button) {
-
-                        return;
-
-                    }
-
-
-                    const animeID =
-                        button.dataset.animeId;
-
-
-                    const animeType =
-                        button.dataset.animeType;
-
-
-                    if (
-                        !animeID ||
-                        !animeType
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    /*
-                        Do NOT send the user to a route
-                        that doesn't exist yet.
-
-                        We expose a clean event for the
-                        Anime Details page that we'll connect
-                        later.
-                    */
-
-                    document.dispatchEvent(
-
-                        new CustomEvent(
-                            "movipilot:explore-anime",
-                            {
-                                detail: {
-                                    id:
-                                        animeID,
-
-                                    type:
-                                        animeType
-                                }
-                            }
-                        )
-
-                    );
-
-
-                    console.log(
-                        "[MOVIPILOT ANIME] Explore:",
-                        animeType,
-                        animeID
-                    );
-
-                }
-            );
-
+    // Preserve the event for any existing listeners; do not set location here.
+    document.dispatchEvent(new CustomEvent("movipilot:explore-anime", {
+        detail: { id: animeID, type: animeType }
+    }));
+});
 
             /* =================================================
                RESTORE LAST FILTER

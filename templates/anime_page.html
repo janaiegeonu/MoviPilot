@@ -494,43 +494,56 @@
 
                     <!-- EXPLORE -->
 
-                    <a
-                        class="anime-explore-button"
-                         href="/explore?type=movie&id={{ .ID }}"
-                            data-movie-id="{{ .ID }}"
-                            aria-label="Explore {{ .Title }}"
-                    >
+                    <!-- Replace the existing Anime card Explore <a>...</a> block with this block. -->
+{{ $exploreType := "" }}
+{{ if or (eq $anime.MediaType "series") (eq $anime.MediaType "tv") }}
+    {{ $exploreType = "tv" }}
+{{ else if eq $anime.MediaType "movie" }}
+    {{ $exploreType = "movie" }}
+{{ end }}
 
-                        <span>
-                            Explore
-                        </span>
-
-
-                        <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden="true"
-                        >
-
-                            <path
-                                d="M5 12H18"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                            />
-
-                            <path
-                                d="M13 7L18 12L13 17"
-                                stroke="currentColor"
-                                stroke-width="1.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-
-                        </svg>
-
-                    </a>
+{{ if $exploreType }}
+    <a
+        class="anime-explore-button"
+        href="/explore?type={{ $exploreType }}&amp;id={{ $anime.ID }}"
+        data-media-type="{{ $exploreType }}"
+        data-media-id="{{ $anime.ID }}"
+        data-anime-id="{{ $anime.ID }}"
+        data-anime-type="{{ $anime.MediaType }}"
+        aria-label="Explore {{ $anime.Title }}"
+    >
+        <span>Explore</span>
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+        >
+            <path
+                d="M5 12H18"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+            />
+            <path
+                d="M13 7L18 12L13 17"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+        </svg>
+    </a>
+{{ else }}
+    <button
+        class="anime-explore-button is-disabled"
+        type="button"
+        disabled
+        aria-label="Explore unavailable for {{ $anime.Title }} because its media type is missing"
+    >
+        <span>Explore unavailable</span>
+    </button>
+{{ end }}
 
                 </div>
 

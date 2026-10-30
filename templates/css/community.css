@@ -1468,6 +1468,18 @@ body.mp-community-modal-open {
 .mp-community-chat-entry-arrow { width: 18px; height: 18px; color: #96ecdf; transition: transform .2s ease; }
 .mp-community-chat-entry-button:hover .mp-community-chat-entry-arrow { transform: translateX(4px); }
 .mp-community-chat-mount { margin: 24px 0 60px; scroll-margin-top: 28px; }
+
+/*
+   COMMUNITY FLOW LAYOUT GUARD
+   The chat invitation card, expandable chat mount, and support desk are
+   separate page-level sections. Keep the chat card/mount from shrinking
+   when the dashboard content column becomes narrow.
+*/
+.mp-community-page > .mp-community-chat-entry,
+.mp-community-page > .mp-community-chat-mount {
+    width: 100%;
+    min-width: 0;
+}
 @keyframes mpChatEntryOrb { from { transform: translate3d(-12px, 4px, 0) scale(.93); } to { transform: translate3d(19px, -12px, 0) scale(1.12); } }
 
 /* =========================================================

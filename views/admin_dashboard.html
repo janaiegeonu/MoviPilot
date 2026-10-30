@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta name="color-scheme" content="dark">
+    <title>MoviPilot Admin | Command Centre</title>
+     <link
+        rel="icon"
+        href="/img/logo favicon.png"
+    >
+    <link rel="stylesheet" href="/templates/css/admin.css?v=2">
+    <script defer src="/templates/js/admin.js?v=2"></script>
+</head>
+<body class="mp-admin-body">
+<div class="admin-shell" id="mpAdminApp">
+    <aside class="admin-sidebar" id="adminSidebar">
+        <a class="admin-brand" href="/admin" aria-label="MoviPilot Admin home">
+            <span class="admin-brand-mark">  <img class="brand-img"
+                src="/img/logo favicon.png"
+                alt="MoviPilot"
+            ></span>
+            <span class="admin-brand-copy"><strong>MoviPilot</strong><small>ADMIN COMMAND</small></span>
+        </a>
+        <div class="admin-sidebar-label">WORKSPACE</div>
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <button class="admin-nav-item is-active" type="button" data-admin-view="overview"><span class="nav-icon">◈</span><span>Overview</span></button>
+            <button class="admin-nav-item" type="button" data-admin-view="users"><span class="nav-icon">♙</span><span>Users</span><span class="nav-count" id="navUserCount">—</span></button>
+            <button class="admin-nav-item" type="button" data-admin-view="analytics"><span class="nav-icon">⌁</span><span>Analytics</span></button>
+            <button class="admin-nav-item" type="button" data-admin-view="support"><span class="nav-icon">✉</span><span>Support inbox</span><span class="nav-count nav-count-alert" id="supportUnreadCount" hidden>0</span></button>
+            <button class="admin-nav-item" type="button" data-admin-view="system"><span class="nav-icon">⌘</span><span>System health</span></button>
+        </nav>
+        <div class="admin-sidebar-bottom">
+            <div class="admin-secure-card"><span class="secure-dot"></span><div><strong>Private workspace</strong><small>Admin access verified</small></div></div>
+            <a href="/dashboard" class="admin-back-link">← Back to MoviPilot</a>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <button class="admin-mobile-menu" id="adminMobileMenu" type="button" aria-label="Toggle admin menu">☰</button>
+            <div class="admin-breadcrumb"><span>MoviPilot</span><i>/</i><strong id="adminBreadcrumbCurrent">Overview</strong></div>
+            <div class="admin-topbar-right">
+                <span class="admin-live-indicator"><i></i> LIVE DATA</span>
+                <span class="admin-topbar-date" id="adminTopbarDate">—</span>
+                <a class="admin-profile-chip" href="/dashboard" aria-label="Return to MoviPilot dashboard">  <img class="brand-img"
+                src="/img/logo favicon.png"
+                alt="MoviPilot"
+            ><b>Owner</b></a>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <section class="admin-view is-visible" data-admin-panel="overview">
+                <div class="admin-page-heading">
+                    <div><span class="admin-eyebrow">YOUR PLATFORM, AT A GLANCE</span><h1>Command <em>centre.</em></h1><p>Track MoviPilot’s growth, understand visitor activity, and stay on top of your platform.</p></div>
+                    <div class="admin-heading-actions"><span class="admin-updated" id="adminUpdatedAt">Waiting for live data…</span><button class="admin-button admin-button-quiet" id="adminRefresh" type="button">↻ <span>Refresh</span></button></div>
+                </div>
+
+                <div class="admin-stat-grid">
+                    <article class="admin-stat-card stat-users"><div class="stat-top"><span>Total registered accounts</span><span class="stat-icon">♙</span></div><strong id="statTotalUsers">—</strong><small>All accounts in your users database</small><div class="stat-foot"><span class="stat-accent">ACCOUNT GROWTH</span></div></article>
+                    <article class="admin-stat-card"><div class="stat-top"><span>New today</span><span class="stat-icon">＋</span></div><strong id="statNewToday">—</strong><small>Registrations since local midnight</small><div class="stat-foot"><span class="stat-accent">TODAY</span></div></article>
+                    <article class="admin-stat-card"><div class="stat-top"><span>New this week</span><span class="stat-icon">▦</span></div><strong id="statNewWeek">—</strong><small>From Monday through today</small><div class="stat-foot"><span class="stat-accent">THIS WEEK</span></div></article>
+                    <article class="admin-stat-card"><div class="stat-top"><span>New this month</span><span class="stat-icon">◷</span></div><strong id="statNewMonth">—</strong><small>Registrations in the current month</small><div class="stat-foot"><span class="stat-accent">THIS MONTH</span></div></article>
+                </div>
+
+                <div class="admin-stat-grid admin-stat-grid-secondary">
+                    <article class="admin-mini-stat"><span class="mini-stat-icon">◎</span><div><small>Unique visitors</small><strong id="statUniqueVisitors">—</strong></div></article>
+                    <article class="admin-mini-stat"><span class="mini-stat-icon">◉</span><div><small>Page views</small><strong id="statPageViews">—</strong></div></article>
+                    <article class="admin-mini-stat"><span class="mini-stat-icon">↗</span><div><small>Visitor sessions</small><strong id="statSessions">—</strong></div></article>
+                    <article class="admin-mini-stat admin-mini-stat-active"><span class="mini-stat-icon"><i></i></span><div><small>Active visitors now</small><strong id="statActiveVisitors">—</strong></div></article>
+                </div>
+
+                <div class="admin-panel admin-chart-panel">
+                    <div class="admin-panel-heading"><div><span class="admin-eyebrow">GROWTH & REACH</span><h2>Platform activity</h2><p>Daily registrations, unique visitors, and recorded page views.</p></div><div class="admin-range-switch" role="group" aria-label="Chart date range"><button type="button" data-range="7d">7D</button><button type="button" data-range="30d" class="is-active">30D</button><button type="button" data-range="90d">90D</button></div></div>
+                    <div class="admin-chart-legend"><span><i class="legend-users"></i> Sign-ups</span><span><i class="legend-visitors"></i> Visitors</span><span><i class="legend-views"></i> Page views</span></div>
+                    <div class="admin-chart-wrap"><canvas id="adminGrowthChart" aria-label="MoviPilot daily growth chart" role="img"></canvas><div class="admin-chart-empty" id="adminChartEmpty" hidden>No tracked activity yet. Add the analytics tracker to your public pages to start collecting real traffic data.</div></div>
+                    <div class="admin-chart-foot"><span id="chartRangeLabel">Last 30 days</span><span>Times use the configured analytics timezone.</span></div>
+                </div>
+
+                <div class="admin-two-column">
+                    <section class="admin-panel"><div class="admin-panel-heading compact"><div><span class="admin-eyebrow">LATEST MEMBERS</span><h2>Recent sign-ups</h2></div><button class="admin-text-button" type="button" data-open-view="users">View users →</button></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>MEMBER</th><th>PROVIDER</th><th>JOINED</th></tr></thead><tbody id="recentUsersBody"><tr><td colspan="3" class="table-placeholder">Loading sign-ups…</td></tr></tbody></table></div></section>
+                    <section class="admin-panel"><div class="admin-panel-heading compact"><div><span class="admin-eyebrow">WHERE THEY GO</span><h2>Top pages</h2></div><button class="admin-text-button" type="button" data-open-view="analytics">Analytics →</button></div><div class="top-pages-list" id="topPagesList"><div class="table-placeholder">Loading page activity…</div></div></section>
+                </div>
+                <section class="admin-panel admin-error-preview"><div class="admin-panel-heading compact"><div><span class="admin-eyebrow">APPLICATION MONITOR</span><h2>Recent errors</h2><p>Server-side HTTP failures captured by the observability middleware.</p></div><button class="admin-text-button" type="button" data-open-view="system">System health →</button></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>TIME</th><th>ROUTE</th><th>STATUS</th><th>EVENT</th></tr></thead><tbody id="recentErrorsBody"><tr><td colspan="4" class="table-placeholder">Loading error events…</td></tr></tbody></table></div></section>
+                <section class="admin-panel"><div class="admin-panel-heading compact"><div><span class="admin-eyebrow">THE LATEST FROM YOUR PLATFORM</span><h2>Recent activity</h2><p>Account registrations, support conversations, and application incidents.</p></div></div><div class="admin-activity-feed" id="adminActivityFeed"><div class="table-placeholder">Loading recent activity…</div></div></section>
+            </section>
+
+            <section class="admin-view" data-admin-panel="users">
+                <div class="admin-page-heading"><div><span class="admin-eyebrow">YOUR MOVIPILOT MEMBERS</span><h1>Account <em>directory.</em></h1><p>Review registered accounts and their sign-up method. Password credentials are never returned by this endpoint.</p></div><button class="admin-button" id="refreshUsers" type="button">↻ Refresh users</button></div>
+                <div class="admin-panel"><div class="admin-panel-heading"><div><span class="admin-eyebrow">REGISTERED ACCOUNTS</span><h2>Latest members</h2></div><span class="admin-count-pill" id="usersCountPill">— accounts shown</span></div><div class="admin-table-wrap"><table class="admin-table admin-users-table"><thead><tr><th>ACCOUNT</th><th>EMAIL</th><th>AUTH PROVIDER</th><th>JOINED</th></tr></thead><tbody id="allUsersBody"><tr><td colspan="4" class="table-placeholder">Loading users…</td></tr></tbody></table></div></div>
+            </section>
+
+            <section class="admin-view" data-admin-panel="analytics">
+                <div class="admin-page-heading"><div><span class="admin-eyebrow">REAL VISITOR MEASUREMENTS</span><h1>Traffic <em>analytics.</em></h1><p>Anonymous visitor IDs, session counts, page views, and returning-visitor measurements.</p></div><div class="admin-range-switch" role="group" aria-label="Analytics range"><button type="button" data-range="7d">7D</button><button type="button" data-range="30d" class="is-active">30D</button><button type="button" data-range="90d">90D</button></div></div>
+                <div class="admin-stat-grid admin-traffic-stats"><article class="admin-stat-card"><div class="stat-top"><span>Unique visitors</span><span class="stat-icon">◎</span></div><strong id="analyticsUnique">—</strong><small>Distinct visitor IDs in selected period</small></article><article class="admin-stat-card"><div class="stat-top"><span>New visitors</span><span class="stat-icon">＋</span></div><strong id="analyticsNew">—</strong><small>First recorded visit in this period</small></article><article class="admin-stat-card"><div class="stat-top"><span>Returning visitors</span><span class="stat-icon">↺</span></div><strong id="analyticsReturning">—</strong><small>First seen before this period</small></article><article class="admin-stat-card"><div class="stat-top"><span>Page views</span><span class="stat-icon">▤</span></div><strong id="analyticsViews">—</strong><small>Recorded page-view events</small></article></div>
+                <div class="admin-panel admin-chart-panel"><div class="admin-panel-heading"><div><span class="admin-eyebrow">VISITOR ACTIVITY</span><h2>Traffic over time</h2><p>Compare page consumption with distinct visitors and new accounts.</p></div></div><div class="admin-chart-legend"><span><i class="legend-users"></i> Sign-ups</span><span><i class="legend-visitors"></i> Visitors</span><span><i class="legend-views"></i> Page views</span></div><div class="admin-chart-wrap"><canvas id="adminAnalyticsChart" aria-label="Website analytics chart" role="img"></canvas></div></div>
+                <div class="admin-panel"><div class="admin-panel-heading"><div><span class="admin-eyebrow">CONTENT DISCOVERY</span><h2>Most visited pages</h2></div></div><div class="top-pages-list" id="analyticsTopPages"></div></div>
+                <p class="admin-disclaimer">Analytics are collected only after the tracking script is installed on the site pages. Counts represent browsers, not verified people; deleting cookies or using another browser can create another visitor ID.</p>
+            </section>
+
+            <section class="admin-view" data-admin-panel="support">
+                <div class="admin-page-heading">
+                    <div><span class="admin-eyebrow">DIRECT USER COMMUNICATION</span><h1>Support <em>inbox.</em></h1><p>Manage private member conversations and respond as the verified MoviPilot Support Team.</p></div>
+                    <div class="admin-heading-actions"><span class="admin-updated" id="supportLastChecked">Live inbox monitoring</span><button class="admin-button" id="refreshSupport" type="button">↻ Refresh inbox</button></div>
+                </div>
+                <div class="support-inbox-overview">
+                    <div class="support-inbox-overview-copy"><span class="support-inbox-overview-icon">✉</span><span><strong>MoviPilot Support Team</strong><small>Verified replies are delivered directly to each member’s Community support space.</small></span></div>
+                    <strong class="support-inbox-unread-total" id="supportUnreadSummary">0 unread conversations</strong>
+                </div>
+                <div class="support-workspace">
+                    <aside class="admin-panel support-list-panel">
+                        <div class="admin-panel-heading compact"><div><span class="admin-eyebrow">MEMBER MESSAGES</span><h2>Conversation queue</h2></div><span class="admin-count-pill" id="supportQueueCount">0</span></div>
+                        <div class="support-list-toolbar">
+                            <label class="support-search-wrap" for="supportSearchInput"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="supportSearchInput" type="search" placeholder="Search member or message…" autocomplete="off"></label>
+                            <div class="support-filter-row" role="group" aria-label="Filter support conversations"><button class="support-filter-button is-active" type="button" data-support-filter="all">All open</button><button class="support-filter-button" type="button" data-support-filter="unread">Unread</button></div>
+                        </div>
+                        <div class="support-thread-list" id="supportThreadList" aria-live="polite"><div class="table-placeholder">Loading messages…</div></div>
+                    </aside>
+                    <section class="admin-panel support-detail-panel">
+                        <div class="support-empty" id="supportEmpty"><div class="support-empty-icon">✉</div><strong>Your support workspace is ready</strong><p>Select a member conversation to view their message history and send a private reply.</p></div>
+                        <div class="support-thread" id="supportThread" hidden>
+                            <div class="support-thread-header">
+                                <div class="support-thread-member-identity"><span class="support-thread-member-avatar" id="supportMemberAvatar">MP</span><div class="support-thread-member-copy"><span class="admin-eyebrow">PRIVATE SUPPORT CONVERSATION</span><h2 id="supportMemberName">Member</h2><div class="support-thread-header-meta"><span class="support-thread-status" id="supportThreadStatus">Open</span><span class="support-thread-verified-brand"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1.6 2.1 1.4 2.5-.1 1.1 2.2 2.2 1.1-.1 2.5 1.4 2.1-1.4 2.1.1 2.5-2.2 1.1-1.1 2.2-2.5-.1L10 20l-2.1-1.4-2.5.1-1.1-2.2-2.2-1.1.1-2.5L.8 11l1.4-2.1-.1-2.5 2.2-1.1 1.1-2.2 2.5.1L10 1.6Z" fill="currentColor"/><path d="m5.8 10.1 2.7 2.7 5.8-5.9" fill="none" stroke="#06232e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>MoviPilot Support Team</span></div></div></div>
+                                <button class="admin-button admin-button-quiet" id="resolveSupport" type="button">Mark resolved</button>
+                            </div>
+                            <div class="support-message-list" id="supportMessageList" aria-live="polite" aria-relevant="additions text"></div>
+                            <form class="support-reply-form" id="supportReplyForm">
+                                <label for="supportReplyInput">REPLY AS MOVIPILOT SUPPORT TEAM</label>
+                                <textarea id="supportReplyInput" maxlength="3000" rows="3" placeholder="Write a clear, helpful reply…" required></textarea>
+                                <div class="support-thread-composer-status"><span>Replies are delivered to the member’s private Community inbox.</span><strong id="supportReplyCharCount">0 / 3000</strong></div>
+                                <div class="support-reply-foot"><small>Never request passwords, verification codes, or complete payment-card details.</small><button class="admin-button" type="submit" id="sendSupportReply">Send verified reply ↗</button></div>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="admin-view" data-admin-panel="system">
+                <div class="admin-page-heading"><div><span class="admin-eyebrow">KEEP THE PLATFORM HEALTHY</span><h1>System <em>health.</em></h1><p>Basic live checks for the web application and its database, plus recent recorded server failures.</p></div><button class="admin-button" id="refreshHealth" type="button">↻ Run checks</button></div>
+                <div class="health-card-grid" id="healthServices"><article class="health-card"><span class="health-pulse"></span><div><strong>Checking services…</strong><small>Waiting for the database health endpoint.</small></div></article></div>
+                <div class="admin-panel"><div class="admin-panel-heading"><div><span class="admin-eyebrow">LAST 24 HOURS</span><h2>Application incidents</h2></div><span class="admin-count-pill" id="errors24hCount">— errors</span></div><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>TIME</th><th>METHOD</th><th>ROUTE</th><th>STATUS</th><th>EVENT</th><th>REQUEST ID</th></tr></thead><tbody id="allErrorsBody"><tr><td colspan="6" class="table-placeholder">Loading system events…</td></tr></tbody></table></div></div>
+                <p class="admin-disclaimer">The current health panel checks the application handler and SQLite connectivity. It does not yet run external synthetic checks against TMDB, Brevo, Google OAuth, DNS, or your hosting provider.</p>
+            </section>
+
+            <footer class="admin-footer"><span>MoviPilot Admin <i>•</i> Private owner workspace</span><span>Metrics update from your application database <b>·</b> <span id="adminFooterTime">—</span></span></footer>
+        </div>
+    </main>
+</div>
+<div class="admin-toast" id="adminToast" role="status" aria-live="polite"></div>
+<button class="admin-inbox-notification" id="adminInboxNotification" type="button" aria-live="polite" aria-label="New support messages. Open the support inbox.">
+    <span class="admin-inbox-notification-mark" aria-hidden="true">✉</span>
+    <span class="admin-inbox-notification-copy"><strong id="adminInboxNotificationTitle">New MoviPilot support message</strong><small>Tap to open your private support inbox</small></span>
+    <span class="admin-inbox-notification-arrow" aria-hidden="true">↗</span>
+</button>
+</body>
+</html>

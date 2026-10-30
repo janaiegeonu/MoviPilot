@@ -1015,6 +1015,24 @@ async function initializeDashboardPage(
     page
 ) {
 
+     // Track the dashboard page being opened.
+    const analyticsRouteByPage = {
+        home: "/dashboard",
+        tv: "/series",
+        movies: "/movies",
+        anime: "/anime",
+        community: "/community"
+    };
+
+    const analyticsPath = analyticsRouteByPage[page];
+
+    if (
+        analyticsPath &&
+        typeof window.MoviPilotAnalytics?.pageView === "function"
+    ) {
+        window.MoviPilotAnalytics.pageView(analyticsPath);
+    }
+
     /*
         MOVIES
     */
@@ -1086,6 +1104,8 @@ async function initializeDashboardPage(
     }
 
 }
+
+ 
 
 
 /* =========================================================
@@ -1287,6 +1307,9 @@ async function loadDashboardHTML(
         `;
 
     }
+
+
+    
 
 }
 
@@ -1608,24 +1631,23 @@ function performSearch() {
 }
 
 
-searchButton.addEventListener(
-    "click",
-    performSearch
-);
+if (searchButton) {
+    searchButton.addEventListener(
+        "click",
+        performSearch
+    );
+}
 
-
-searchInput.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (event.key === "Enter") {
-
-            performSearch();
-
+if (searchInput) {
+    searchInput.addEventListener(
+        "keydown",
+        (event) => {
+            if (event.key === "Enter") {
+                performSearch();
+            }
         }
-
-    }
-);
+    );
+}
 
 
 /* =========================================================
@@ -1697,16 +1719,11 @@ window.addEventListener(
    CINEMATIC PARTICLES
    ========================================================= */
 
-const canvas =
-    document.getElementById(
-        "particleCanvas"
-    );
+const canvas = document.getElementById("particleCanvas");
 
-
-const context =
-    canvas.getContext(
-        "2d"
-    );
+const context = canvas
+    ? canvas.getContext("2d")
+    : null;
 
 
 let particles = [];

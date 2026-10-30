@@ -3,9 +3,15 @@ package main
 import (
 	"MoviPilot/funcs/storage"
 	"MoviPilot/handlers"
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -97,7 +103,42 @@ func main() {
 	http.HandleFunc("/api/community/chat/reactions", handlers.CommunityChatReactionUsersHandler)
 
 	storage.InitDatabase()
+	if err := handlers.RegisterAdminRoutes(
+		http.DefaultServeMux,
+		storage.DB,
+		handlers.AdminConfigFromEnv(),
+	); err != nil {
+		log.Fatalf("MoviPilot admin setup failed: %v", err)
+	}
 	fmt.Println(storage.RGBY("MoviPilot server running currently on http://localhost:8080"))
-	http.ListenAndServe(":8080", nil)
+	server := &http.Server{
+		Addr:              ":8080",
+		Handler:           handlers.AdminObservability(http.DefaultServeMux, storage.DB),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       90 * time.Second,
+		WriteTimeout:      2 * time.Minute,
+		IdleTimeout:       90 * time.Second,
+	}
 
+	shutdownContext, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	go func() {
+		log.Println("MoviPilot server listening on :8080")
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("MoviPilot server stopped: %v", err)
+		}
+	}()
+
+	<-shutdownContext.Done()
+
+	shutdownTimeout, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := server.Shutdown(shutdownTimeout); err != nil {
+		log.Printf("Graceful shutdown failed: %v", err)
+	}
 }

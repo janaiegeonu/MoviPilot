@@ -112,6 +112,12 @@
         </svg>
     </button>
 
+    <button class="mp-community-support-hero-cta" id="mpCommunityContactSupport" type="button" aria-controls="mpCommunitySupport">
+    <span class="mp-community-support-hero-cta-icon" aria-hidden="true">✉</span>
+    <span>Contact support</span>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+</button>
+
     <!-- Hero note -->
     <span class="mp-community-hero-note">
         <span class="mp-community-note-dot"></span>
@@ -257,6 +263,69 @@
             <span class="mp-community-chat-entry-button-copy"><strong>Enter community chat</strong><small>Open the global room</small></span>
             <svg class="mp-community-chat-entry-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
+
+        <!-- community support -->
+<section class="mp-community-support" id="mpCommunitySupport" aria-labelledby="mpCommunitySupportTitle">
+    <div class="mp-community-support-heading">
+        <div class="mp-community-support-heading-copy">
+            <span class="mp-community-support-kicker">OFFICIAL MOVIPILOT ASSISTANCE</span>
+            <h2 id="mpCommunitySupportTitle">
+                <img src="/img/logo favicon.png" alt="" width="34" height="34" loading="lazy">
+                <span>Talk to</span> <strong>MoviPilot.</strong>
+            </h2>
+            <p>Questions, feedback, or something not working as expected? Start a private conversation with the MoviPilot Support Team. We’ll reply directly in this space.</p>
+        </div>
+        <div class="mp-community-support-heading-badge" aria-label="Official support channel">
+            <span class="mp-community-support-heading-mark"><img src="/img/logo favicon.png" alt="" width="28" height="28"></span>
+            <span><strong>Official support</strong><small>Private account conversation</small></span>
+        </div>
+    </div>
+
+    <div class="mp-community-support-card">
+        <div class="mp-community-support-toolbar">
+            <div class="mp-community-support-team-identity">
+                <span class="mp-community-support-team-avatar"><img src="/img/logo favicon.png" alt=""></span>
+                <span class="mp-community-support-team-copy">
+                    <strong>MoviPilot Support Team <span class="mp-support-verified-badge" title="Verified MoviPilot support account" aria-label="Verified support team">
+                        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6 12.1 3l2.5-.1 1.1 2.2 2.2 1.1-.1 2.5L19.2 11l-1.4 2.1.1 2.5-2.2 1.1-1.1 2.2-2.5-.1L10 20l-2.1-1.4-2.5.1-1.1-2.2-2.2-1.1.1-2.5L.8 11l1.4-2.1-.1-2.5 2.2-1.1 1.1-2.2 2.5.1L10 1.6Z" fill="currentColor"/><path d="m5.8 10.1 2.7 2.7 5.8-5.9" fill="none" stroke="#06232e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </span></strong>
+                    <small>Verified MoviPilot team · Replies appear in this conversation</small>
+                </span>
+            </div>
+            <div class="mp-community-support-toolbar-status">
+                <span class="mp-community-support-live-dot" aria-hidden="true"></span>
+                <span id="mpSupportStatus" role="status">Secure support channel</span>
+            </div>
+        </div>
+
+        <div class="mp-community-support-conversation-intro">
+            <span class="mp-community-support-lock" aria-hidden="true">⌑</span>
+            <span><strong>Your private support conversation</strong><small>Only you and the MoviPilot support team can view these messages.</small></span>
+            <span class="mp-community-support-case-label">PRIVATE</span>
+        </div>
+
+        <div class="mp-community-support-messages" id="mpSupportMessages" aria-live="polite" aria-relevant="additions text" aria-busy="true">
+            <div class="mp-community-support-loading"><span class="mp-community-support-spinner" aria-hidden="true"></span><span>Loading your support conversation…</span></div>
+        </div>
+
+        <form class="mp-community-support-form" id="mpCommunitySupportForm">
+            <label class="mp-community-support-input-label" for="mpCommunitySupportInput">MESSAGE THE SUPPORT TEAM</label>
+            <div class="mp-community-support-composer">
+                <textarea id="mpCommunitySupportInput" name="message" maxlength="3000" rows="3" placeholder="Tell us how we can help…" required></textarea>
+                <div class="mp-community-support-composer-foot">
+                    <small id="mpSupportHint">Please don't share passwords, verification codes, or payment-card details.</small>
+                    <span class="mp-community-support-char-count" id="mpSupportCharCount">0 / 3000</span>
+                </div>
+            </div>
+            <div class="mp-community-support-form-foot">
+                <span class="mp-community-support-encryption-note"><span aria-hidden="true">▣</span> Private to your MoviPilot account</span>
+                <button type="submit" id="mpSupportSend"><span class="mp-community-support-send-icon" aria-hidden="true">↗</span><span class="mp-community-support-send-label">Send message</span></button>
+            </div>
+        </form>
+    </div>
+    <p class="mp-community-support-note">Your conversation stays in your account so you can return to it whenever you need help. Response times may vary.</p>
+</section>
+
     </section>
     <div class="mp-community-chat-mount" id="mpCommunityChatMount" hidden></div>
 

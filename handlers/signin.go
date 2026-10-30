@@ -14,16 +14,13 @@ func setLoginCookie(
 	r *http.Request,
 	sessionID string,
 ) {
-
-	secure := r.TLS != nil
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     "movipilot_session",
 		Value:    sessionID,
 		Path:     "/",
 		MaxAge:   7 * 24 * 60 * 60,
 		HttpOnly: true,
-		Secure:   secure,
+		Secure:   adminSecureCookieEnabled(),
 		SameSite: http.SameSiteLaxMode,
 	})
 }

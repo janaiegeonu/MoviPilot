@@ -55,6 +55,9 @@
 <script defer src="/templates/js/analytics.js?v=1"></script>
 <script defer src="/templates/js/community-support.js?v=1"></script>
 
+<link rel="stylesheet" href="/templates/css/dashboard_trending_week.css?v=1">
+
+
 </head>
 
 
@@ -1529,31 +1532,117 @@
 
 
 
-    <!-- =====================================================
-         RESERVED RIGHT-SIDE RAIL
-         Leave this area available for future widgets.
-         ===================================================== -->
+   <!-- =====================================================
+     MOVIPILOT — TRENDING THIS WEEK (DESKTOP RIGHT RAIL)
+     ===================================================== -->
+<aside
+    class="dashboard-right-rail dashboard-right-rail--weekly"
+    id="dashboardWeeklyTrendingRail"
+    aria-label="Trending movies this week"
+>
+    <section class="weekly-trending-panel" aria-labelledby="weeklyTrendingTitle">
 
-    <aside
-        class="dashboard-right-rail"
-        aria-label="Dashboard discovery rail"
-    >
-
-        <div class="dashboard-rail-frame">
-
-            <span class="dashboard-rail-kicker">
-                DISCOVERY SPACE
-            </span>
-
-            <div class="dashboard-rail-line"></div>
-
-            <span class="dashboard-rail-note">
-                Reserved for upcoming MoviPilot features.
-            </span>
-
+        <div class="weekly-trending-eyebrow-row">
+            <span class="weekly-trending-live-dot" aria-hidden="true"></span>
+            <span class="weekly-trending-eyebrow">MOVIPILOT DISCOVERY</span>
         </div>
 
-    </aside>
+        <header class="weekly-trending-heading">
+            <div class="weekly-trending-heading-copy">
+                <h2 id="weeklyTrendingTitle">
+                    Trending <span>This Week</span>
+                </h2>
+                <p>The movies everyone is talking about.</p>
+            </div>
+            <div class="weekly-trending-controls" aria-label="Scroll weekly movies">
+                <button
+                    class="weekly-trending-scroll-button"
+                    id="weeklyTrendingScrollUp"
+                    type="button"
+                    aria-label="Scroll to previous movies"
+                    title="Scroll up"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 19V5M6 11L12 5L18 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button
+                    class="weekly-trending-scroll-button"
+                    id="weeklyTrendingScrollDown"
+                    type="button"
+                    aria-label="Scroll to more movies"
+                    title="Scroll down"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 5V19M18 13L12 19L6 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="weekly-trending-status-row">
+            <span id="weeklyTrendingCount">Loading weekly chart</span>
+            <span class="weekly-trending-status-divider" aria-hidden="true"></span>
+            <span id="weeklyTrendingUpdated">Syncing with TMDB</span>
+        </div>
+
+        <div
+            class="weekly-trending-scroll"
+            id="weeklyTrendingScroll"
+            role="region"
+            aria-label="Weekly trending movies. Scroll to explore the list."
+            tabindex="0"
+        >
+            <div class="weekly-trending-list" id="weeklyTrendingList" aria-live="polite" aria-busy="true">
+                <div class="weekly-trending-skeleton" aria-hidden="true">
+                    <span class="weekly-skeleton-poster"></span>
+                    <span class="weekly-skeleton-copy">
+                        <span class="weekly-skeleton-line weekly-skeleton-line--title"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--meta"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--overview"></span>
+                    </span>
+                </div>
+                <div class="weekly-trending-skeleton" aria-hidden="true">
+                    <span class="weekly-skeleton-poster"></span>
+                    <span class="weekly-skeleton-copy">
+                        <span class="weekly-skeleton-line weekly-skeleton-line--title"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--meta"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--overview"></span>
+                    </span>
+                </div>
+                <div class="weekly-trending-skeleton" aria-hidden="true">
+                    <span class="weekly-skeleton-poster"></span>
+                    <span class="weekly-skeleton-copy">
+                        <span class="weekly-skeleton-line weekly-skeleton-line--title"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--meta"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--overview"></span>
+                    </span>
+                </div>
+                <div class="weekly-trending-skeleton" aria-hidden="true">
+                    <span class="weekly-skeleton-poster"></span>
+                    <span class="weekly-skeleton-copy">
+                        <span class="weekly-skeleton-line weekly-skeleton-line--title"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--meta"></span>
+                        <span class="weekly-skeleton-line weekly-skeleton-line--overview"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="weekly-trending-scroll-hint" aria-hidden="true">
+            <span class="weekly-trending-scroll-hint-line"></span>
+            <span>SCROLL TO DISCOVER MORE</span>
+            <span class="weekly-trending-scroll-hint-line"></span>
+        </div>
+
+        <footer class="weekly-trending-footer">
+            <span class="weekly-trending-footer-mark" aria-hidden="true">✦</span>
+            <span>Weekly momentum, refreshed regularly</span>
+            <span class="weekly-trending-footer-source">TMDB</span>
+        </footer>
+
+    </section>
+</aside>
 
 
     <!-- =========================================================
@@ -2792,6 +2881,8 @@
 ></script>
 
   <script src="/templates/js/my_movipilot_library.js?v=1" defer></script>
+
+  <script src="/templates/js/dashboard_trending_week.js?v=1" defer></script>
 
 
 </body>

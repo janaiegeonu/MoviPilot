@@ -1,0 +1,647 @@
+/* =========================================================
+   MOVIPILOT — TRENDING THIS WEEK
+   Desktop-only right-side discovery rail.
+   Palette: midnight navy, cyan, white and sea green.
+   ========================================================= */
+
+.dashboard-right-rail--weekly {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    align-self: stretch;
+    color: #edf9ff;
+}
+
+.weekly-trending-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    max-height: min(790px, calc(100vh - 142px));
+    padding: 19px 16px 14px;
+    overflow: hidden;
+    isolation: isolate;
+    border: 1px solid rgba(89, 190, 225, 0.17);
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse at 96% 0%, rgba(0, 207, 202, 0.105), transparent 37%),
+        radial-gradient(ellipse at 0% 52%, rgba(30, 113, 190, 0.10), transparent 42%),
+        linear-gradient(158deg, rgba(8, 23, 43, 0.98), rgba(3, 12, 27, 0.985) 62%, rgba(4, 20, 31, 0.98));
+    box-shadow:
+        0 18px 48px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        0 0 34px rgba(0, 191, 206, 0.035);
+}
+
+.weekly-trending-panel::before,
+.weekly-trending-panel::after {
+    position: absolute;
+    z-index: -1;
+    content: "";
+    pointer-events: none;
+}
+
+.weekly-trending-panel::before {
+    top: -95px;
+    right: -80px;
+    width: 230px;
+    height: 230px;
+    border: 1px solid rgba(73, 202, 225, 0.10);
+    border-radius: 50%;
+    box-shadow: 0 0 0 18px rgba(73, 202, 225, 0.018), 0 0 0 38px rgba(73, 202, 225, 0.012);
+}
+
+.weekly-trending-panel::after {
+    top: 0;
+    left: 18px;
+    right: 18px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(75, 220, 224, 0.72), rgba(71, 143, 255, 0.35), transparent);
+    opacity: 0.75;
+}
+
+.weekly-trending-eyebrow-row,
+.weekly-trending-heading,
+.weekly-trending-status-row,
+.weekly-trending-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.weekly-trending-eyebrow-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    margin-bottom: 15px;
+}
+
+.weekly-trending-live-dot {
+    position: relative;
+    flex: 0 0 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #42e5c0;
+    box-shadow: 0 0 10px rgba(66, 229, 192, 0.75);
+}
+
+.weekly-trending-live-dot::after {
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(66, 229, 192, 0.42);
+    border-radius: inherit;
+    content: "";
+    animation: weeklyPulse 2.3s ease-out infinite;
+}
+
+.weekly-trending-eyebrow {
+    color: #81b7c9;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.19em;
+    white-space: nowrap;
+}
+
+.weekly-trending-period {
+    margin-left: auto;
+    padding: 5px 8px;
+    border: 1px solid rgba(79, 218, 208, 0.20);
+    border-radius: 6px;
+    background: rgba(27, 189, 173, 0.075);
+    color: #80e2d2;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.10em;
+    white-space: nowrap;
+}
+
+.weekly-trending-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.weekly-trending-heading-copy {
+    min-width: 0;
+}
+
+.weekly-trending-heading h2 {
+    margin: 0;
+    color: #f0f8ff;
+    font-size: clamp(19px, 1.42vw, 24px);
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    line-height: 1.12;
+}
+
+.weekly-trending-heading h2 span {
+    display: block;
+    margin-top: 3px;
+    background: linear-gradient(95deg, #5bd9e8 3%, #80f0d1 62%, #91baff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.weekly-trending-heading p {
+    margin: 8px 0 0;
+    color: #7893a9;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+.weekly-trending-controls {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 6px;
+    padding-bottom: 1px;
+}
+
+.weekly-trending-scroll-button {
+    display: grid;
+    width: 29px;
+    height: 29px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid rgba(119, 185, 215, 0.19);
+    border-radius: 9px;
+    background: rgba(15, 42, 66, 0.74);
+    color: #a6d8e8;
+    cursor: pointer;
+    transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.weekly-trending-scroll-button svg {
+    width: 15px;
+    height: 15px;
+}
+
+.weekly-trending-scroll-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: rgba(78, 222, 216, 0.52);
+    background: rgba(13, 104, 116, 0.25);
+    color: #8ffff0;
+    box-shadow: 0 0 16px rgba(49, 208, 201, 0.12);
+}
+
+.weekly-trending-scroll-button:disabled {
+    opacity: 0.32;
+    cursor: default;
+}
+
+.weekly-trending-status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 24px;
+    margin-bottom: 10px;
+    color: #7391a6;
+    font-size: 9px;
+    font-weight: 650;
+    letter-spacing: 0.055em;
+}
+
+.weekly-trending-status-row #weeklyTrendingCount {
+    color: #a4c6d4;
+}
+
+.weekly-trending-status-divider {
+    width: 3px;
+    height: 3px;
+    flex: 0 0 3px;
+    border-radius: 50%;
+    background: #46c9bd;
+    opacity: 0.8;
+}
+
+.weekly-trending-scroll {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    min-height: 180px;
+    max-height: 510px;
+    padding: 1px 7px 2px 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(47, 205, 196, 0.68) rgba(34, 67, 88, 0.25);
+    scroll-behavior: smooth;
+}
+
+.weekly-trending-scroll::-webkit-scrollbar {
+    width: 5px;
+}
+
+.weekly-trending-scroll::-webkit-scrollbar-track {
+    margin: 5px 0;
+    border-radius: 10px;
+    background: rgba(35, 64, 84, 0.23);
+}
+
+.weekly-trending-scroll::-webkit-scrollbar-thumb {
+    border: 1px solid rgba(126, 248, 231, 0.18);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #52dbea 0%, #35cbb7 53%, #4389d5 100%);
+    box-shadow: 0 0 10px rgba(50, 215, 203, 0.22);
+}
+
+.weekly-trending-scroll::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #91f6ee, #4ce4c8 60%, #6baaff);
+}
+
+.weekly-trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.weekly-movie-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) 13px;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    min-height: 105px;
+    padding: 8px 9px 8px 7px;
+    overflow: hidden;
+    border: 1px solid rgba(115, 171, 195, 0.105);
+    border-radius: 12px;
+    background: linear-gradient(110deg, rgba(17, 42, 64, 0.63), rgba(9, 27, 46, 0.65));
+    color: inherit;
+    text-decoration: none;
+    isolation: isolate;
+    transition: transform 200ms ease, border-color 200ms ease, background 200ms ease, box-shadow 200ms ease;
+    animation: weeklyCardEnter 420ms both;
+}
+
+.weekly-movie-card::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(100deg, rgba(47, 214, 206, 0.085), transparent 48%);
+    content: "";
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+.weekly-movie-card:hover,
+.weekly-movie-card:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(81, 220, 210, 0.40);
+    background: linear-gradient(110deg, rgba(19, 58, 77, 0.85), rgba(10, 35, 54, 0.86));
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22), 0 0 19px rgba(49, 197, 191, 0.075);
+    outline: none;
+}
+
+.weekly-movie-card:hover::before,
+.weekly-movie-card:focus-visible::before {
+    opacity: 1;
+}
+
+.weekly-movie-poster {
+    position: relative;
+    width: 56px;
+    height: 82px;
+    overflow: hidden;
+    border: 1px solid rgba(154, 205, 221, 0.15);
+    border-radius: 8px;
+    background: linear-gradient(145deg, #12334e, #0a1728 68%, #0b3a43);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.23);
+}
+
+.weekly-movie-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: transform 350ms ease, opacity 220ms ease;
+}
+
+.weekly-movie-poster img.is-loaded {
+    opacity: 1;
+}
+
+.weekly-movie-card:hover .weekly-movie-poster img {
+    transform: scale(1.055);
+}
+
+.weekly-movie-poster-fallback {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: rgba(148, 219, 225, 0.7);
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.weekly-movie-rank {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    display: grid;
+    min-width: 19px;
+    height: 18px;
+    padding: 0 4px;
+    place-items: center;
+    border: 1px solid rgba(116, 237, 222, 0.34);
+    border-radius: 5px;
+    background: rgba(2, 13, 27, 0.81);
+    color: #b9fff1;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(8px);
+}
+
+.weekly-movie-copy {
+    min-width: 0;
+    align-self: center;
+}
+
+.weekly-movie-title {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: #edf8ff;
+    font-size: 11px;
+    font-weight: 760;
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+}
+
+.weekly-movie-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin-top: 5px;
+    color: #85a6b9;
+    font-size: 9px;
+    font-weight: 600;
+}
+
+.weekly-movie-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: #f4cf83;
+}
+
+.weekly-movie-rating svg {
+    width: 10px;
+    height: 10px;
+    fill: currentColor;
+}
+
+.weekly-movie-genres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 15px;
+    margin-top: 6px;
+}
+
+.weekly-movie-genre {
+    max-width: 90px;
+    padding: 2px 5px;
+    overflow: hidden;
+    border: 1px solid rgba(89, 197, 200, 0.14);
+    border-radius: 4px;
+    background: rgba(24, 105, 111, 0.12);
+    color: #91c9ca;
+    font-size: 7px;
+    font-weight: 700;
+    letter-spacing: 0.035em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.weekly-movie-overview {
+    display: -webkit-box;
+    margin: 6px 0 0;
+    overflow: hidden;
+    color: #8da6b8;
+    font-size: 9px;
+    font-weight: 450;
+    line-height: 1.43;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.weekly-movie-arrow {
+    display: grid;
+    width: 13px;
+    height: 22px;
+    place-items: center;
+    color: #5d92a8;
+    transition: color 180ms ease, transform 180ms ease;
+}
+
+.weekly-movie-arrow svg {
+    width: 13px;
+    height: 13px;
+}
+
+.weekly-movie-card:hover .weekly-movie-arrow {
+    transform: translateX(2px);
+    color: #8cf1df;
+}
+
+.weekly-trending-skeleton {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 105px;
+    padding: 8px;
+    border: 1px solid rgba(115, 171, 195, 0.08);
+    border-radius: 12px;
+    background: rgba(15, 38, 58, 0.43);
+}
+
+.weekly-skeleton-poster,
+.weekly-skeleton-line {
+    display: block;
+    border-radius: 6px;
+    background: linear-gradient(100deg, rgba(48, 82, 103, 0.22), rgba(83, 133, 151, 0.31), rgba(48, 82, 103, 0.22));
+    background-size: 220% 100%;
+    animation: weeklySkeleton 1.65s ease-in-out infinite;
+}
+
+.weekly-skeleton-poster {
+    width: 56px;
+    height: 82px;
+}
+
+.weekly-skeleton-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+}
+
+.weekly-skeleton-line {
+    height: 7px;
+}
+
+.weekly-skeleton-line--title { width: 76%; height: 9px; }
+.weekly-skeleton-line--meta { width: 43%; }
+.weekly-skeleton-line--overview { width: 94%; }
+
+.weekly-trending-empty {
+    display: grid;
+    min-height: 180px;
+    padding: 24px 16px;
+    place-content: center;
+    text-align: center;
+}
+
+.weekly-trending-empty-icon {
+    margin-bottom: 10px;
+    color: #5bcfc7;
+    font-size: 25px;
+}
+
+.weekly-trending-empty strong {
+    color: #e5f5fc;
+    font-size: 12px;
+}
+
+.weekly-trending-empty p {
+    max-width: 210px;
+    margin: 6px auto 0;
+    color: #849eaf;
+    font-size: 10px;
+    line-height: 1.55;
+}
+
+.weekly-trending-retry {
+    justify-self: center;
+    margin-top: 13px;
+    padding: 7px 12px;
+    border: 1px solid rgba(79, 218, 208, 0.3);
+    border-radius: 7px;
+    background: rgba(27, 189, 173, 0.10);
+    color: #91e8dc;
+    font: inherit;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.weekly-trending-retry:hover {
+    background: rgba(27, 189, 173, 0.18);
+}
+
+.weekly-trending-scroll-hint {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 10px 0 12px;
+    color: #63879a;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    white-space: nowrap;
+}
+
+.weekly-trending-scroll-hint-line {
+    height: 1px;
+    flex: 1 1 auto;
+    background: linear-gradient(90deg, transparent, rgba(84, 179, 190, 0.24));
+}
+
+.weekly-trending-scroll-hint-line:last-child {
+    transform: scaleX(-1);
+}
+
+.weekly-trending-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(106, 165, 187, 0.12);
+    color: #638296;
+    font-size: 8px;
+    line-height: 1.3;
+}
+
+.weekly-trending-footer-mark {
+    color: #55d7c3;
+    font-size: 11px;
+}
+
+.weekly-trending-footer-source {
+    margin-left: auto;
+    color: #8bb6c5;
+    font-size: 8px;
+    font-weight: 850;
+    letter-spacing: 0.11em;
+}
+
+.weekly-trending-status-stale {
+    color: #e5bd79 !important;
+}
+
+@keyframes weeklyPulse {
+    0% { transform: scale(0.72); opacity: 0.9; }
+    100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes weeklySkeleton {
+    0% { background-position: 100% 0; }
+    100% { background-position: -120% 0; }
+}
+
+@keyframes weeklyCardEnter {
+    from { transform: translateY(7px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* This feature is intentionally desktop-only. Keep it out of
+   tablet and mobile layouts rather than squeezing the rail. */
+@media (max-width: 1200px), (hover: none) and (pointer: coarse) {
+    .dashboard-right-rail--weekly {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1101px) and (max-height: 760px) {
+    .weekly-trending-panel {
+        max-height: calc(100vh - 112px);
+        padding-top: 14px;
+    }
+
+    .weekly-trending-eyebrow-row { margin-bottom: 10px; }
+    .weekly-trending-heading { margin-bottom: 10px; }
+    .weekly-trending-scroll { max-height: 420px; }
+    .weekly-movie-card { min-height: 96px; }
+    .weekly-movie-poster { height: 74px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .weekly-trending-live-dot::after,
+    .weekly-skeleton-poster,
+    .weekly-skeleton-line,
+    .weekly-movie-card {
+        animation: none !important;
+    }
+
+    .weekly-trending-scroll,
+    .weekly-movie-card,
+    .weekly-movie-poster img,
+    .weekly-trending-scroll-button {
+        scroll-behavior: auto !important;
+        transition: none !important;
+    }
+}

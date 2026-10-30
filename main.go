@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/benlei/go-tmdb/v2"
 	"github.com/joho/godotenv"
 )
 
@@ -23,6 +24,21 @@ func main() {
 	if err != nil {
 		log.Println("Warning: .env file not found")
 	}
+
+	// Initialize TMDB client
+	apiKey := os.Getenv("TMDB_TOKEN")
+
+	if apiKey == "" {
+		log.Fatal("TMDB_TOKEN environment variable is missing")
+	}
+
+	tmdbClient, err := tmdb.Init(apiKey)
+	if err != nil {
+		log.Fatalf("Failed to initialize TMDB client: %v", err)
+	}
+
+	// Enable automatic retries for rate-limit errors
+	tmdbClient.SetClientAutoRetry()
 
 	http.Handle("/templates/", http.StripPrefix("/templates/", http.FileServer(http.Dir("templates"))))
 	http.Handle("/img/", http.StripPrefix("/img/", http.FileServer(http.Dir("img"))))
@@ -50,6 +66,11 @@ func main() {
 	//Explore page routes
 	http.HandleFunc("/explore", handlers.ExplorePageHandler)
 	http.HandleFunc("/person", handlers.PersonPageHandler)
+
+	http.Handle(
+		"/api/dashboard/trending-week",
+		handlers.NewTrendingWeekMoviesHandler(tmdbClient),
+	)
 
 	http.HandleFunc("/api/explore/state", handlers.ExploreStateAPI)
 	http.HandleFunc("/api/explore/watchlist", handlers.ExploreWatchlistAPI)
